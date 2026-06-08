@@ -202,7 +202,7 @@ StatsModel = {
 3. **Same platform twice is supported** (two Twitch, two X, etc.) — the registry keys on `streamId`, not platform.
 4. Backend spins up the matching ingester; status flips `connecting → live/offline`. All connected dashboards update (shared registry).
 5. Disconnect removes the ingester and its stats.
-6. **Default config** seeds Banks/Z's known handles, so it works on first load; the paste-UI is the primary, always-real path (point it at any live channel during judging).
+6. **No seeded streams** (decided). The dashboard opens directly to the connect panel; a demo always begins by pasting links — any live channel, strictly real, zero stale config.
 
 ---
 
@@ -268,9 +268,11 @@ StatsModel = {
 ## 14. Open items to confirm with the user
 
 - ~~X dev key~~ — **✅ done** (pay-go key with $5 credits, verified live).
-- Backend host preference (Railway vs Render vs Fly) — default **Railway** unless told otherwise.
-- Default seed handles for Banks & Z on each platform (need the actual channel names).
-- Whether the native room needs *any* persistence across backend restarts (default: no).
+- ~~Backend host~~ — **✅ Railway** (decided).
+- ~~Seed handles~~ — **✅ none** (decided): opens to the connect panel; paste links at demo time.
+- ~~Native-room persistence across restarts~~ — **✅ no** (decided): in-memory ring buffer only.
+
+All open items resolved — spec is implementation-ready.
 
 ## 15. Secrets handling
 
