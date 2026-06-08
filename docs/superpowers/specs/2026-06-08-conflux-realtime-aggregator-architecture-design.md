@@ -50,7 +50,8 @@ This is *why* the architecture is shaped the way it is. All facts below were ver
 ### The X path (verified, locked)
 
 - X API **pay-as-you-go is the default for new developers** (since Feb 6 2026): no monthly minimum, pre-load credits, settable spending cap.
-- **`GET /2/tweets/search/recent` (7-day) IS included on pay-go** (confirmed across two independent 2026 sources).
+- **`GET /2/tweets/search/recent` (7-day) IS included on pay-go** — **✅ VERIFIED LIVE 2026-06-08** against the project's own pay-go key (`HTTP 200`, real results). No longer an assumption.
+- **Token gotcha (verified):** the project's Bearer token must be sent **verbatim as displayed** — it contains literal `%2B`/`%3D` sequences and must **NOT** be URL-decoded (decoding → `401`; raw → `200`).
 - Poll `query=(to:Banks OR to:Z) -is:retweet`, `max_results=100`, with `since_id` to fetch only new replies. Rate limit **450 req/15 min** (1 every 2s) → **10s polling has 5× headroom**.
 - **Cost for a 30-min demo: ~$5 realistic, ~$90 worst-case. Cap at $25.**
 - **Catches:** (a) it's **polling** (~seconds latency), not push; (b) token must stay **server-side** (no CORS); (c) **provision the X dev account + credits on Day 1** — key approval is not guaranteed-instant.
@@ -233,7 +234,7 @@ StatsModel = {
 
 | Risk | Mitigation |
 |---|---|
-| **X dev key not provisioned in time** | **Day-1 action:** create account + load credits today. Highest-priority blocker. |
+| ~~X dev key not provisioned in time~~ | **✅ RESOLVED 2026-06-08** — pay-go key provisioned with $5 credits; `search/recent` verified returning 200. Use Bearer verbatim (do not URL-decode). |
 | Kick `slug→id` Cloudflare-blocked from serverless IPs | Use `curl_cffi`-style browser impersonation on the backend; cache the stable id; fall back to hardcoded ids for the known channels. |
 | Twitch anonymous IRC is undocumented / could change | Works today; isolated behind the ingester interface; EventSub (needs login) is the only sanctioned successor — note but don't build now. |
 | X "live" number is total, not concurrent | Labeled honestly; user-approved. Pair with real engagement (replies/min). |
@@ -266,6 +267,14 @@ StatsModel = {
 
 ## 14. Open items to confirm with the user
 
+- ~~X dev key~~ — **✅ done** (pay-go key with $5 credits, verified live).
 - Backend host preference (Railway vs Render vs Fly) — default **Railway** unless told otherwise.
 - Default seed handles for Banks & Z on each platform (need the actual channel names).
 - Whether the native room needs *any* persistence across backend restarts (default: no).
+
+## 15. Secrets handling
+
+- X credentials are **never** committed. They live only in the backend host's env / a **gitignored `.env`** (added to `.gitignore` before the backend is created).
+- Frontend never contains any platform secret — it talks only to our backend.
+- Only the **Bearer token** is needed (app-only auth for `search/recent`); Consumer Key/Secret are not deployed.
+- Credentials shared in plaintext during planning should be **regenerated after the challenge**.
