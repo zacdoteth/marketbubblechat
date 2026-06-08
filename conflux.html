@@ -438,7 +438,7 @@ const ICON = {
 /* ---------- backend connection (the real feed) ---------- */
 const BACKEND_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'ws://localhost:8787'
-  : 'wss://REPLACE_WITH_RAILWAY_HOST';   // set at deploy time (Task 24)
+  : 'wss://conflux-backend-production.up.railway.app';   // Railway backend
 let backendWS = null, backendReady = false;
 const onSnapshot = [], onServerMessage = [], onStats = [], onStreams = [];
 let reconnectDelay = 1000 + Math.random() * 1000;   // initial 1-2s with jitter
