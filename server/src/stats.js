@@ -3,7 +3,6 @@ const WINDOW_MS = 60_000;
 
 export function createStats() {
   const streams = new Map(); // id -> { platform, streamer, viewers, msgTimes[] }
-  let siteViewers = 0;
 
   return {
     registerStream(id, meta = {}) {
@@ -12,7 +11,6 @@ export function createStats() {
     },
     removeStream(id) { streams.delete(id); },
     setViewers(id, n) { const s = streams.get(id); if (s) s.viewers = Number(n) || 0; },
-    setSiteViewers(n) { siteViewers = Number(n) || 0; },
     recordMessage(id, now) { const s = streams.get(id); if (s) s.msgTimes.push(now); },
     snapshot(now) {
       const perStream = {}, perPlatform = {}, perStreamer = {};
@@ -31,9 +29,8 @@ export function createStats() {
         perStreamer[s.streamer].msgsPerMin += rate;
       }
       return {
-        combined: { viewers: combinedViewers + siteViewers, msgsPerMin: combinedRate },
+        combined: { viewers: combinedViewers, msgsPerMin: combinedRate },
         perStream, perPlatform, perStreamer,
-        site: { viewers: siteViewers },
       };
     },
   };

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createStats } from '../src/stats.js';
 
-test('aggregates viewers across stream/platform/streamer + site', () => {
+test('aggregates viewers across stream/platform/streamer', () => {
   const s = createStats();
   s.registerStream('s1', { platform: 'twitch', streamer: 'Banks' });
   s.registerStream('s2', { platform: 'twitch', streamer: 'Z' });
@@ -11,14 +11,12 @@ test('aggregates viewers across stream/platform/streamer + site', () => {
   s.setViewers('s1', 100);
   s.setViewers('s2', 50);
   s.setViewers('s3', 30);
-  s.setSiteViewers(7);
   const snap = s.snapshot(10_000);
-  assert.equal(snap.combined.viewers, 187);          // 100+50+30+7
-  assert.equal(snap.perPlatform.twitch.viewers, 150); // s1+s2
+  assert.equal(snap.combined.viewers, 180);             // 100+50+30
+  assert.equal(snap.perPlatform.twitch.viewers, 150);   // s1+s2
   assert.equal(snap.perPlatform.kick.viewers, 30);
-  assert.equal(snap.perStreamer.Banks.viewers, 130);  // s1+s3
+  assert.equal(snap.perStreamer.Banks.viewers, 130);     // s1+s3
   assert.equal(snap.perStreamer.Z.viewers, 50);
-  assert.equal(snap.site.viewers, 7);
   assert.equal(snap.perStream.s1.viewers, 100);
 });
 

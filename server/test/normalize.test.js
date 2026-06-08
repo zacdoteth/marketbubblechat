@@ -20,11 +20,6 @@ test('keeps provided color and displayName', () => {
   assert.equal(m.color, '#123456');
   assert.equal(m.displayName, 'U');
 });
-test('native message gets mb color and empty streamer', () => {
-  const m = makeMessage({ platform: 'mb', username: 'you', text: 'hi', ts: 2 });
-  assert.equal(m.color, '#3FD0C0');
-  assert.equal(m.streamer, '');
-});
 test('coerces missing username to anon and stringifies text', () => {
   const m = makeMessage({ platform: 'x', text: 42, ts: 3 });
   assert.equal(m.username, 'anon');

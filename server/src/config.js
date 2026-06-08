@@ -11,7 +11,7 @@ export const KICK_WS_URL =
 export const TWITCH_IRC_URL = 'wss://irc-ws.chat.twitch.tv:443';
 
 export const PLATFORM_COLORS = {
-  twitch: '#A571FF', x: '#F4F4F6', kick: '#53FC18', mb: '#3FD0C0',
+  twitch: '#A571FF', x: '#F4F4F6', kick: '#53FC18',
 };
 
 let _overrides = null;

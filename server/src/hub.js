@@ -2,7 +2,6 @@
 import { createRegistry } from './streamRegistry.js';
 import { createAggregator } from './aggregator.js';
 import { createStats } from './stats.js';
-import { createNativeRoom } from './nativeRoom.js';
 import { makeMessage } from './normalize.js';
 import { parseStreamUrl } from './urlParser.js';
 import { TwitchIngester } from './ingesters/twitch.js';
@@ -15,7 +14,6 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
   const registry = createRegistry();
   const agg = createAggregator({ max: 100 });
   const stats = createStats();
-  const room = createNativeRoom();
   const running = new Map(); // streamId -> ingester instance
 
   function emit(fields) {
@@ -30,7 +28,6 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
     registry, agg, stats,
     snapshot() { return { streams: registry.list(), messages: agg.recent(), stats: stats.snapshot(now()) }; },
     statsSnapshot() { return stats.snapshot(now()); },
-    setSiteViewers(n) { stats.setSiteViewers(n); },
 
     connectStream(url, streamerLabel) {
       const parsed = parseStreamUrl(url);
@@ -56,13 +53,5 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
       stats.removeStream(id);
       pushStreams();
     },
-
-    postNative(connId, handle, text) {
-      const v = room.validate(connId, text, now());
-      if (!v.ok) return { error: v.reason };
-      emit({ platform: 'mb', streamer: '', username: String(handle || 'anon').slice(0, 24), text: v.text, ts: now() });
-      return { ok: true };
-    },
-    dropConn(connId) { room.drop(connId); },
   };
 }
