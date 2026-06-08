@@ -14,7 +14,6 @@
   --gold:#E8C77E; --gold-br:#F6E0A6; --gold-deep:#C9A861;
   --line:rgba(232,199,126,.16); --line-soft:rgba(232,199,126,.09);
   --twitch:#A571FF; --twitch-tx:#BD9CFF; --x:#F4F4F6; --x-tx:#EFEFF2; --kick:#53FC18; --kick-tx:#74FB45;
-  --native:#3FD0C0; --native-tx:#62E2D3;
   --panel:rgba(15,14,16,.84);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -70,7 +69,8 @@ body.mode-dashboard .stage{display:none}
 body.mode-dashboard .panel{max-width:680px;width:100%}
 body.mode-watch .app{justify-content:stretch}
 body.mode-watch .panel{width:clamp(300px,36vw,380px);max-width:380px;flex:none}
-body.mode-watch .panel-foot{display:none}
+body.mode-watch .panel-foot{display:flex}
+body.mode-watch .panel-setup{display:none}
 .stage{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;container-type:size;padding:clamp(2px,1vh,12px)}
 
 /* BROADCAST STAGE — always optimal 16:9, letterboxed to fit at any size */
@@ -112,14 +112,13 @@ body.mode-watch .panel-foot{display:none}
 .chip[aria-pressed="false"]{opacity:.38;filter:grayscale(.5);box-shadow:none;border-color:rgba(255,255,255,.12);background:transparent}
 .chip[aria-pressed="false"] .cdot{box-shadow:none;opacity:.6}
 .chip:hover{transform:translateY(-1px)}
-.c-twitch{--c:#A571FF} .c-x{--c:#F4F4F6} .c-kick{--c:#53FC18} .c-native{--c:#3FD0C0}
+.c-twitch{--c:#A571FF} .c-x{--c:#F4F4F6} .c-kick{--c:#53FC18}
 .tools{display:flex;gap:7px}
 .tool{min-width:32px;height:32px;padding:0 9px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;border-radius:9px;color:var(--gold);border:1px solid var(--line);background:rgba(232,199,126,.04);transition:all .16s ease;font-family:'Hanken Grotesk',sans-serif;font-weight:700}
 .tool svg{width:15px;height:15px}
 .tool span{font-size:11px;letter-spacing:.04em}
 .tool:hover{background:rgba(232,199,126,.12);transform:translateY(-1px)}
-.tool:focus-visible,.chip:focus-visible,.viewseg button:focus-visible,.jump:focus-visible,.cfbar .clear:focus-visible,.search input:focus-visible,.composer input:focus-visible,.tw-form input:focus-visible,.tw-form button:focus-visible,.src.btn:focus-visible,.search .x:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
-.composer button:focus-visible{outline:2px solid var(--native-tx);outline-offset:2px}
+.tool:focus-visible,.chip:focus-visible,.viewseg button:focus-visible,.jump:focus-visible,.cfbar .clear:focus-visible,.search input:focus-visible,.tw-form input:focus-visible,.tw-form button:focus-visible,.src.btn:focus-visible,.search .x:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
 .tool.active{background:rgba(232,199,126,.16);border-color:rgba(232,199,126,.5)}
 
 .hype{position:relative;height:5px;background:rgba(255,255,255,.05);z-index:2;overflow:hidden}
@@ -156,7 +155,6 @@ body.mode-watch .panel-foot{display:none}
 .row.golden .msg{color:var(--gold-br)}
 .row.golden::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 32%,rgba(255,245,210,.22) 50%,transparent 68%);transform:translateX(-120%);animation:shimmer 1.5s ease .12s 1}
 @keyframes shimmer{to{transform:translateX(120%)}}
-.row.mine{background:rgba(63,208,192,.08)}
 .row.tap{animation:tap .55s ease}
 @keyframes tap{0%{background:rgba(232,199,126,.3)}100%{background:transparent}}
 .gx{font-family:'Space Mono',monospace;font-size:11px;flex:none;color:var(--gold-br)}
@@ -168,7 +166,7 @@ body.mode-watch .panel-foot{display:none}
 .badge .h{font-family:'Space Mono',monospace;font-weight:400;font-size:10px;color:var(--ct);white-space:nowrap;letter-spacing:.01em;opacity:.92}
 .row:hover .badge{border-color:color-mix(in srgb,var(--c) 32%, transparent);background:color-mix(in srgb,var(--c) 13%, transparent)}
 .uname{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;letter-spacing:-.01em}
-.m-twitch{--c:var(--twitch-tx);--ct:#D4C5FF} .m-x{--c:var(--x-tx);--ct:#F2F2F4} .m-kick{--c:var(--kick-tx);--ct:#AEF59A} .m-native{--c:var(--native-tx);--ct:#86EEDF}
+.m-twitch{--c:var(--twitch-tx);--ct:#D4C5FF} .m-x{--c:var(--x-tx);--ct:#F2F2F4} .m-kick{--c:var(--kick-tx);--ct:#AEF59A}
 .lv{width:6px;height:6px;border-radius:50%;background:#FF4D4D;box-shadow:0 0 6px #FF4D4D;flex:none}
 
 .surge-chip,.gh-chip{position:absolute;top:12px;z-index:6;display:inline-flex;align-items:center;gap:6px;pointer-events:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:11px;letter-spacing:.06em;color:#1a1305;padding:6px 12px;border-radius:999px;background:linear-gradient(180deg,var(--gold-br),var(--gold-deep));box-shadow:0 8px 26px -8px rgba(232,199,126,.7);opacity:0;transform:translateY(-6px);transition:all .25s ease}
@@ -211,17 +209,6 @@ body.mode-watch .panel-foot{display:none}
 .vbreakdown b{color:var(--gold-br)}
 .vbreakdown .r{display:flex;justify-content:space-between;gap:14px;padding:2px 0}
 
-/* native composer */
-.composer{display:flex;align-items:center;gap:9px;padding:11px 14px;border-top:1px solid var(--line-soft);position:relative;z-index:2;background:rgba(63,208,192,.03)}
-.composer .me{font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:var(--native-tx);flex:none;display:inline-flex;align-items:center;gap:6px}
-.composer .me svg{width:13px;height:13px}
-.composer input{flex:1;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;padding:9px 12px;outline:none;transition:border-color .15s ease}
-.composer input:focus{border-color:color-mix(in srgb,var(--native) 50%, transparent)}
-.composer input::placeholder{color:var(--muted-2)}
-.composer button{cursor:pointer;flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:10px;border:none;color:#04201c;background:linear-gradient(180deg,var(--native-tx),var(--native));transition:filter .15s}
-.composer button:hover{filter:brightness(1.1)}
-.composer button svg{width:16px;height:16px}
-
 footer{position:relative;z-index:3;text-align:center;padding:8px 14px 13px;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:var(--muted-2)}
 footer b{color:var(--gold-deep);font-weight:400}
 
@@ -240,7 +227,7 @@ footer b{color:var(--gold-deep);font-weight:400}
   .tool span{display:none}
 }
 @media (max-width:380px){ .chip .cnt{display:none} }
-@media (prefers-reduced-motion:reduce){ .row.in{animation:none} .dot,.bc-live i{animation:none} .row.golden::after{display:none} .bc-play{animation:none} body{animation:none} .mark.ping{animation:none} .hype.surge .fill{animation:none} .chip,.tool,.badge,.jump,.src.btn,.surge-chip,.gh-chip,.viewseg button,.bc-ctrls svg,.cfbar .clear,.search input,.tw-form input,.composer input,.search .x{transition:none} .boot-mark path{animation:none;stroke-dashoffset:0} .boot-mark .core{animation:none;opacity:1} .boot-mark .ring{animation:none;opacity:.5} .boot-word,.boot-sub{animation:none;opacity:1;transform:none} .boot-bar i{animation:none;width:100%} }
+@media (prefers-reduced-motion:reduce){ .row.in{animation:none} .dot,.bc-live i{animation:none} .row.golden::after{display:none} .bc-play{animation:none} body{animation:none} .mark.ping{animation:none} .hype.surge .fill{animation:none} .chip,.tool,.badge,.jump,.src.btn,.surge-chip,.gh-chip,.viewseg button,.bc-ctrls svg,.cfbar .clear,.search input,.tw-form input,.search .x{transition:none} .boot-mark path{animation:none;stroke-dashoffset:0} .boot-mark .core{animation:none;opacity:1} .boot-mark .ring{animation:none;opacity:.5} .boot-word,.boot-sub{animation:none;opacity:1;transform:none} .boot-bar i{animation:none;width:100%} }
 /* ---------- boot title screen ---------- */
 .boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
   background:radial-gradient(120% 120% at 50% 42%, #0b0a0c, #050406 70%);transition:opacity .9s ease,transform .9s cubic-bezier(.7,0,.3,1)}
@@ -260,6 +247,11 @@ footer b{color:var(--gold-deep);font-weight:400}
 .boot-bar{width:160px;height:2px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}
 .boot-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold-deep),var(--gold-br));box-shadow:0 0 12px var(--gold-br);animation:loadbar 1.7s ease .3s forwards}
 @keyframes loadbar{to{width:100%}}
+
+/* ---------- prominent setup panel ---------- */
+.panel-setup{display:flex;flex-direction:column;gap:8px;padding:10px 14px 12px;border-bottom:2px solid color-mix(in srgb,var(--gold) 28%,transparent);background:rgba(232,199,126,.04);position:relative;z-index:2}
+.panel-setup .setup-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--gold-br);text-transform:uppercase;font-weight:700}
+.panel-setup .setup-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 
 /* ---------- channel (streamer) filter ---------- */
 .cfbar{display:none;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--line-soft);position:relative;z-index:2;background:rgba(232,199,126,.04)}
@@ -326,17 +318,16 @@ footer b{color:var(--gold-deep);font-weight:400}
     <div class="bc-play"></div>
     <div class="bc-top">
       <span class="bc-live"><i></i>LIVE</span>
-      <span class="bc-streamers">@Banks + @Z</span>
+      <span class="bc-streamers" id="bcStreamers"></span>
       <span class="bc-plats">
         <i style="background:#A571FF" title="Twitch"></i>
         <i style="background:#F4F4F6" title="X"></i>
         <i style="background:#53FC18" title="Kick"></i>
-        <i style="background:#3FD0C0" title="MB"></i>
       </span>
       <span class="bc-rec" id="bcRec">REC 00:00:00</span>
     </div>
     <div class="bc-bottom">
-      <span class="bc-title">Market Bubble · Combined Stream</span>
+      <span class="bc-title">Combined Live Chat</span>
       <span class="bc-views"><span id="bcEye"></span><b id="bcViewers">0</b></span>
       <span class="bc-ctrls" id="bcCtrls"></span>
     </div>
@@ -349,7 +340,6 @@ footer b{color:var(--gold-deep);font-weight:400}
         <button class="chip c-kick"   aria-pressed="true" data-p="kick"><i class="cdot"></i>Kick<span class="cnt" id="cnt-kick">0</span></button>
         <button class="chip c-x"      aria-pressed="true" data-p="x"><i class="cdot"></i>X<span class="cnt" id="cnt-x">0</span></button>
         <button class="chip c-twitch" aria-pressed="true" data-p="twitch"><i class="cdot"></i>Twitch<span class="cnt" id="cnt-twitch">0</span></button>
-        <button class="chip c-native" aria-pressed="true" data-p="native"><i class="cdot"></i>MB<span class="cnt" id="cnt-native">0</span></button>
       </div>
       <div class="tools">
         <button class="tool" id="surge" aria-label="Trigger a hype surge" title="Trigger a hype surge"></button>
@@ -358,6 +348,16 @@ footer b{color:var(--gold-deep);font-weight:400}
         <button class="tool" id="pause" aria-label="Pause or resume the feed" title="Pause / resume"></button>
         <button class="tool" id="clear" aria-label="Clear the feed" title="Clear feed"></button>
       </div>
+    </div>
+
+    <div class="panel-setup" id="connectPanel">
+      <span class="setup-lbl">Your streams</span>
+      <div class="setup-row">
+        <input type="text" id="connectUrl" placeholder="paste twitch / kick / x link…" autocomplete="off" spellcheck="false">
+        <input type="text" id="connectWho" placeholder="label (optional)" autocomplete="off" spellcheck="false" maxlength="16">
+        <button class="src btn s-twitch" id="connectGo">+ Add stream</button>
+      </div>
+      <span id="connectList" class="connect-list"></span>
     </div>
 
     <div class="hype" id="hype"><div class="fill" id="hypeFill"></div></div>
@@ -381,25 +381,11 @@ footer b{color:var(--gold-deep);font-weight:400}
     </div>
 
     <div class="panel-foot">
-      <div class="sources" id="connectPanel">
-        <span class="lbl">Connect</span>
-        <input type="text" id="connectUrl" placeholder="paste twitch / kick / x link…" autocomplete="off" spellcheck="false">
-        <input type="text" id="connectWho" placeholder="who (Banks/Z)" autocomplete="off" spellcheck="false" maxlength="16">
-        <button class="src btn s-twitch" id="connectGo">+ Add stream</button>
-        <span id="connectList" class="connect-list"></span>
-      </div>
       <div class="vbreak">
         <span class="v"><i style="background:#53FC18"></i><b id="v-kick">0</b></span>
         <span class="v"><i style="background:#F4F4F6"></i><b id="v-x">0</b></span>
         <span class="v"><i style="background:#A571FF"></i><b id="v-twitch">0</b></span>
-        <span class="v"><i style="background:#3FD0C0"></i><b id="v-native">0</b></span>
       </div>
-    </div>
-
-    <div class="composer">
-      <span class="me" id="meTag"></span>
-      <input type="text" id="compose" placeholder="chat on marketbubble.com…" aria-label="Compose a message" autocomplete="off" maxlength="180">
-      <button id="send" aria-label="Send message" title="Send"></button>
     </div>
   </section>
 </main>
@@ -409,18 +395,17 @@ footer b{color:var(--gold-deep);font-weight:400}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ============================================================
-   CONFLUX v4 — multi-streamer combined chat + viewer dashboard
-   Per-message: which streamer (@Banks/@Z) + which platform.
-   Combined viewer count. Native marketbubble.com chat. Watch mode.
+   CONFLUX v4 — creator-centric combined chat + viewer dashboard
+   Per-message: which streamer + which platform (twitch/kick/x).
+   Combined viewer count. Watch mode.
    ============================================================ */
 
 const ICONS = {
   twitch:'<svg viewBox="0 0 24 24"><path d="M4 2 2.5 6v13h4.5v3h2.5l3-3h4l5-5V2H4Zm16 9-3 3h-4l-3 3v-3H6.5V4H20v7Z" fill="currentColor"/><path d="M15 7h2v5h-2V7Zm-5 0h2v5h-2V7Z" fill="currentColor"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.65l-5.21-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.71 6.231 5.454-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644Z" fill="currentColor"/></svg>',
-  kick:'<svg viewBox="0 0 24 24"><path d="M3 3h5v6l5-6h6l-7 8 7 10h-6l-5-7v7H3V3Z" fill="currentColor"/></svg>',
-  native:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 4V5a1 1 0 0 1 1-1Z"/></svg>'
+  kick:'<svg viewBox="0 0 24 24"><path d="M3 3h5v6l5-6h6l-7 8 7 10h-6l-5-7v7H3V3Z" fill="currentColor"/></svg>'
 };
-const LABEL = { twitch:'Twitch', x:'X', kick:'Kick', native:'MB' };
+const LABEL = { twitch:'Twitch', x:'X', kick:'Kick' };
 
 const ICON = {
   bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
@@ -446,7 +431,6 @@ const ICON = {
   s('pause',ICON.pause); s('clear',ICON.trash);
   s('surgeChip',ICON.bolt+'<span>HYPE SURGE</span>'); s('ghChip',ICON.spark+'<span>golden hour</span>');
   s('jump',ICON.arrowDown+'<span class="jn">new</span>'); s('eyeIcon',ICON.eye); s('bcEye',ICON.eye);
-  s('send',ICON.send); s('meTag',ICON.user+'you');
   s('vDash',ICON.grid+'Dashboard'); s('vWatch',ICON.play+'Watch');
   s('bcCtrls',ICON.vol+ICON.gear+ICON.full);
 })();
@@ -481,11 +465,10 @@ function setConnState(ok) {
 function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g, ':$1:'); }
 
 onServerMessage.push((m) => {
-  const p = m.platform === 'mb' ? 'native' : m.platform;
-  bump(p);
+  bump(m.platform);
   addRow({
-    platform: p,
-    channel: m.streamId || 'MB',
+    platform: m.platform,
+    channel: m.streamId || m.platform,
     username: m.displayName || m.username,
     message: cleanText(m.text),
     streamer: m.streamer || '',
@@ -495,10 +478,9 @@ onServerMessage.push((m) => {
 onSnapshot.push((snap) => {
   feed.innerHTML = '';
   snap.messages.forEach(m => {
-    const p = m.platform === 'mb' ? 'native' : m.platform;
     addRow({
-      platform: p,
-      channel: m.streamId || 'MB',
+      platform: m.platform,
+      channel: m.streamId || m.platform,
       username: m.displayName || m.username,
       message: cleanText(m.text),
       streamer: m.streamer || '',
@@ -507,29 +489,10 @@ onSnapshot.push((snap) => {
   feed.scrollTop = feed.scrollHeight;
 });
 
-/* ---------- streamers + content ---------- */
-const STREAMERS=['@Banks','@Z'];
-const NAMES=['user91','user1337','user67','0xWhale','degenmaxi','satoshi_jr','gm_ser','vibes_only','pumpamentalist',
-'liquidated_again','wagmi_warrior','chartwizard','anon4202','moonboy77','ngmi_andy','based_dept','polyfren','kalshi_chad',
-'greencandle','redcandle_rip','sizingup','fomo_frank','diamondpaws','exit_liquidity','ser_finance','bagholder','rektrachel',
-'copium_king','thesis_guy','onchain_omar','degenharder','probably_nothing','few_understand','top_signal','wenlambo','candle_cult'];
-const MSGS=['gm fam ☀️','wagmi','this UI is actually clean','source labels go hard','real-time fr','who built this 👀',
-'thanks for the polymarket picks','kalshi odds looking spicy','down bad but vibing','size it ser','i\'m so early',
-'chat is unified now??','based dev','ngmi if you fade','LFG','green candles incoming 🟢','rip my longs 😭',
-'this is the bottom trust','+1','Pog','clip that','first time the feed feels alive','all three chats in one is genius',
-'HYPE just different 👀','no cap this slaps','respectfully, bullish','switching tabs is over','i can finally read everyone',
-'one feed to rule them all','the glow tho ✨','mobile works too?? insane','chat cooking again','10/10 build','ratio',
-'ser this aggregator','the vibes are immaculate','wen token','aped in','gg','where do i sign up',
-'this is so satisfying to watch','particle flow is sick','color coded chat W','you love to see it','sheesh',
-'locked in 🔒','up only 📈','full send','banks cooking','combined feed is huge','market bubble W'];
-const HYPE_MSGS=['LFG 🚀','UP ONLY 📈','green candles 🟢','TO THE MOON 🚀','PUMP IT','ATH soon','WE ARE SO BACK',
-'full send 🚀','HYPE 🔥','SEND IT','this is it ser','GREEN EVERYWHERE 🟢'];
-const GOLD_MSGS=['gm legends ✦','we are so back','this is the one','green forever 🟢','to the moon together 🚀',
-'wagmi for real','market bubble is him','golden candle 🕯️','few will make it — we will','onchain forever'];
 const HOT_RE=/🚀|🟢|🔥|moon|lfg|pump|green|ath|up only|sheesh|bull|send/i;
 
-const STATE={enabled:{twitch:true,x:true,kick:true,native:true},total:0,paused:false,
-  counts:{twitch:0,x:0,kick:0,native:0},stuck:true,newCount:0,emitTimes:[],query:''};
+const STATE={enabled:{twitch:true,x:true,kick:true},total:0,paused:false,
+  counts:{twitch:0,x:0,kick:0},stuck:true,newCount:0,emitTimes:[],query:''};
 const MAXDOM=80;
 const small=Math.min(innerWidth,innerHeight)<720;
 
@@ -611,7 +574,6 @@ onStats.push((st)=>{
   // per-platform footer pills
   const pf = st.perPlatform||{};
   setVB('v-kick', pf.kick); setVB('v-x', pf.x); setVB('v-twitch', pf.twitch);
-  document.getElementById('v-native').textContent = kfmt2((st.site&&st.site.viewers)||0);
 });
 function setVB(id, p){ const el=document.getElementById(id); if(el) el.textContent = kfmt2(p?p.viewers:0); }
 
@@ -622,7 +584,6 @@ vEl.parentElement.addEventListener('mouseenter', ()=>{
   const rows=[];
   for(const [id,s] of Object.entries(latestStats.perStream||{}))
     rows.push(`<div class="r"><span>${s.platform}${s.streamer?(' · '+s.streamer):''}</span><b>${kfmt2(s.viewers)}</b></div>`);
-  rows.push(`<div class="r"><span>site (native)</span><b>${kfmt2(latestStats.site.viewers)}</b></div>`);
   vbd.innerHTML = `<div class="r"><span><b>combined</b></span><b>${(latestStats.combined.viewers||0).toLocaleString()}</b></div>`+rows.join('');
   const r=vEl.getBoundingClientRect(); vbd.style.top=(r.bottom+8)+'px'; vbd.style.left=Math.max(8,r.left-40)+'px';
   vbd.classList.add('show');
@@ -696,8 +657,8 @@ document.getElementById('surge').addEventListener('click',()=>triggerSurge(5000)
 const pauseBtn=document.getElementById('pause');
 pauseBtn.addEventListener('click',()=>{STATE.paused=!STATE.paused;pauseBtn.innerHTML=STATE.paused?ICON.play:ICON.pause;});
 document.getElementById('clear').addEventListener('click',()=>{
-  feed.innerHTML='';STATE.total=0;STATE.counts={twitch:0,x:0,kick:0,native:0};STATE.newCount=0;jumpBtn.classList.remove('show');
-  ['twitch','x','kick','native'].forEach(p=>{document.getElementById('cnt-'+p).textContent='0';});
+  feed.innerHTML='';STATE.total=0;STATE.counts={twitch:0,x:0,kick:0};STATE.newCount=0;jumpBtn.classList.remove('show');
+  ['twitch','x','kick'].forEach(p=>{document.getElementById('cnt-'+p).textContent='0';});
 });
 const searchEl=document.getElementById('search'), searchInput=document.getElementById('searchInput'), searchBtn=document.getElementById('searchBtn');
 searchBtn.addEventListener('click',()=>{const open=searchEl.classList.toggle('open');searchBtn.classList.toggle('active',open);if(open)searchInput.focus();else{STATE.query='';searchInput.value='';rescan();}});
@@ -712,21 +673,6 @@ document.querySelectorAll('.viewseg button').forEach(b=>b.addEventListener('clic
   document.querySelectorAll('.viewseg button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',(x===b).toString());});
 }));
 
-/* ---------- native composer (marketbubble.com chat) ---------- */
-const compose=document.getElementById('compose');
-function myHandle(){
-  let h = localStorage.getItem('conflux_handle');
-  if(!h){ h = (prompt('Pick a chat name (no login):','')||'').trim().slice(0,24) || ('guest'+((Math.random()*9000+1000)|0)); localStorage.setItem('conflux_handle', h); }
-  return h;
-}
-function sendMine(){
-  const t=compose.value.trim(); if(!t)return;
-  sendBackend({ type:'post', handle: myHandle(), text: t });
-  compose.value='';   // the server will echo it back into the shared feed
-}
-document.getElementById('send').addEventListener('click',sendMine);
-compose.addEventListener('keydown',e=>{if(e.key==='Enter')sendMine();});
-
 /* ---------- broadcast REC timer ---------- */
 const bcRec=document.getElementById('bcRec'); const recStart=Date.now();
 setInterval(()=>{const s=((Date.now()-recStart)/1000)|0;const p=n=>String(n).padStart(2,'0');
@@ -737,8 +683,7 @@ function confluencePulse(){
   emitParticle('kick',14,false);
   setTimeout(()=>emitParticle('x',14,false),150);
   setTimeout(()=>emitParticle('twitch',14,false),300);
-  setTimeout(()=>emitParticle('native',12,false),450);
-  setTimeout(()=>{emitParticle('native',10,true);bloomNow(950);ringT=0;},600);
+  setTimeout(()=>{emitParticle('kick',10,true);bloomNow(950);ringT=0;},450);
 }
 document.getElementById('mark').addEventListener('click',()=>{const m=document.getElementById('mark');m.classList.add('ping');setTimeout(()=>m.classList.remove('ping'),560);confluencePulse();});
 const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
@@ -747,7 +692,7 @@ addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.ke
 
 /* ---------- generative audio (off by default) ---------- */
 let audioReady=false, audioOn=false, synth=null, lastNoteAt=0;
-const SCALE={kick:['C5','D5','E5','G5','A5'],x:['G4','A4','C5','D5','E5'],twitch:['C4','D4','E4','G4','A4'],native:['E4','G4','B4','D5','E5']};
+const SCALE={kick:['C5','D5','E5','G5','A5'],x:['G4','A4','C5','D5','E5'],twitch:['C4','D4','E4','G4','A4']};
 async function initAudio(){
   if(audioReady||typeof Tone==='undefined')return;
   try{
@@ -790,6 +735,13 @@ function renderStreams(streams){
     el.innerHTML=`<span class="st"></span>${esc(s.platform)}·${esc(s.channel)}${s.streamerLabel?(' ('+esc(s.streamerLabel)+')'):''} <span class="rm" data-id="${s.id}">&#x2715;</span>`;
     connectList.appendChild(el);
   });
+  // update broadcast stage streamer label dynamically
+  const bcStreamers=document.getElementById('bcStreamers');
+  if(bcStreamers){
+    const labels=streams.filter(s=>s.status==='live').map(s=>s.streamerLabel||s.channel).filter(Boolean);
+    const unique=[...new Set(labels)];
+    bcStreamers.textContent=unique.length?unique.join(' + '):'';
+  }
 }
 connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id}); });
 onStreams.push(renderStreams);
@@ -801,7 +753,7 @@ onSnapshot.push(snap=>renderStreams(snap.streams));
 let THREE_OK=typeof THREE!=='undefined';
 let renderer,scene,camera,points,geo,posArr,colArr,samples={},uSamples=[],coreSprites=[],parts=[],freeList=[];
 let mouse={x:0,y:0},cam={x:0,y:2},running=true,last=performance.now(),bootStart=performance.now(),ringSprite=null,ringT=1;
-const SAMP=220, PC={kick:[0.33,0.99,0.10],x:[0.96,0.96,0.98],twitch:[0.65,0.44,1.0],native:[0.25,0.85,0.78]}, GOLD=[0.95,0.80,0.42];
+const SAMP=220, PC={kick:[0.33,0.99,0.10],x:[0.96,0.96,0.98],twitch:[0.65,0.44,1.0]}, GOLD=[0.95,0.80,0.42];
 let AMBIENT,POOL,MAX,PSIZE;
 
 function softSprite(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
@@ -823,14 +775,13 @@ function initThree(){
   const srcDefs={
     kick:  new THREE.Vector3(-S*1.2, S*0.6, -6),
     x:     new THREE.Vector3( S*1.2, S*0.6, -11),
-    twitch:new THREE.Vector3(-S*0.5,-S*1.0, -4),
-    native:new THREE.Vector3( S*0.5,-S*1.0, -8)
+    twitch:new THREE.Vector3( S*0.0,-S*1.0, -6)
   };
   for(const k in srcDefs){const s=srcDefs[k];const mid=new THREE.Vector3((s.x+conv.x)*0.42,(s.y+conv.y)*0.44,(s.z+conv.z)*0.5-5);
     samples[k]=new THREE.CatmullRomCurve3([s,mid,conv]).getSpacedPoints(SAMP);}
   uSamples=new THREE.CatmullRomCurve3([conv.clone(),new THREE.Vector3(2,S*0.34,-9),new THREE.Vector3(-3,S*0.82,-15),new THREE.Vector3(1,S*1.3,-24)]).getSpacedPoints(SAMP);
 
-  ['kick','x','twitch','native'].forEach(k=>{
+  ['kick','x','twitch'].forEach(k=>{
     const tube=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(samples[k]),80,0.8,8,false);
     scene.add(new THREE.Mesh(tube,new THREE.MeshBasicMaterial({color:new THREE.Color(PC[k][0],PC[k][1],PC[k][2]),transparent:true,opacity:0.045,blending:THREE.AdditiveBlending,depthWrite:false})));
   });
@@ -839,10 +790,10 @@ function initThree(){
 
   AMBIENT=small?320:560; POOL=small?180:340; MAX=AMBIENT+POOL; PSIZE=small?1.15:1.45;
   posArr=new Float32Array(MAX*3); colArr=new Float32Array(MAX*3);
-  const pk=['kick','x','twitch','native'];
+  const pk=['kick','x','twitch'];
   for(let i=0;i<MAX;i++){
     const amb=i<AMBIENT;
-    parts.push({platform:amb?pk[i%4]:'kick',t:amb?Math.random():0,
+    parts.push({platform:amb?pk[i%3]:'kick',t:amb?Math.random():0,
       speed:amb?(small?0.0050:0.0058)*(0.7+Math.random()*0.7):0,
       ox:Math.random()*2-1,oy:Math.random()*2-1,oz:Math.random()*2-1,
       mag:(small?2.4:3.0)*(0.4+Math.random()*0.9),sh:Math.random()*6.28,
