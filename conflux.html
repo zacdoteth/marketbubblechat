@@ -469,6 +469,35 @@ function setConnState(ok) {
 }
 function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g, ':$1:'); }
 
+onServerMessage.push((m) => {
+  const p = m.platform === 'mb' ? 'native' : m.platform;
+  bump(p);
+  addRow({
+    platform: p,
+    channel: m.streamId || 'MB',
+    username: m.displayName || m.username,
+    message: cleanText(m.text),
+    streamer: m.streamer || '',
+    mine: false,
+  });
+  STATE.counts[p] = (STATE.counts[p]||0) + 1;
+  const cnt = document.getElementById('cnt-'+p); if(cnt) cnt.textContent = STATE.counts[p];
+});
+onSnapshot.push((snap) => {
+  feed.innerHTML = '';
+  snap.messages.forEach(m => {
+    const p = m.platform === 'mb' ? 'native' : m.platform;
+    addRow({
+      platform: p,
+      channel: m.streamId || 'MB',
+      username: m.displayName || m.username,
+      message: cleanText(m.text),
+      streamer: m.streamer || '',
+    });
+  });
+  feed.scrollTop = feed.scrollHeight;
+});
+
 /* ---------- streamers + content ---------- */
 const STREAMERS=['@Banks','@Z'];
 const NAMES=['user91','user1337','user67','0xWhale','degenmaxi','satoshi_jr','gm_ser','vibes_only','pumpamentalist',
@@ -510,14 +539,14 @@ feed.addEventListener('touchstart',()=>hovering=true,{passive:true});
 feed.addEventListener('touchend',()=>setTimeout(()=>hovering=false,1500),{passive:true});
 
 /* ---------- render row (who: streamer + platform) ---------- */
-function addRow({platform,channel,username,message,live,golden,mine}){
+function addRow({platform,channel,username,message,streamer,live,golden,mine}){
   const hot=HOT_RE.test(message);
   const row=document.createElement('div');
   row.className='row in m-'+platform+(hot?' hot':'')+(golden?' golden':'')+(mine?' mine':'');
   row.dataset.p=platform; row.dataset.ch=channel; if(mine) row.dataset.mine='1';
   row.innerHTML=
     `<span class="meta"><span class="uname"></span>`+(live?'<span class="lv"></span>':'')+`</span>`+
-    `<span class="badge">${ICONS[platform]}<span class="h">${LABEL[platform]}</span></span>`+
+    `<span class="badge">${ICONS[platform]}<span class="h">${LABEL[platform]}${streamer?(' · '+esc(streamer)):''}</span></span>`+
     `<span class="time">${clock()}</span>`+
     `<span class="msg"></span>`;
   row.querySelector('.uname').textContent=username;
@@ -621,23 +650,6 @@ setInterval(()=>{
   document.getElementById('bcViewers').textContent=vstr;
   paintViewers();
 },120);
-
-/* ---------- emitter ---------- */
-const WEIGHT=[['kick',.24],['x',.26],['twitch',.30],['native',.20]];
-function pickPlatform(){let r=Math.random();for(const[p,w]of WEIGHT){if((r-=w)<0)return p;}return 'twitch';}
-function emitDemo(){
-  const platform=pickPlatform(); bump(platform);
-  const golden=goldenHour()||Math.random()<0.02;
-  let message;
-  if(golden) message=pick(GOLD_MSGS);
-  else if(surgeOn&&Math.random()<0.6) message=pick(HYPE_MSGS);
-  else message=pick(MSGS);
-  const channel = platform==='native' ? 'MB' : pick(STREAMERS);
-  addRow({platform,channel,username:pick(NAMES),message,golden});
-}
-let timer=null;
-function tick(){ if(!STATE.paused && !reading() && !document.hidden) emitDemo();
-  timer=setTimeout(tick, Math.max(140, 1000/rate*(0.7+Math.random()*0.6))); }
 
 /* ---------- scroll + jump ---------- */
 feed.addEventListener('scroll',()=>{ STATE.stuck=feed.scrollTop+feed.clientHeight>=feed.scrollHeight-44;
@@ -892,15 +904,8 @@ function loop(now){
 
 /* ---------- boot ---------- */
 try{ if(THREE_OK) initThree(); }catch(e){ THREE_OK=false; console.warn('3D disabled:',e); }
-paintViewers();
-for(let i=0;i<6;i++){const platform=pickPlatform();bump(platform);
-  const ch=platform==='native'?'MB':pick(STREAMERS), nm=pick(NAMES);
-  const row=document.createElement('div');row.className='row m-'+platform;row.dataset.p=platform;row.dataset.ch=ch;
-  row.innerHTML=`<span class="meta"><span class="uname"></span></span><span class="badge">${ICONS[platform]}<span class="h">${LABEL[platform]}</span></span><span class="time">${clock()}</span><span class="msg"></span>`;
-  row.querySelector('.uname').textContent=nm; row.querySelector('.msg').textContent=pick(MSGS); feed.appendChild(row);}
-feed.scrollTop=feed.scrollHeight;
 setTimeout(confluencePulse, 420);
-setTimeout(tick, 1500);
+connectBackend();
 
 /* boot title screen → reveal the live dashboard */
 const bootEl=document.getElementById('boot');
