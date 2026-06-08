@@ -491,8 +491,6 @@ onServerMessage.push((m) => {
     streamer: m.streamer || '',
     mine: false,
   });
-  STATE.counts[p] = (STATE.counts[p]||0) + 1;
-  const cnt = document.getElementById('cnt-'+p); if(cnt) cnt.textContent = STATE.counts[p];
 });
 onSnapshot.push((snap) => {
   feed.innerHTML = '';
@@ -657,7 +655,6 @@ setInterval(()=>{
   const now=performance.now();
   STATE.emitTimes=STATE.emitTimes.filter(t=>now-t<1000);
   const measured=STATE.emitTimes.length;
-  document.getElementById('rate').textContent=measured;
   const target=Math.min(1,measured/4);
   hype+=(target-hype)*0.10; riverHeat=hype;
   hypeFill.style.width=(hype*100).toFixed(1)+'%';
