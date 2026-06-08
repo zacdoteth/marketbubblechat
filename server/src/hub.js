@@ -15,6 +15,7 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
   const agg = createAggregator({ max: 100 });
   const stats = createStats();
   const running = new Map(); // streamId -> ingester instance
+  const kickByBroadcaster = new Map(); // broadcasterUserId(string) -> streamId
 
   function emit(fields) {
     const msg = makeMessage(fields);
@@ -39,6 +40,7 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
         onMessage: (m) => emit({ ...m, streamId: stream.id, platform: parsed.platform, streamer: streamerLabel || '' }),
         onViewers: (n) => stats.setViewers(stream.id, n),
         onStatus: (s) => { registry.setStatus(stream.id, s); pushStreams(); },
+        onResolved: (bid) => { kickByBroadcaster.set(String(bid), stream.id); },
       });
       running.set(stream.id, ing);
       ing.start();
@@ -51,7 +53,15 @@ export function createHub({ onMessage, onStats, onStreams, now = () => Date.now(
       if (ing) { try { ing.stop(); } catch {} running.delete(id); }
       registry.remove(id);
       stats.removeStream(id);
+      for (const [bid, sid] of kickByBroadcaster) { if (sid === id) kickByBroadcaster.delete(bid); }
       pushStreams();
+    },
+
+    handleKickChat(broadcasterUserId, fields) {
+      const streamId = kickByBroadcaster.get(String(broadcasterUserId));
+      if (!streamId) return;
+      const s = registry.get(streamId);
+      emit({ ...fields, streamId, platform: 'kick', streamer: s?.streamerLabel || '' });
     },
   };
 }
