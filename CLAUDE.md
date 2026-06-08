@@ -1,6 +1,8 @@
 # CONFLUX — ZCADE BUILD CODEX // HANDOFF TO CLAUDE CODE
 
-> Save me as `CLAUDE.md` in the repo root so you auto-load every session. Single deliverable: **`conflux.html`** (one self-contained file). Deploy target: **Vercel**. Challenge deadline: **June 11**.
+> **⚠️ SUPERSEDED — read the spec first.** This codex describes the original single-file *simulation* (viewer-centric, native marketbubble.com chat, Watch as the landing). The shipped product is different: a **creator-centric, all-real aggregator** of the creators' own **X + Kick + Twitch** chats — a Node backend (`server/`) + the `conflux.html` frontend, no native/MB room, no login. The authoritative architecture is **`docs/superpowers/specs/2026-06-08-conflux-realtime-aggregator-architecture-design.md`** (see §16 for the current revision). Sections below are kept for the original design lore/brand tokens only.
+
+> Original brief: Single deliverable: **`conflux.html`** (one self-contained file). Deploy target: **Vercel**. Challenge deadline: **June 11**.
 
 ---
 

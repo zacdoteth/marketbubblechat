@@ -16,7 +16,8 @@ export class KickIngester {
       this.cb.onResolved?.(info.broadcasterUserId);
       this.cb.onViewers(info.viewerCount || 0);
       this.cb.onStatus(info.isLive ? 'live' : 'offline');
-      try { this.subIds = await subscribeChat(info.broadcasterUserId); } catch (e) { /* chat sub may fail; viewers still work */ }
+      try { this.subIds = await subscribeChat(info.broadcasterUserId); }
+      catch (e) { console.warn('[kick] chat webhook subscribe failed for', this.slug, '-', e.message, '(viewer counts still work; check KICK creds + app Webhook URL)'); }
       this.timer = setInterval(() => this._poll(), 20_000);
     } catch (e) { this.cb.onStatus('error'); }
   }

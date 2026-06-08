@@ -264,7 +264,7 @@ footer b{color:var(--gold-deep);font-weight:400}
 .chan:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 </style>
 </head>
-<body class="mode-watch">
+<body class="mode-dashboard">
 <div class="boot" id="boot">
   <svg class="boot-mark" viewBox="0 0 40 40" fill="none">
     <path class="pk" d="M5 9 L20 21" stroke="#53FC18" stroke-width="2.4" stroke-linecap="round"/>
@@ -298,8 +298,8 @@ footer b{color:var(--gold-deep);font-weight:400}
   </div>
 
   <div class="viewseg" role="group" aria-label="View mode">
-    <button data-view="dashboard" id="vDash" aria-label="Dashboard view" aria-pressed="false"></button>
-    <button data-view="watch" class="on" id="vWatch" aria-label="Watch view" aria-pressed="true"></button>
+    <button data-view="dashboard" class="on" id="vDash" aria-label="Dashboard view" aria-pressed="true"></button>
+    <button data-view="watch" id="vWatch" aria-label="Watch view" aria-pressed="false"></button>
   </div>
 
   <div class="hud">
