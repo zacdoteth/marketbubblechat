@@ -206,6 +206,10 @@ body.mode-watch .panel-foot{display:none}
 .connect-pill.error .st{background:#FF4D4D}
 .connect-pill .rm{cursor:pointer;color:var(--muted)}
 .connect-pill .rm:hover{color:var(--ink)}
+.vbreakdown{position:absolute;z-index:40;background:rgba(10,9,11,.96);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--ink);box-shadow:0 18px 50px -20px #000;display:none;max-width:260px}
+.vbreakdown.show{display:block}
+.vbreakdown b{color:var(--gold-br)}
+.vbreakdown .r{display:flex;justify-content:space-between;gap:14px;padding:2px 0}
 
 /* native composer */
 .composer{display:flex;align-items:center;gap:9px;padding:11px 14px;border-top:1px solid var(--line-soft);position:relative;z-index:2;background:rgba(63,208,192,.03)}
@@ -309,8 +313,9 @@ footer b{color:var(--gold-deep);font-weight:400}
   <div class="hud">
     <div class="vcount"><span class="eye" id="eyeIcon"></span><b id="viewers">0</b><span class="vlbl">watching</span></div>
     <div class="live"><span class="dot"></span>LIVE</div>
-    <div class="stat"><b id="rate">0</b><span>msg/sec</span></div>
+    <div class="stat"><b id="rate">0</b><span>msg/min</span></div>
   </div>
+  <div class="vbreakdown" id="vbreakdown"></div>
 </header>
 
 <main class="app">
@@ -597,23 +602,34 @@ function bump(platform){
   STATE.emitTimes.push(performance.now());
 }
 
-/* ---------- combined viewer counts ---------- */
-const VIEW={twitch:5200,x:3100,kick:4800,native:1180};
-let shownViewers=combined();
-function combined(){return VIEW.twitch+VIEW.x+VIEW.kick+VIEW.native;}
-setInterval(()=>{                                 // viewers drift, spike on surge
-  const f=surgeOn?(1+(Math.random()*0.035+0.008)):1;
-  VIEW.twitch=Math.max(900,VIEW.twitch*f+(Math.random()*70-34));
-  VIEW.x     =Math.max(700,VIEW.x*f     +(Math.random()*60-29));
-  VIEW.kick  =Math.max(800,VIEW.kick*f  +(Math.random()*66-32));
-  VIEW.native=Math.max(300,VIEW.native  +(Math.random()*24-11)+(surgeOn?14:0));
-},1600);
-function paintViewers(){
-  document.getElementById('v-twitch').textContent=kfmt(VIEW.twitch);
-  document.getElementById('v-x').textContent=kfmt(VIEW.x);
-  document.getElementById('v-kick').textContent=kfmt(VIEW.kick);
-  document.getElementById('v-native').textContent=kfmt(VIEW.native);
-}
+/* ---------- real viewer stats (from backend) ---------- */
+let latestStats = null;
+function kfmt2(n){ n=Number(n)||0; return n>=1000?(n/1000).toFixed(1)+'K':String(Math.round(n)); }
+onStats.push((st)=>{
+  latestStats = st;
+  document.getElementById('viewers').textContent = (st.combined.viewers||0).toLocaleString();
+  document.getElementById('bcViewers').textContent = (st.combined.viewers||0).toLocaleString();
+  document.getElementById('rate').textContent = st.combined.msgsPerMin||0;
+  // per-platform footer pills
+  const pf = st.perPlatform||{};
+  setVB('v-kick', pf.kick); setVB('v-x', pf.x); setVB('v-twitch', pf.twitch);
+  document.getElementById('v-native').textContent = kfmt2((st.site&&st.site.viewers)||0);
+});
+function setVB(id, p){ const el=document.getElementById(id); if(el) el.textContent = kfmt2(p?p.viewers:0); }
+
+const vEl=document.getElementById('viewers'), vbd=document.getElementById('vbreakdown');
+vEl.parentElement.style.cursor='help';
+vEl.parentElement.addEventListener('mouseenter', ()=>{
+  if(!latestStats)return;
+  const rows=[];
+  for(const [id,s] of Object.entries(latestStats.perStream||{}))
+    rows.push(`<div class="r"><span>${s.platform}${s.streamer?(' · '+s.streamer):''}</span><b>${kfmt2(s.viewers)}</b></div>`);
+  rows.push(`<div class="r"><span>site (native)</span><b>${kfmt2(latestStats.site.viewers)}</b></div>`);
+  vbd.innerHTML = `<div class="r"><span><b>combined</b></span><b>${(latestStats.combined.viewers||0).toLocaleString()}</b></div>`+rows.join('');
+  const r=vEl.getBoundingClientRect(); vbd.style.top=(r.bottom+8)+'px'; vbd.style.left=Math.max(8,r.left-40)+'px';
+  vbd.classList.add('show');
+});
+vEl.parentElement.addEventListener('mouseleave', ()=>vbd.classList.remove('show'));
 
 /* ---------- hype cycle ---------- */
 let rate=0.55, surgeOn=false, surgeUntil=0, hype=0, riverHeat=0, goldenUntil=0, bloomUntil=0, bloomDur=750;
@@ -649,12 +665,6 @@ setInterval(()=>{
   surgeChip.classList.toggle('show',surgeOn); ghChip.classList.toggle('show',goldenHour());
   document.body.classList.toggle('reading',reading()&&!STATE.paused);
   flash.classList.toggle('warm',goldenHour());
-  // viewer count ease + paint
-  shownViewers+=(combined()-shownViewers)*0.08;
-  const vstr=Math.round(shownViewers).toLocaleString();
-  document.getElementById('viewers').textContent=vstr;
-  document.getElementById('bcViewers').textContent=vstr;
-  paintViewers();
 },120);
 
 /* ---------- scroll + jump ---------- */
