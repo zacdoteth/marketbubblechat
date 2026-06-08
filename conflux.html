@@ -56,6 +56,8 @@ header{position:relative;z-index:3;display:flex;align-items:center;justify-conte
 .vcount b{font-size:21px;color:var(--gold-br);font-weight:700;letter-spacing:.01em;font-variant-numeric:tabular-nums}
 .vcount .vlbl{font-size:8.5px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
 .live{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.2em;color:var(--ink)}
+body.disconnected .live{opacity:.4}
+body.disconnected .live::after{content:" · reconnecting";font-size:9px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:#FF4D4D;box-shadow:0 0 0 0 rgba(255,77,77,.5);animation:pulse 2.2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,77,77,.5)}70%{box-shadow:0 0 0 7px rgba(255,77,77,0)}100%{box-shadow:0 0 0 0 rgba(255,77,77,0)}}
 .stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;gap:2px}
@@ -437,6 +439,35 @@ const ICON = {
   s('vDash',ICON.grid+'Dashboard'); s('vWatch',ICON.play+'Watch');
   s('bcCtrls',ICON.vol+ICON.gear+ICON.full);
 })();
+
+/* ---------- backend connection (the real feed) ---------- */
+const BACKEND_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'ws://localhost:8787'
+  : 'wss://REPLACE_WITH_RAILWAY_HOST';   // set at deploy time (Task 24)
+let backendWS = null, backendReady = false;
+const onSnapshot = [], onServerMessage = [], onStats = [], onStreams = [];
+function connectBackend() {
+  try {
+    const ws = new WebSocket(BACKEND_URL);
+    backendWS = ws;
+    ws.onopen = () => { backendReady = true; setConnState(true); };
+    ws.onmessage = (e) => {
+      let m; try { m = JSON.parse(e.data); } catch { return; }
+      if (m.type === 'snapshot') { onSnapshot.forEach(f => f(m)); }
+      else if (m.type === 'message') { onServerMessage.forEach(f => f(m.message)); }
+      else if (m.type === 'stats') { onStats.forEach(f => f(m.stats)); }
+      else if (m.type === 'streams') { onStreams.forEach(f => f(m.streams)); }
+      else if (m.type === 'error') { console.warn('server:', m.error); }
+    };
+    ws.onclose = () => { backendReady = false; setConnState(false); setTimeout(connectBackend, 2000); };
+    ws.onerror = () => { try { ws.close(); } catch {} };
+  } catch { setConnState(false); setTimeout(connectBackend, 2000); }
+}
+function sendBackend(obj) { if (backendReady) try { backendWS.send(JSON.stringify(obj)); } catch {} }
+function setConnState(ok) {
+  document.body.classList.toggle('disconnected', !ok);
+}
+function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g, ':$1:'); }
 
 /* ---------- streamers + content ---------- */
 const STREAMERS=['@Banks','@Z'];
