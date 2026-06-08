@@ -197,6 +197,15 @@ body.mode-watch .panel-foot{display:none}
 .vbreak .v{display:flex;align-items:center;gap:5px;color:var(--muted)}
 .vbreak .v i{width:7px;height:7px;border-radius:50%}
 .vbreak .v b{font-weight:700;color:var(--ink)}
+#connectUrl{flex:1;min-width:150px;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-family:'Space Mono',monospace;font-size:11px;padding:7px 10px;outline:none}
+#connectWho{width:110px;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-family:'Space Mono',monospace;font-size:11px;padding:7px 10px;outline:none}
+.connect-list{display:flex;gap:6px;flex-wrap:wrap}
+.connect-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:7px;font-family:'Space Mono',monospace;font-size:10px;border:1px solid var(--line);color:var(--ink)}
+.connect-pill .st{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.connect-pill.live .st{background:#53FC18;box-shadow:0 0 6px #53FC18}
+.connect-pill.error .st{background:#FF4D4D}
+.connect-pill .rm{cursor:pointer;color:var(--muted)}
+.connect-pill .rm:hover{color:var(--ink)}
 
 /* native composer */
 .composer{display:flex;align-items:center;gap:9px;padding:11px 14px;border-top:1px solid var(--line-soft);position:relative;z-index:2;background:rgba(63,208,192,.03)}
@@ -367,15 +376,12 @@ footer b{color:var(--gold-deep);font-weight:400}
     </div>
 
     <div class="panel-foot">
-      <div class="sources">
-        <span class="lbl">Live</span>
-        <span class="src btn s-twitch" id="twPill">Twitch <span class="tag">▸ connect</span></span>
-        <span class="tw-form" id="twForm">
-          <input type="text" id="tw-ch" placeholder="channel" autocomplete="off" spellcheck="false">
-          <button id="tw-go">Go</button>
-        </span>
-        <span class="src demo s-x" title="X live — simulated in this demo">X <span class="tag">demo</span></span>
-        <span class="src demo s-kick" title="Kick live (Pusher) — simulated in this demo">Kick <span class="tag">demo</span></span>
+      <div class="sources" id="connectPanel">
+        <span class="lbl">Connect</span>
+        <input type="text" id="connectUrl" placeholder="paste twitch / kick / x link…" autocomplete="off" spellcheck="false">
+        <input type="text" id="connectWho" placeholder="who (Banks/Z)" autocomplete="off" spellcheck="false" maxlength="16">
+        <button class="src btn s-twitch" id="connectGo">+ Add stream</button>
+        <span id="connectList" class="connect-list"></span>
       </div>
       <div class="vbreak">
         <span class="v"><i style="background:#53FC18"></i><b id="v-kick">0</b></span>
@@ -759,33 +765,28 @@ soundBtn.addEventListener('click',async()=>{
   audioOn=!audioOn; soundBtn.innerHTML=audioOn?ICON.soundOn:ICON.soundOff; soundBtn.classList.toggle('active',audioOn);
 });
 
-/* ---------- Twitch live (anonymous IRC over WebSocket) ---------- */
-const twPill=document.getElementById('twPill'), twForm=document.getElementById('twForm');
-twPill.addEventListener('click',()=>{const o=twForm.classList.toggle('open');if(o)document.getElementById('tw-ch').focus();});
-let twWS=null;
-function connectTwitch(channel){
-  channel=channel.toLowerCase().replace(/[^a-z0-9_]/g,'');
-  if(!channel){twPill.querySelector('.tag').textContent='▸ enter channel';return;}
-  try{if(twWS)twWS.close();}catch(e){}
-  twPill.querySelector('.tag').textContent='connecting…';
-  try{
-    const ws=new WebSocket('wss://irc-ws.chat.twitch.tv:443'); twWS=ws;
-    ws.onopen=()=>{ws.send('CAP REQ :twitch.tv/tags');ws.send('PASS SCHMOOPIIE');ws.send('NICK justinfan'+((Math.random()*99999)|0));ws.send('JOIN #'+channel);
-      twPill.querySelector('.tag').textContent='● live'; twForm.classList.remove('open');};
-    ws.onmessage=e=>e.data.split('\r\n').forEach(line=>{
-      if(!line)return; if(line.startsWith('PING')){ws.send('PONG :tmi.twitch.tv');return;}
-      if(line.indexOf('PRIVMSG')>-1){
-        const nm=line.match(/display-name=([^;]*)/),um=line.match(/:([^!]+)!/),mm=line.match(/PRIVMSG #[^ ]+ :(.*)$/);
-        const username=(nm&&nm[1])||(um&&um[1])||'viewer', message=mm?mm[1].trim():'';
-        if(message){bump('twitch');addRow({platform:'twitch',channel:'#'+channel,username,message,live:true});}
-      }
-    });
-    ws.onerror=()=>{twPill.querySelector('.tag').textContent='unavailable · demo';};
-    ws.onclose=()=>{if(twWS===ws)twWS=null;};
-  }catch(err){twPill.querySelector('.tag').textContent='unavailable · demo';}
+/* ---------- connect panel (paste links across platforms) ---------- */
+const connectUrl=document.getElementById('connectUrl'), connectWho=document.getElementById('connectWho'),
+  connectGo=document.getElementById('connectGo'), connectList=document.getElementById('connectList');
+function doConnect(){
+  const url=connectUrl.value.trim(); if(!url)return;
+  sendBackend({ type:'connectStream', url, streamerLabel: connectWho.value.trim() });
+  connectUrl.value='';
 }
-document.getElementById('tw-go').addEventListener('click',()=>connectTwitch(document.getElementById('tw-ch').value));
-document.getElementById('tw-ch').addEventListener('keydown',e=>{if(e.key==='Enter')connectTwitch(e.target.value);});
+connectGo.addEventListener('click', doConnect);
+connectUrl.addEventListener('keydown', e=>{ if(e.key==='Enter') doConnect(); });
+function renderStreams(streams){
+  connectList.innerHTML='';
+  streams.forEach(s=>{
+    const el=document.createElement('span');
+    el.className='connect-pill '+(s.status==='live'?'live':(s.status==='error'?'error':''));
+    el.innerHTML=`<span class="st"></span>${esc(s.platform)}·${esc(s.channel)}${s.streamerLabel?(' ('+esc(s.streamerLabel)+')'):''} <span class="rm" data-id="${s.id}">&#x2715;</span>`;
+    connectList.appendChild(el);
+  });
+}
+connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id}); });
+onStreams.push(renderStreams);
+onSnapshot.push(snap=>renderStreams(snap.streams));
 
 /* ============================================================
    THREE.JS — the confluence (4 streams now)
