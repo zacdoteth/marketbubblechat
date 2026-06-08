@@ -441,11 +441,24 @@ const BACKEND_URL = (location.hostname === 'localhost' || location.hostname === 
   : 'wss://REPLACE_WITH_RAILWAY_HOST';   // set at deploy time (Task 24)
 let backendWS = null, backendReady = false;
 const onSnapshot = [], onServerMessage = [], onStats = [], onStreams = [];
+let reconnectDelay = 1000 + Math.random() * 1000;   // initial 1-2s with jitter
+const RECONNECT_MAX = 30000;
+function scheduleReconnect() {
+  setTimeout(connectBackend, reconnectDelay);
+  reconnectDelay = Math.min(reconnectDelay * 1.5, RECONNECT_MAX);
+}
+let warnedPlaceholder = false;
 function connectBackend() {
+  if (BACKEND_URL.includes('REPLACE_WITH_')) {
+    if (!warnedPlaceholder) { warnedPlaceholder = true; console.error('[conflux] BACKEND_URL is still the deploy placeholder ('+BACKEND_URL+'). Replace it with the real backend host before deploying.'); }
+    setConnState(false);
+    scheduleReconnect();
+    return;
+  }
   try {
     const ws = new WebSocket(BACKEND_URL);
     backendWS = ws;
-    ws.onopen = () => { backendReady = true; setConnState(true); };
+    ws.onopen = () => { backendReady = true; setConnState(true); reconnectDelay = 1000 + Math.random() * 1000; };
     ws.onmessage = (e) => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       if (m.type === 'snapshot') { onSnapshot.forEach(f => f(m)); }
@@ -454,9 +467,9 @@ function connectBackend() {
       else if (m.type === 'streams') { onStreams.forEach(f => f(m.streams)); }
       else if (m.type === 'error') { console.warn('server:', m.error); }
     };
-    ws.onclose = () => { backendReady = false; setConnState(false); setTimeout(connectBackend, 2000); };
+    ws.onclose = () => { backendReady = false; setConnState(false); scheduleReconnect(); };
     ws.onerror = () => { try { ws.close(); } catch {} };
-  } catch { setConnState(false); setTimeout(connectBackend, 2000); }
+  } catch { setConnState(false); scheduleReconnect(); }
 }
 function sendBackend(obj) { if (backendReady) try { backendWS.send(JSON.stringify(obj)); } catch {} }
 function setConnState(ok) {
@@ -583,7 +596,7 @@ vEl.parentElement.addEventListener('mouseenter', ()=>{
   if(!latestStats)return;
   const rows=[];
   for(const [id,s] of Object.entries(latestStats.perStream||{}))
-    rows.push(`<div class="r"><span>${s.platform}${s.streamer?(' · '+s.streamer):''}</span><b>${kfmt2(s.viewers)}</b></div>`);
+    rows.push(`<div class="r"><span>${esc(String(s.platform||''))}${s.streamer?(' · '+esc(String(s.streamer))):''}</span><b>${kfmt2(s.viewers)}</b></div>`);
   vbd.innerHTML = `<div class="r"><span><b>combined</b></span><b>${(latestStats.combined.viewers||0).toLocaleString()}</b></div>`+rows.join('');
   const r=vEl.getBoundingClientRect(); vbd.style.top=(r.bottom+8)+'px'; vbd.style.left=Math.max(8,r.left-40)+'px';
   vbd.classList.add('show');
@@ -694,13 +707,15 @@ addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.ke
 let audioReady=false, audioOn=false, synth=null, lastNoteAt=0;
 const SCALE={kick:['C5','D5','E5','G5','A5'],x:['G4','A4','C5','D5','E5'],twitch:['C4','D4','E4','G4','A4']};
 async function initAudio(){
-  if(audioReady||typeof Tone==='undefined')return;
+  if(audioReady)return true;
+  if(typeof Tone==='undefined')return false;
   try{
     await Tone.start();
     const fv=new Tone.Freeverb(0.82,2600); fv.wet.value=0.3; fv.toDestination();
     synth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.004,decay:0.22,sustain:0,release:0.4}});
     synth.volume.value=-13; synth.connect(fv); Tone.Destination.volume.value=-5; audioReady=true;
-  }catch(e){ audioReady=false; }
+    return true;
+  }catch(e){ audioReady=false; synth=null; console.warn('[audio] init failed:', (e&&e.message)||e); return false; }
 }
 function playNote(platform,golden){
   if(!audioOn||!audioReady||!synth)return;
@@ -713,16 +728,22 @@ function playSurge(){ if(!audioOn||!audioReady||!synth)return; try{synth.trigger
 const soundBtn=document.getElementById('sound');
 soundBtn.addEventListener('click',async()=>{
   if(typeof Tone==='undefined'){ soundBtn.title='audio unavailable'; return; }
-  if(!audioReady) await initAudio();
+  if(!audioReady){ const ok=await initAudio(); if(!ok){ soundBtn.title='audio unavailable'; return; } soundBtn.title='sound'; }
   audioOn=!audioOn; soundBtn.innerHTML=audioOn?ICON.soundOn:ICON.soundOff; soundBtn.classList.toggle('active',audioOn);
 });
 
 /* ---------- connect panel (paste links across platforms) ---------- */
 const connectUrl=document.getElementById('connectUrl'), connectWho=document.getElementById('connectWho'),
   connectGo=document.getElementById('connectGo'), connectList=document.getElementById('connectList');
+function controlToken(){
+  // creator opens the dashboard once with ?key=<token>; persisted so control survives reloads.
+  const k=new URLSearchParams(location.search).get('key');
+  if(k){ try{localStorage.setItem('conflux_ctl',k);}catch{} return k; }
+  try{ return localStorage.getItem('conflux_ctl')||''; }catch{ return ''; }
+}
 function doConnect(){
   const url=connectUrl.value.trim(); if(!url)return;
-  sendBackend({ type:'connectStream', url, streamerLabel: connectWho.value.trim() });
+  sendBackend({ type:'connectStream', url, streamerLabel: connectWho.value.trim(), token: controlToken() });
   connectUrl.value='';
 }
 connectGo.addEventListener('click', doConnect);
@@ -743,7 +764,7 @@ function renderStreams(streams){
     bcStreamers.textContent=unique.length?unique.join(' + '):'';
   }
 }
-connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id}); });
+connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id, token: controlToken()}); });
 onStreams.push(renderStreams);
 onSnapshot.push(snap=>renderStreams(snap.streams));
 

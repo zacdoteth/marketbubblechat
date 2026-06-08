@@ -9,13 +9,13 @@ export function makeMessage({ streamId = null, platform, streamer = '',
   return {
     id: 'm' + (++_seq),
     seq: 0,
-    streamId,
+    streamId: streamId ?? null,
     platform,
-    streamer,
+    streamer: streamer || '',          // coerce null → '' (default only catches undefined)
     username: name,
     displayName: displayName || name,
     color: color || PLATFORM_COLORS[platform] || '#ECE7DD',
     text: String(text ?? ''),
-    ts,
+    ts: ts ?? 0,                        // coerce null → 0 (guards downstream Date math)
   };
 }

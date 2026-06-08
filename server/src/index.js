@@ -1,29 +1,65 @@
 // server/src/index.js — http server (health + Kick webhook) + WS fan-out.
 import { createServer } from 'node:http';
-import { PORT } from './config.js';
+import { PORT, X_BEARER_TOKEN, KICK_CLIENT_ID, KICK_CLIENT_SECRET } from './config.js';
 import { startFanout } from './fanout.js';
 import { getKickPublicKey, verifyKickSignature, parseChatWebhook } from './ingesters/kickWebhook.js';
+
+const MAX_BODY_SIZE = 1024 * 1024; // 1MB — real Kick chat events are ~hundreds of bytes
+// idempotency: Kick retries deliveries; drop duplicates by Kick-Event-Message-Id.
+const recentKickMessageIds = new Set();
+const MAX_KICK_IDS = 5000;
 
 let hubRef = null;
 const server = createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/webhooks/kick') {
     const chunks = [];
-    req.on('data', c => chunks.push(c));
+    let total = 0;
+    let aborted = false;
+    req.on('data', c => {
+      if (aborted) return;
+      total += c.length;
+      if (total > MAX_BODY_SIZE) { aborted = true; try { res.writeHead(413); res.end('payload too large'); } catch {} req.destroy(); return; }
+      chunks.push(c);
+    });
     req.on('end', async () => {
+      if (aborted) return;
       const raw = Buffer.concat(chunks).toString('utf8');
       try {
         const messageId = req.headers['kick-event-message-id'];
         const timestamp = req.headers['kick-event-message-timestamp'];
         const signature = req.headers['kick-event-signature'];
-        // verify-if-possible, non-fatal (Kick sig scheme; do not drop chat if verification can't run)
-        try { const pk = await getKickPublicKey(); if (pk && signature) verifyKickSignature({ messageId, timestamp, body: raw, signature, publicKey: pk }); } catch {}
+        // idempotency: ack-and-skip a retry we've already processed.
+        if (messageId && recentKickMessageIds.has(messageId)) { res.writeHead(200); res.end('ok'); return; }
+        // Signature verification: when we have BOTH a public key and a signature, enforce it
+        // (reject forgeries). If the key can't be fetched or no signature is sent, fall back to
+        // best-effort (do not drop chat) — availability over strictness for this scheme.
+        try {
+          const pk = await getKickPublicKey();
+          if (pk && signature) {
+            const ok = verifyKickSignature({ messageId, timestamp, body: raw, signature, publicKey: pk });
+            if (!ok) { console.warn('[kick] webhook signature invalid; rejecting'); res.writeHead(401); res.end('invalid signature'); return; }
+          }
+        } catch (e) { console.warn('[kick] signature verification unavailable (allowing best-effort):', e.message); }
         const payload = JSON.parse(raw);
         const type = req.headers['kick-event-type'] || '';
         if (type === 'chat.message.sent' || payload?.content != null) {
           const m = parseChatWebhook(payload);
           if (hubRef && m.broadcasterUserId) hubRef.handleKickChat(m.broadcasterUserId, { username: m.username, text: m.text, ts: m.ts || Date.now() });
+          else if (!m.broadcasterUserId) console.warn('[kick] webhook chat dropped: no broadcaster_user_id; username:', m.username);
         }
-      } catch {}
+        // record only after successful processing so a failed parse can still be retried
+        if (messageId) {
+          recentKickMessageIds.add(messageId);
+          if (recentKickMessageIds.size > MAX_KICK_IDS) {
+            const keep = Array.from(recentKickMessageIds).slice(-Math.floor(MAX_KICK_IDS / 2));
+            recentKickMessageIds.clear();
+            for (const id of keep) recentKickMessageIds.add(id);
+          }
+        }
+      } catch (e) {
+        if (e instanceof SyntaxError) console.warn('[kick] malformed JSON in webhook body:', raw.slice(0, 200));
+        else console.error('[kick] webhook handler error:', e.message);
+      }
       res.writeHead(200); res.end('ok'); // always 200 so Kick doesn't retry-storm
     });
     return;
@@ -33,4 +69,31 @@ const server = createServer((req, res) => {
 });
 const { hub } = startFanout(server);
 hubRef = hub;
+
+// process-level guards: an unhandled error in a callback/timer must not silently kill the process.
+process.on('unhandledRejection', (reason) => { console.error('[fatal] unhandledRejection:', reason); });
+process.on('uncaughtException', (err) => { console.error('[fatal] uncaughtException:', err); });
+
+// startup provider availability — make missing creds visible instead of failing silently later.
+if (!X_BEARER_TOKEN) console.warn('[startup] X ingestion disabled: X_BEARER_TOKEN not set');
+if (!KICK_CLIENT_ID || !KICK_CLIENT_SECRET) console.warn('[startup] Kick ingestion disabled: KICK_CLIENT_ID or KICK_CLIENT_SECRET not set');
+
 server.listen(PORT, () => console.log('CONFLUX backend on :' + PORT));
+
+// graceful shutdown: unsubscribe Kick webhooks + close connections so we don't leak subscriptions.
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] ${signal} received, cleaning up...`);
+  const forceExit = setTimeout(() => process.exit(0), 5000);
+  forceExit.unref?.();
+  try {
+    const ids = hub.registry.list().map(s => s.id);
+    await Promise.all(ids.map(id => Promise.resolve(hub.disconnectStream(id)).catch(() => {})));
+  } catch {}
+  try { server.close(); } catch {}
+  process.exit(0);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

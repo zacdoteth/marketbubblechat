@@ -10,7 +10,7 @@ export function createStats() {
         streams.set(id, { platform: meta.platform, streamer: meta.streamer || '', viewers: 0, msgTimes: [] });
     },
     removeStream(id) { streams.delete(id); },
-    setViewers(id, n) { const s = streams.get(id); if (s) s.viewers = Number(n) || 0; },
+    setViewers(id, n) { const s = streams.get(id); if (s) { const v = Number(n); s.viewers = (Number.isFinite(v) && v >= 0) ? Math.floor(v) : 0; } },
     recordMessage(id, now) { const s = streams.get(id); if (s) s.msgTimes.push(now); },
     snapshot(now) {
       const perStream = {}, perPlatform = {}, perStreamer = {};

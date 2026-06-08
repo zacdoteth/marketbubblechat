@@ -2,11 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHub } from '../src/hub.js';
 
-test('connectStream rejects unsupported URL and snapshot returns empty arrays', () => {
+test('connectStream rejects unsupported URL and snapshot returns empty arrays', async () => {
   const hub = createHub({ onMessage: () => {}, onStats: () => {}, onStreams: () => {}, now: () => 1000 });
 
-  // unsupported platform returns an error object
-  const result = hub.connectStream('https://youtube.com/x', 'Banks');
+  // unsupported platform returns an error object (connectStream is async)
+  const result = await hub.connectStream('https://youtube.com/x', 'Banks');
   assert.ok(result.error, 'expected an error for unsupported URL');
 
   // snapshot shape is correct with no streams connected

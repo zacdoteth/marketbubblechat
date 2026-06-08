@@ -11,18 +11,36 @@ export class KickIngester {
   async start() {
     try {
       const info = await resolveKickChannel(this.slug);
-      if (!info?.broadcasterUserId) { this.cb.onStatus('error'); return; }
+      if (this.closed) return;
+      if (!info?.broadcasterUserId) {
+        console.warn(`[kick] failed to resolve channel: ${this.slug} (invalid/offline or rate-limited; chat will not be routed)`);
+        this.cb.onStatus('error');
+        return;
+      }
       this.broadcasterUserId = info.broadcasterUserId;
       this.cb.onResolved?.(info.broadcasterUserId);
       this.cb.onViewers(info.viewerCount || 0);
       this.cb.onStatus(info.isLive ? 'live' : 'offline');
       try { this.subIds = await subscribeChat(info.broadcasterUserId); }
-      catch (e) { console.warn('[kick] chat webhook subscribe failed for', this.slug, '-', e.message, '(viewer counts still work; check KICK creds + app Webhook URL)'); }
-      this.timer = setInterval(() => this._poll(), 20_000);
-    } catch (e) { this.cb.onStatus('error'); }
+      catch (e) {
+        console.warn('[kick] chat webhook subscribe failed for', this.slug, '-', e.message, '(viewer counts still work; check KICK creds + app Webhook URL)');
+        // chat is a core feature — surface the failure rather than pretending everything is fine
+        if (!this.closed) this.cb.onStatus('error');
+      }
+      if (!this.closed) this.timer = setInterval(() => this._poll(), 20_000);
+    } catch (e) {
+      console.warn(`[kick] error starting channel ${this.slug}: ${e.message} (chat unavailable)`);
+      if (!this.closed) this.cb.onStatus('error');
+    }
   }
   async _poll() {
-    try { const info = await resolveKickChannel(this.slug); if (info) { this.cb.onViewers(info.viewerCount || 0); this.cb.onStatus(info.isLive ? 'live' : 'offline'); } } catch {}
+    try {
+      const info = await resolveKickChannel(this.slug);
+      if (this.closed) return;
+      if (info) { this.cb.onViewers(info.viewerCount || 0); this.cb.onStatus(info.isLive ? 'live' : 'offline'); }
+    } catch (e) {
+      console.error(`[kick] poll failed for ${this.slug}: ${e.message}`);
+    }
   }
   async stop() { this.closed = true; clearInterval(this.timer); if (this.subIds) { try { await unsubscribe(this.subIds); } catch {} } }
 }

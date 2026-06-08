@@ -11,6 +11,8 @@ export async function resolveKickChannel(slug, fetchImpl = fetch) {
   let token = await getKickToken();
   let r = await fetchImpl(`${API}/channels?slug=${encodeURIComponent(slug)}`, { headers: headers(token) });
   if (r.status === 401) { _resetKickToken(); token = await getKickToken(true); r = await fetchImpl(`${API}/channels?slug=${encodeURIComponent(slug)}`, { headers: headers(token) }); }
+  // Rate-limited / permission-denied: degrade gracefully (keep last-known) instead of throwing.
+  if (r.status === 429 || r.status === 403) { console.warn(`[kick] ${r.status} (rate-limited or denied) resolving ${slug}`); return null; }
   if (!r.ok) throw new Error('kick channels ' + r.status);
   const j = await r.json();
   return mapChannel((j.data || [])[0]);
