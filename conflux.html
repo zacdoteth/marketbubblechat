@@ -701,11 +701,15 @@ document.querySelectorAll('.viewseg button').forEach(b=>b.addEventListener('clic
 
 /* ---------- native composer (marketbubble.com chat) ---------- */
 const compose=document.getElementById('compose');
+function myHandle(){
+  let h = localStorage.getItem('conflux_handle');
+  if(!h){ h = (prompt('Pick a chat name (no login):','')||'').trim().slice(0,24) || ('guest'+((Math.random()*9000+1000)|0)); localStorage.setItem('conflux_handle', h); }
+  return h;
+}
 function sendMine(){
   const t=compose.value.trim(); if(!t)return;
-  bump('native'); VIEW.native+=1;
-  addRow({platform:'native',channel:'MB',username:'you',message:t,mine:true});
-  compose.value=''; feed.scrollTop=feed.scrollHeight; STATE.stuck=true; jumpBtn.classList.remove('show');
+  sendBackend({ type:'post', handle: myHandle(), text: t });
+  compose.value='';   // the server will echo it back into the shared feed
 }
 document.getElementById('send').addEventListener('click',sendMine);
 compose.addEventListener('keydown',e=>{if(e.key==='Enter')sendMine();});
