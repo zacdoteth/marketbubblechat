@@ -280,3 +280,28 @@ All open items resolved — spec is implementation-ready.
 - Frontend never contains any platform secret — it talks only to our backend.
 - Only the **Bearer token** is needed (app-only auth for `search/recent`); Consumer Key/Secret are not deployed.
 - Credentials shared in plaintext during planning should be **regenerated after the challenge**.
+
+---
+
+## 16. REVISION 2026-06-08b — creator-centric + fully-official Kick
+
+Two decisions made during implementation supersede earlier sections.
+
+### 16.1 Creator-centric — remove the native MB room entirely
+CONFLUX is a **creator tool**, not a destination for site visitors. Decision: **remove the native/MB source completely** — no composer, no site-visitor posting, no MB chip, no MB/`mb` platform, no "site viewers" stat. The product **aggregates the creators' own X + Kick + Twitch chats** into one dashboard + a watch-mode visualization. This overrides Banks's original "native chat on marketbubble.com" item (§1.4) and the native-room design in §4.7, §5 (`mb`, `site`), §8.
+
+Net removals: `nativeRoom.js`, hub `postNative`/`dropConn`, fanout `post` handling + `setSiteViewers`, stats `site`, the frontend composer + MB chip + `v-native` + `mb→native` mapping.
+
+### 16.2 Kick — fully official API (free), drop the unofficial endpoint AND the Pusher socket
+The unofficial `/api/v2/channels/{slug}` lookup is Cloudflare-blocked from servers; **cycletls was verified non-viable** (returns HTTP 200 with empty bodies + frequent resets). Kick also does **not** push viewer counts over Pusher (verified: 22s, 0 events on 4 channel variants). The **official `/public/v1/` API is free and NOT Cloudflare-blocked** (confirmed by Kick eng in KickDevDocs #281, closed Nov 2025). New Kick architecture (app credentials only, no user login):
+
+- **Auth:** app token via `POST https://id.kick.com/oauth/token`, `grant_type=client_credentials`, `client_id`+`client_secret` (no scope). Token ~1h, not refreshable → re-request on expiry/401. Cache it.
+- **Channel resolve + live viewer count:** `GET https://api.kick.com/public/v1/channels?slug=<slug>` → `data[].broadcaster_user_id`, `data[].stream.is_live`, `data[].stream.viewer_count`. Batch up to 50 slugs per call. Poll every ~20s for live counts. Send a normal `User-Agent`; back off on 429/403.
+- **Chat:** official **webhook**. On connect, `POST https://api.kick.com/public/v1/events/subscriptions` with app token, body `{ events:[{name:"chat.message.sent",version:1}], method:"webhook", broadcaster_user_id:<id> }`. Kick POSTs `chat.message.sent` events to our **public callback** (`<PUBLIC_BASE_URL>/webhooks/kick`); verify the signature against the key from `GET /public/v1/public-key`. Parse the payload (`broadcaster.channel_slug`/broadcaster id, sender, content) → normalized message routed to the right stream by `broadcaster_user_id`. On disconnect, DELETE the subscription.
+- **Implications:** the chatroom_id and Pusher socket are gone. The webhook **requires a public HTTPS URL → testable only on Railway** (or a tunnel). The backend gains a webhook receiver route + a `broadcaster_user_id → streamId` routing map. The chat path is now per-source-isolated through one central webhook endpoint rather than a per-stream socket.
+
+### 16.3 New env vars
+`KICK_CLIENT_ID`, `KICK_CLIENT_SECRET` (gitignored `.env`, same handling as the X bearer — regenerate after the challenge), and `PUBLIC_BASE_URL` (the deployed backend origin, for the webhook callback).
+
+### 16.4 Cost unchanged
+Kick official API is **$0** (app token, viewer counts, and webhooks all free). Only X costs (~$5 demo). Total still well under $25.
