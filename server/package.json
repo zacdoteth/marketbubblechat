@@ -6,7 +6,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
-    "start": "node --env-file=.env src/index.js",
+    "start": "node src/index.js",
     "dev": "node --env-file=.env --watch src/index.js"
   },
   "dependencies": { "ws": "^8.18.0" }
