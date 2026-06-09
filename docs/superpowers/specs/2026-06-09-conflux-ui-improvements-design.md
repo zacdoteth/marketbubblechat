@@ -14,6 +14,8 @@
 
 - **Drop the streamer label entirely.** Remove the "who/label" input; pills show `platform · channel`; no per-person dimension anywhere.
 - **Detailed stats = a persistent left column** in Dashboard mode (uses the empty space beside the centered chat). Hidden in Watch mode (Watch stays the pure visualization).
+- **Keep msg/min** in the stats column (alongside viewers), per-platform and per-channel.
+- **Mute/show toggles at BOTH levels.** Platform toggles relocate to a prominent bar **below the "watching" counter** (each pill = platform name + live count + mute/show), replacing the old top filter chips AND the footer count-pills. Per-channel mute toggles live on each channel row in the stats column.
 
 ## Design
 
@@ -36,10 +38,18 @@
 - **Content, rendered from the `stats` event + the `streams` list (joined on `streamId`):**
   - **Combined:** big tabular number = `combined.viewers`; sub-line `combined.msgsPerMin` msg/min.
   - **By platform:** one row per platform that has ≥1 connected stream — color dot + name + `viewers` (kfmt) + `msg/min`. Order: Twitch, Kick, X.
-  - **By channel:** one row per connected stream — platform-color dot + `channel` + `viewers` + `msg/min` + a live/offline indicator (from `stream.status`).
+  - **By channel:** one row per connected stream — platform-color dot + `channel` + `viewers` + `msg/min` + a live/offline indicator (from `stream.status`) + a **mute toggle** (eye/eye-off SVG) that hides/shows just that channel's messages.
   - Empty state (no streams): "No streams yet — paste a link above to start."
 - Reuses existing `latestStats`, the `onStats` handler, and the `streams` list kept by `renderStreams`/`onSnapshot`. Add a `renderStats()` called on both `stats` and `streams` updates.
-- The existing header combined count + hover tooltip stay (harmless); the footer `.vbreak` per-platform pills are **removed** (superseded by the column) to avoid duplication.
+- The existing header combined count + hover tooltip stay (harmless).
+
+### 4. Platform toggle bar + filtering
+- **New `.platbar` strip directly below `<header>`** (above `.app`), visible in BOTH modes. Holds one pill per platform (Twitch, Kick, X): color dot + platform name + live viewer count (from `perPlatform`) + acts as the **mute/show toggle** (`aria-pressed`). This REPLACES the old `.filters .chip` block (removed from `.panel-head`) and the footer `.vbreak` count-pills (removed).
+- **Two filter dimensions in `STATE`:**
+  - `STATE.enabled[platform]` (existing) — platform mute, toggled by the `.platbar` pills.
+  - `STATE.streamMuted[streamId]` (new, default unmuted) — per-channel mute, toggled by the stats-column row toggle.
+- **`applyFilters()`** (single source of truth) shows a row iff `STATE.enabled[row.dataset.p]` **and** `!STATE.streamMuted[row.dataset.ch]` (rows already carry `dataset.p`=platform and `dataset.ch`=streamId). Re-scans all rows on any toggle; particle river gating stays platform-level (existing behavior).
+- Both the `.platbar` pills and the per-channel toggles reflect current mute state visually (dimmed/eye-off when muted).
 
 ## Data flow
 `streams` event → list of `{id, platform, channel, status}`. `stats` event → `{combined, perPlatform, perStream:{[id]:{viewers,msgsPerMin}}}`. `renderStats()` joins them: per-channel = each stream + `perStream[stream.id]`.
@@ -55,7 +65,8 @@
 - Mobile redesign beyond the stack/collapse rules above.
 
 ## Testing
-- Manual browser verification against the live backend (Playwright): add a valid live channel (pill `platform·channel`, stats column populates), add a bad URL (inline error), add an offline channel (inline "offline" note), connect 2 same-platform channels (per-channel + per-platform both correct), toggle Watch (column hides), check ≤820px stacking.
+- Manual browser verification against the live backend (Playwright): add a valid live channel (pill `platform·channel`, stats column populates), add a bad URL (inline error), add an offline channel (inline "offline" note), connect 2 same-platform channels (per-channel + per-platform both correct), toggle Watch (column hides, platbar stays), check ≤820px stacking.
+- **Toggles:** mute a platform pill → all its rows hide, its count still shows; mute one channel via its stats-row toggle → only that channel's rows hide (other same-platform channel stays); unmute restores; platform-mute + channel-mute compose correctly.
 - `grep -c "<script"` still `3`.
 
 ## Files
