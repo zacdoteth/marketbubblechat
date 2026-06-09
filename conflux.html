@@ -875,9 +875,12 @@ function showConnectMsg(msg,isErr){
 function clearConnectMsg(){showConnectMsg('',false);}
 const VALID_URL_RE=/(?:twitch\.tv|kick\.com|x\.com|twitter\.com)/i;
 function doConnect(){
-  const url=connectUrl.value.trim(); if(!url)return;
-  if(!VALID_URL_RE.test(url)){showConnectMsg('Paste a twitch.tv, kick.com, or x.com channel link.',true);return;}
+  const url=connectUrl.value.trim();
+  if(!url){ showConnectMsg('Paste a channel link first — e.g. twitch.tv/yourname',true); try{connectUrl.focus();}catch(e){} return; }
+  if(!VALID_URL_RE.test(url)){ showConnectMsg("That doesn't look like a twitch.tv / kick.com / x.com link.",true); return; }
+  if(typeof backendReady!=='undefined' && !backendReady){ showConnectMsg('Connecting to the server… give it a second and click again.',true); return; }
   sendBackend({ type:'connectStream', url, token: controlToken() });
+  showConnectMsg('Connecting '+url.replace(/^https?:\/\/(www\.)?/,'').replace(/\/+$/,'')+' …',false);
   connectUrl.value='';
 }
 connectGo.addEventListener('click', doConnect);
