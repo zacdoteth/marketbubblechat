@@ -34,7 +34,7 @@ test('BUG 3: Streamer label not escaped in vbreakdown HTML', () => {
   // User input in connectWho field:
   const maliciousLabel = '<img src=x onerror="alert(1)">';
   
-  // Flows through: hub.connectStream -> emit -> stats -> snapshot
+  // Flows through: room.connect -> pool fan-out -> stats -> snapshot
   // Frontend at line 586:
   // rows.push(`<div class="r"><span>${s.platform}${s.streamer?(' · '+s.streamer):''}</span>...`)
   // NOT ESCAPED!

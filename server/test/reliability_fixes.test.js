@@ -3,7 +3,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createStats } from '../src/stats.js';
-import { createHub } from '../src/hub.js';
+import { createRoom } from '../src/room.js';
+import { createIngesterPool } from '../src/ingesterPool.js';
+
+// Shared fakes for the ported room/pool tests
+function _fakeIngesters() {
+  const instances = [];
+  class Fake {
+    constructor(channel, cb) { this.channel = channel; this.cb = cb; this.stopped = false; instances.push(this); }
+    async start() { this.cb.onResolved?.('bid-' + this.channel); this.cb.onStatus('live'); this.cb.onViewers(1); }
+    async stop() { this.stopped = true; }
+  }
+  return { ingesters: { twitch: Fake, kick: Fake, x: Fake }, instances };
+}
+const _noopSched = { setTimer: (fn) => ({ fn }), clearTimer: () => {} };
 
 // --- stats.setViewers clamping (Infinity / NaN / negative / float) ---
 test('FIX stats.setViewers: clamps Infinity, NaN, null, negative to 0; floors floats', () => {
@@ -25,44 +38,44 @@ test('FIX stats.setViewers: clamps Infinity, NaN, null, negative to 0; floors fl
   assert.equal(round.perStream.s1.viewers, 0);
 });
 
-// --- hub: duplicate same platform+channel connect is de-duped (no zombie ingesters) ---
-test('FIX hub.connectStream: same platform+channel returns existing stream (dedupe)', async () => {
-  const hub = createHub({ onMessage: () => {}, onStats: () => {}, onStreams: () => {}, now: () => 0 });
-  const a = await hub.connectStream('https://x.com/elonmusk', 'Elon');
-  const b = await hub.connectStream('https://x.com/elonmusk', 'Elon again');
+// --- room: duplicate same platform+channel connect is de-duped (no zombie ingesters) ---
+test('FIX room.connect: same platform+channel returns existing stream (dedupe)', async () => {
+  const { ingesters, instances } = _fakeIngesters();
+  const pool = createIngesterPool({ ingesters, ..._noopSched });
+  const room = createRoom({ pool, send: () => {}, now: () => 0 });
+  const a = await room.connect('https://x.com/elonmusk');
+  const b = await room.connect('https://x.com/elonmusk');
   assert.ok(a.stream, 'first connect creates a stream');
   assert.equal(b.stream.id, a.stream.id, 'second connect reuses the same stream id');
-  assert.equal(hub.registry.list().length, 1, 'only one stream registered');
-  await hub.disconnectStream(a.stream.id);
+  assert.equal(room.snapshot().streams.length, 1, 'only one stream registered');
+  assert.equal(instances.length, 1, 'only one ingester started');
 });
 
-// --- hub: handleKickChat fans out to all streams sharing a broadcaster id, and ignores dead ids ---
-test('FIX hub.handleKickChat: routes to mapped stream, guards against removed streams', async () => {
+// --- pool: routeKickChat routes to mapped room, drops unknown broadcaster ---
+test('FIX pool.routeKickChat: routes to mapped room, drops unknown broadcaster', async () => {
+  const { ingesters } = _fakeIngesters();
+  const pool = createIngesterPool({ ingesters, ..._noopSched });
   const got = [];
-  const hub = createHub({ onMessage: (m) => got.push(m), onStats: () => {}, onStreams: () => {}, now: () => 0 });
-
-  // Simulate the onResolved mapping the way the ingester would, then emit.
-  // We register a kick stream directly via the registry + the public mapping path.
-  const s = await hub.connectStream('https://kick.com/somebody', 'Somebody');
-  // Manually wire the broadcaster mapping by invoking the same internal map the ingester uses.
-  // Since onResolved is internal, we exercise handleKickChat for an UNKNOWN broadcaster first:
-  hub.handleKickChat('999999', { username: 'u', text: 'should be dropped', ts: 1 });
+  const room = createRoom({ pool, send: (o) => { if (o.type === 'message') got.push(o.message); }, now: () => 0 });
+  await room.connect('https://kick.com/somebody'); // resolves 'bid-somebody'
+  pool.routeKickChat('999999', { username: 'u', text: 'dropped', ts: 1 }); // unknown -> drop
   assert.equal(got.length, 0, 'unknown broadcaster -> no emit (no crash)');
-
-  // And a removed stream must not produce an emit even if a stale mapping existed.
-  await hub.disconnectStream(s.stream.id);
-  hub.handleKickChat('999999', { username: 'u', text: 'still dropped', ts: 2 });
-  assert.equal(got.length, 0, 'no emit for unmapped/removed stream');
+  pool.routeKickChat('bid-somebody', { username: 'u', text: 'kept', ts: 2 });
+  assert.equal(got.length, 1);
+  assert.equal(got[0].text, 'kept');
 });
 
-// --- hub: emit does not record stats for a stream removed mid-flight (no throw, no leak) ---
-test('FIX hub.emit: recordMessage skipped for unregistered streamId', async () => {
-  const hub = createHub({ onMessage: () => {}, onStats: () => {}, onStreams: () => {}, now: () => 1000 });
-  const s = await hub.connectStream('https://twitch.tv/banks', 'Banks');
+// --- room: disconnect removes stats and a late Kick chat is a guarded no-op ---
+test('FIX room.disconnect: removes stats and late Kick chat is a no-op', async () => {
+  const { ingesters } = _fakeIngesters();
+  const pool = createIngesterPool({ ingesters, ..._noopSched });
+  const room = createRoom({ pool, send: () => {}, now: () => 1000 });
+  const s = await room.connect('https://kick.com/somebody');
   const id = s.stream.id;
-  await hub.disconnectStream(id);
-  // handleKickChat for a now-removed stream id must be a no-op and not throw.
-  assert.doesNotThrow(() => hub.handleKickChat('nope', { username: 'x', text: 'y', ts: 0 }));
+  room.disconnect(id);
   // stats for the removed stream are gone
-  assert.equal(hub.statsSnapshot().perStream[id], undefined);
+  assert.equal(room.statsSnapshot().perStream[id], undefined);
+  // a late webhook for the now-removed channel must not throw and must not re-add anything
+  assert.doesNotThrow(() => pool.routeKickChat('bid-somebody', { username: 'x', text: 'y', ts: 0 }));
+  assert.equal(room.snapshot().streams.length, 0);
 });
