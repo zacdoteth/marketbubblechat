@@ -44,7 +44,7 @@ const server = createServer((req, res) => {
         const type = req.headers['kick-event-type'] || '';
         if (type === 'chat.message.sent' || payload?.content != null) {
           const m = parseChatWebhook(payload);
-          if (hubRef && m.broadcasterUserId) hubRef.handleKickChat(m.broadcasterUserId, { username: m.username, text: m.text, ts: m.ts || Date.now() });
+          if (hubRef && m.broadcasterUserId) hubRef.routeKickChat(m.broadcasterUserId, { username: m.username, text: m.text, ts: m.ts || Date.now() });
           else if (!m.broadcasterUserId) console.warn('[kick] webhook chat dropped: no broadcaster_user_id; username:', m.username);
         }
         // record only after successful processing so a failed parse can still be retried
@@ -88,10 +88,7 @@ async function shutdown(signal) {
   console.log(`[shutdown] ${signal} received, cleaning up...`);
   const forceExit = setTimeout(() => process.exit(0), 5000);
   forceExit.unref?.();
-  try {
-    const ids = hub.registry.list().map(s => s.id);
-    await Promise.all(ids.map(id => Promise.resolve(hub.disconnectStream(id)).catch(() => {})));
-  } catch {}
+  try { await hub.stopAll(); } catch {}
   try { server.close(); } catch {}
   process.exit(0);
 }
