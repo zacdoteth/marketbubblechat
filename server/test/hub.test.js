@@ -2,18 +2,32 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHub } from '../src/hub.js';
 
-test('connectStream rejects unsupported URL and snapshot returns empty arrays', async () => {
-  const hub = createHub({ onMessage: () => {}, onStats: () => {}, onStreams: () => {}, now: () => 1000 });
+function makeFakeIngesters() {
+  const instances = [];
+  class Fake {
+    constructor(channel, cb) { this.channel = channel; this.cb = cb; this.stopped = false; instances.push(this); }
+    async start() { this.cb.onResolved?.('bid-' + this.channel); }
+    async stop() { this.stopped = true; }
+  }
+  return { ingesters: { twitch: Fake, kick: Fake, x: Fake }, instances };
+}
+const noopSched = { setTimer: (fn) => ({ fn }), clearTimer: () => {} };
 
-  // unsupported platform returns an error object (connectStream is async)
-  const result = await hub.connectStream('https://youtube.com/x', 'Banks');
-  assert.ok(result.error, 'expected an error for unsupported URL');
+test('hub: routeKickChat delegates to the pool and reaches subscribed rooms', async () => {
+  const hub = createHub({ ...makeFakeIngesters(), ...noopSched });
+  const got = [];
+  const room = { onMessage: (f) => got.push(f), onStatus: () => {}, onViewers: () => {} };
+  await hub.pool.subscribe('kick', 'roshtein', room);
+  hub.routeKickChat('bid-roshtein', { username: 'u', text: 'gg', ts: 1 });
+  assert.equal(got.length, 1);
+  assert.equal(got[0].text, 'gg');
+  assert.equal(got[0].platform, 'kick');
+});
 
-  // snapshot shape is correct with no streams connected
-  const snap = hub.snapshot();
-  assert.ok(Array.isArray(snap.streams), 'streams should be an array');
-  assert.ok(Array.isArray(snap.messages), 'messages should be an array');
-  assert.ok(snap.stats, 'stats should be present');
-  assert.equal(snap.streams.length, 0);
-  assert.equal(snap.messages.length, 0);
+test('hub: stopAll stops pooled ingesters', async () => {
+  const { ingesters, instances } = makeFakeIngesters();
+  const hub = createHub({ ingesters, ...noopSched });
+  await hub.pool.subscribe('twitch', 'foo', { onMessage(){}, onStatus(){}, onViewers(){} });
+  await hub.stopAll();
+  assert.ok(instances.every(i => i.stopped));
 });
