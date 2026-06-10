@@ -74,14 +74,15 @@ Operator runs: node x-broadcast-worker.mjs <url>
   - `X_INGEST_TOKEN` **unset → 503** ("x ingest disabled"): secure by default, unlike the open control gate.
   - `token` mismatch → 401; missing `broadcastId` → 400.
   - **Dedup by `uuid`** via a bounded recent-set (mirrors the Kick `recentKickMessageIds` idempotency). New messages → `hub.routeXChat(broadcastId, {username,displayName,text,ts})`.
-  - `occupancy` present → `hub.setXViewers`; `status` present → `hub.setXStatus`; `broadcaster` present → `hub.setXLabel` (**stretch** — see below).
+  - `occupancy` present → `hub.setXViewers`; `status` present → `hub.setXStatus`; `broadcaster` present → `hub.setXLabel` (sets the pill's display name; see frontend).
   - Always `200` on success; body-size cap like the Kick handler.
 - `hub.js` gains `routeXChat / setXViewers / setXStatus / setXLabel` delegating to the pool. Config (`server/src/config.js`) gains `X_INGEST_TOKEN`.
 
 ### 7. Frontend — `conflux.html`
 - No change needed to accept the URL (existing `VALID_URL_RE` matches `x.com`).
 - **Add:** when a stream with `source:'xbroadcast'` is present, show a one-line, copy-ready command under its pill / in the setup panel: `node x-broadcast-worker.mjs https://x.com/i/broadcasts/{id}` (backend URL + token live in the worker's env, **never rendered** — no token leak). This is the only UI addition.
-- **Stretch:** pill label uses the broadcaster label (from `setXLabel`) when present, else the broadcast id (which is functional on its own — core ships without this).
+- The X **platform** tag/color always shows (every message is `platform:'x'`) — this is automatic, not derived from the name.
+- Pill **channel name**: `setXLabel` stores a `label` on the stream object (pushed via the normal `streams` event); the pill renders `x · {label || channel}`, so it reads `x · 8Bit` once the worker reports the handle (and `x · {id}` only in the brief window before the worker's first POST). `hub.setXLabel` → pool sets `entry.label` and updates each subscribed room's stream `label`, emitting a `streams` update.
 
 ## Data flow & lifecycle
 Paste link → `xbroadcast:{id}` entry (status `connecting`, pill). Run worker → first chat/occupancy POST flips status `live`, sets the real viewer count, fans chat into the subscribed room. Room closes (tab/refresh) → entry ref-count drops → linger → removed; later worker POSTs for that id are dropped (logged). Broadcast ends → worker POSTs `status:offline` and exits.
