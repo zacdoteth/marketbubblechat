@@ -23,16 +23,17 @@ export function createRoom({ pool, send, now = () => Date.now() }) {
     async connect(url) {
       const parsed = parseStreamUrl(url);
       if (parsed.error) return { error: parsed.error };
-      const key = parsed.platform + ':' + parsed.channel;
+      const source = parsed.source || parsed.platform; // pool key / ingester selection
+      const key = source + ':' + parsed.channel;
       const existingId = keyToStreamId.get(key);
       if (existingId) return { stream: streams.get(existingId) };
       const id = 's' + (++_id);
-      const stream = { id, platform: parsed.platform, channel: parsed.channel, status: 'connecting', poolKey: key };
+      const stream = { id, platform: parsed.platform, source, channel: parsed.channel, status: 'connecting', poolKey: key };
       streams.set(id, stream);
       keyToStreamId.set(key, id);
       stats.registerStream(id, { platform: parsed.platform, streamer: '' });
       pushStreams();                 // instant pill (connecting)
-      await pool.subscribe(parsed.platform, parsed.channel, room);
+      await pool.subscribe(source, parsed.channel, room, parsed.platform);
       return { stream };
     },
 
@@ -71,6 +72,12 @@ export function createRoom({ pool, send, now = () => Date.now() }) {
       const s = streams.get(streamId);
       if (s) s.status = status;
       pushStreams();
+    },
+    setLabel(poolKey, label) {
+      const streamId = keyToStreamId.get(poolKey);
+      if (!streamId) return;
+      const s = streams.get(streamId);
+      if (s) { s.label = label; pushStreams(); }
     },
   };
   return room;
