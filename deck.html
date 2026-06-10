@@ -1931,7 +1931,8 @@
   .mk-pane-h .pm-by .pm-lockup{height:9px;width:48px}
   /* coins -> tight ticker list (drop the sparkline + full name in the narrow column) */
   .markets .mrow{padding:6px 11px;gap:6px}
-  .markets .mrow .spk{display:none}
+  .markets .mrow .nm{flex:0 0 auto;min-width:0}
+  .markets .mrow .spk{display:block;flex:1 1 auto;min-width:14px;width:auto;height:15px;margin:0 8px;opacity:.85}
   .markets .mrow .nm .s{display:none}
   .markets .mrow .nm .t{font-size:11px}
   .markets .mrow .pr .px{font-size:11px}
@@ -2693,7 +2694,7 @@
   /* ===== MARKETS ===== */
   function spark(down){
     var pts=[],y=11; for(var i=0;i<22;i++){ y+=(Math.random()-(down?0.62:0.38))*3; y=Math.max(2,Math.min(20,y)); pts.push(i*3+','+y.toFixed(1)); }
-    return '<svg class="spk" width="64" height="22" viewBox="0 0 66 22"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.5"/></svg>';
+    return '<svg class="spk" viewBox="0 0 66 22" preserveAspectRatio="none"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>';
   }
   var mix=[['TRUMP','Trump','1.64',-1.14],['MOODENG','Moo Deng','0.0376',-1.18],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['BTC','Bitcoin','61,330',-2.15],['POPCAT','Popcat','0.0404',-2.29],['ETH','Ethereum','1,626',-2.67],['WIF','Dogwifhat','0.1514',-3.13],['SOL','Solana','63.52',-3.90],['FARTCOIN','Fartcoin','0.1130',-3.87],['HYPE','Hyperliquid','55.91',-9.70]];
   var preds=[
