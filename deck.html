@@ -1948,6 +1948,30 @@
   .markets .pm-cat{padding:7px 11px 3px}
   .markets .pm-cat-l{font-size:8px} .markets .pm-cat-n{font-size:8px}
   .mk-list::-webkit-scrollbar{width:4px}
+  /* ── MARKETS density polish (high-density, locked vertical rhythm) ── */
+  /* one consistent 12px gutter everywhere in the rail */
+  .mk-head{padding:10px 12px 8px}
+  .mk-pane-h{padding:10px 12px 6px}
+  .markets .pm-cat{padding:8px 12px 3px}
+  .mk-foot{padding:8px 12px}
+  /* coins -> dense ~31px watchlist rows, price over % tight */
+  .markets .mrow{padding:5px 12px;gap:8px;align-items:center}
+  .markets .mrow .nm .t{font-size:11px;line-height:1;letter-spacing:.01em}
+  .markets .mrow .pr{line-height:1.05}
+  .markets .mrow .pr .px{font-size:11.5px;line-height:1.12}
+  .markets .mrow .pr .ch{font-size:8.5px;line-height:1;letter-spacing:.02em}
+  /* predictions -> tight cards: 2-line question, tiny vol, INLINE odds (61% YES) */
+  .markets .prow{padding:7px 12px;gap:5px 8px}
+  .markets .prow .nm .t{font-size:10.5px;line-height:1.2}
+  .markets .prow .nm .s{font-size:8px;line-height:1;margin-top:2px;letter-spacing:.02em;color:var(--dim-2)}
+  .markets .prow .pbar{height:5px;align-self:center}
+  .markets .prow .pr{display:inline-flex;align-items:baseline;gap:4px;margin-left:0}
+  .markets .prow .pr .px{font-size:11px;line-height:1}
+  .markets .prow .pr .ch{font-size:8px;line-height:1;letter-spacing:.04em}
+  /* crisp hairline dividers; no trailing border at the end of each list */
+  .markets .mrow,.markets .prow{border-bottom:1px solid var(--line-soft)}
+  .markets .mk-list>*:last-child{border-bottom:none}
+  .mk-list{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 </style>
 
 <div class="app">
