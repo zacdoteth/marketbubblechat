@@ -14,7 +14,20 @@
   (no TDZ). Engagement design labeled in comments throughout.
 -->
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- ░░ iOS web-app / PWA — single de-duplicated set ░░
+     Insert immediately AFTER the (edited) viewport meta on line 17.
+     NOTE: the existing viewport tag is upgraded in-place via headViewportEdit
+     below (it gains viewport-fit=cover) — do NOT add a second viewport tag. -->
+<meta name="theme-color" content="#0A0A0C" />
+<meta name="color-scheme" content="dark" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Market Bubble" />
+<meta name="application-name" content="Market Bubble" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230A0A0C'/%3E%3Cpath d='M115 48l-44 49h29l-15 44 54-59h-35l11-34z' fill='%235B8CFF'/%3E%3C/svg%3E" />
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Market%20Bubble%20Command%20Deck%22%2C%22short_name%22%3A%22Market%20Bubble%22%2C%22description%22%3A%22Every%20chat.%20Every%20platform.%20One%20feed.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230A0A0C%22%2C%22theme_color%22%3A%22%230A0A0C%22%2C%22start_url%22%3A%22.%22%2C%22scope%22%3A%22.%22%7D" />
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
@@ -429,6 +442,1321 @@
   .vf.isLive .sil{display:none}
   .vf.isLive::before{opacity:.16}
   .vf.isLive::after{opacity:.12}
+
+/* ===================== MOBILE APP-SHELL (welded) ===================== */
+/* ============================================================
+   MARKET BUBBLE — MOBILE APP SHELL · FOUNDATION (canonical)
+   Paste ONCE at the very END of the existing <style> block,
+   immediately after line 432 (".vf.isLive::after{opacity:.12}")
+   and BEFORE all five lens blocks. This is the single source of
+   truth for: glass recipe, safe-area vars, shell metrics, the
+   fixed-viewport reset, the .deck->single-pane override, the ONE
+   region show/hide machine (body.m-tab-*), and the desktop guard.
+   Desktop (>=861px) is byte-for-byte untouched: every layout rule
+   lives inside @media(max-width:860px); the nav is display:none.
+   ============================================================ */
+
+/* ---- GLOBAL TOKENS (harmless on desktop; only consumed <=860px) ---- */
+:root{
+  /* ONE glass recipe — every frosted surface references these */
+  --g-blur:22px; --g-sat:180%;
+  --g-bg:rgba(12,12,16,.62);        /* primary chrome (top bar)            */
+  --g-bg-strong:rgba(12,12,16,.78); /* bottom nav — denser for legibility  */
+  --g-bg-soft:rgba(16,16,21,.55);   /* sticky sub-headers                  */
+  --g-bg-sheet:rgba(16,16,21,.86);  /* connect sheet                       */
+  --g-hair:rgba(255,255,255,.10);
+  --g-hair-2:rgba(255,255,255,.055);
+  --g-blue:rgba(91,140,255,.24);    /* the bubble fill (the ONE accent)    */
+  --g-blue-hi:rgba(131,166,255,.40);
+  /* safe-area, resolved once (env() needs viewport-fit=cover) */
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+  /* shell metrics — single source of truth for fixed offsets */
+  --mb-top-h:52px;          /* condensed top bar height (excl. notch)  */
+  --mb-tape-h:30px;         /* slim sticky tape height                 */
+  --mb-nav-h:58px;          /* nav body height (excl. home-bar inset)  */
+  --mb-chrome:calc(var(--mb-top-h) + var(--mb-tape-h) + var(--sat));
+  --mb-navfull:calc(var(--mb-nav-h) + var(--sab));
+}
+
+/* ---- nav + mobile-only chrome never exist on desktop ---- */
+.mbnav,.mb-fab,.mb-scrim{display:none}
+
+@media (max-width:860px){
+
+  /* 1 — FIXED VIEWPORT: the page never scrolls; each region scrolls itself.
+     This deliberately overrides the 1240px rule (html,body{overflow:auto};
+     .app{height:auto}) — it MUST win, hence it lives after that block. */
+  html,body{overflow:hidden;height:100%;height:100dvh;overscroll-behavior:none}
+  .app{height:100dvh;min-height:0;display:flex;flex-direction:column;
+       padding-left:var(--sal);padding-right:var(--sar)}
+
+  /* 2 — CONDENSED TOP BAR (fixed-height; offset anchor for the regions) */
+  .topbar{flex:0 0 auto;height:calc(var(--mb-top-h) + var(--sat));min-height:0;
+    padding:var(--sat) 12px 0;gap:10px;flex-wrap:nowrap;
+    background:var(--g-bg);
+    -webkit-backdrop-filter:blur(var(--g-blur)) saturate(var(--g-sat));
+            backdrop-filter:blur(var(--g-blur)) saturate(var(--g-sat));
+    border-bottom:1px solid var(--g-hair-2)}
+  .brand{gap:9px;min-width:0;flex:0 1 auto}
+  .brand .logo{width:30px;height:30px;border-radius:8px}
+  .brand .tx{min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .brand .tx .nm{font-size:15px;line-height:1;white-space:nowrap}
+  .brand .tx .sl{display:none}              /* THE FIX: tagline no longer overlaps the wordmark */
+  .modetog{display:none}                    /* layout picker is the bottom nav's job on mobile */
+  .tb-stats{gap:14px;margin-left:auto;flex:0 0 auto}
+  .tb-stat .v{font-size:13px}
+  .tb-stats .tb-stat:last-child{display:none}  /* msg/min lives in INTEL on phones */
+
+  /* 3 — SLIM STICKY TAPE */
+  .tape{flex:0 0 auto;height:var(--mb-tape-h);min-height:var(--mb-tape-h);
+    background:var(--g-bg-soft);
+    -webkit-backdrop-filter:blur(14px) saturate(150%);
+            backdrop-filter:blur(14px) saturate(150%);
+    border-bottom:1px solid var(--g-hair-2)}
+  .tape-tag{display:none}                    /* reclaim width on phones */
+  .fng{padding:0 11px}
+
+  /* 4 — DECK GRID -> ONE FULL-SCREEN STAGE.
+     Neutralize EVERY desktop layout-class grid (deck/watch/spotlight). */
+  .deck,body.watch .deck,body.dash .deck,body.lay-spotlight .deck{
+    display:block;grid-template-columns:none;grid-template-rows:none;
+    grid-template-areas:none;flex:1 1 auto;min-height:0;position:relative;
+    overflow:hidden}
+  /* .rightcol dissolves so .onair + .markets become first-class panes
+     (same proven pattern desktop Spotlight uses) — ZERO DOM moves */
+  .rightcol{display:contents !important;border:none !important}
+
+  /* 5 — THE FOUR REGIONS: each a fixed full-screen scroll pane,
+     pinned between chrome and nav, momentum-scrolled, one shown at a time. */
+  .stats,.wire,.onair,.markets{
+    position:fixed !important;left:0;right:0;
+    top:calc(var(--mb-chrome));
+    bottom:var(--mb-navfull);
+    width:100%;margin:0;border:none !important;
+    overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    z-index:10;scrollbar-width:none}
+  .stats::-webkit-scrollbar,.wire::-webkit-scrollbar,
+  .onair::-webkit-scrollbar,.markets::-webkit-scrollbar{width:0;height:0}
+
+  /* HIDE-ALL reset — high enough specificity to beat
+     body.watch .stats / body.watch .markets (lines 96 & 279). */
+  body .stats,body.watch .stats,
+  body .onair,body.watch .onair,
+  body .markets,body.watch .markets,
+  body .wire{display:none}
+
+  /* REVEAL exactly one, by the single state token: body.m-tab-* */
+  body.m-tab-wire    .wire   {display:flex;flex-direction:column}
+  body.m-tab-onair   .onair  {display:flex;flex-direction:column}
+  body.m-tab-markets .markets{display:flex;flex-direction:column}
+  body.m-tab-intel   .stats  {display:flex;flex-direction:column}
+  /* no-JS / pre-boot fallback: WIRE shows by default */
+  body:not(.m-tab-wire):not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire{
+    display:flex;flex-direction:column}
+
+  /* INTEL padding for thumbs */
+  .stats{padding:16px 14px calc(20px + var(--sab));gap:18px}
+
+  /* footer is desktop chrome — the nav owns the bottom */
+  .confluxbar{display:none}
+
+  /* tooltip is a hover/desktop affordance — suppress on the touch shell */
+  .tooltip{display:none}
+}
+
+/* desktop guard — the nav can NEVER leak onto desktop even if a body class flips */
+@media (min-width:861px){ .mbnav,.mb-fab,.mb-scrim{display:none !important} }
+
+/* --- nav-ia --- */
+/* ============================================================
+   MOBILE APP SHELL — NAVIGATION & IA  (scoped ≤860px only)
+   Liquid-glass bottom tab bar + full-screen region switching.
+   Desktop (≥861px) is completely untouched: .mbnav is display:none
+   and none of these rules apply.
+   ============================================================ */
+
+/* The nav is invisible everywhere by default; mobile media turns it on. */
+.mbnav{display:none}
+
+@media (max-width:860px){
+
+  /* ---- shell metrics (single source of truth for fixed offsets) ---- */
+  :root{
+    --mb-topbar:52px;          /* condensed top bar height (mobile) */
+    --mb-tape:32px;            /* slim sticky tape height */
+    --mb-top:calc(var(--mb-topbar) + var(--mb-tape));
+    --mb-nav:64px;             /* bar body, before safe-area */
+    --mb-safe-b:env(safe-area-inset-bottom,0px);
+    --mb-navfull:calc(var(--mb-nav) + var(--mb-safe-b));
+  }
+
+  /* page no longer scrolls as one column — each region scrolls itself */
+  html,body{overflow:hidden;height:100%}
+  .app{height:100dvh;min-height:0;overflow:hidden}
+
+  /* ---- condensed, fixed top bar + sticky tape (offset anchors) ---- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    height:var(--mb-topbar);min-height:var(--mb-topbar);
+    padding:0 14px calc(0px + env(safe-area-inset-top,0px)) 14px;
+    padding-top:env(safe-area-inset-top,0px);
+    flex-wrap:nowrap;gap:12px;
+    background:rgba(7,7,9,.92);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+            backdrop-filter:blur(14px) saturate(140%)}
+  /* fix the .sl subtext crowding the wordmark on small widths */
+  .brand .tx{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .brand .tx .nm{font-size:15px;white-space:nowrap}
+  .brand .tx .sl{display:none}                 /* tagline hidden on phones — wordmark stands alone */
+  .brand .logo{width:30px;height:30px}
+  /* desktop layout picker is off-canvas on phones (mobile nav replaces it) */
+  .topbar .modetog{display:none}
+  .tb-stats{margin-left:auto;gap:14px}
+  .tb-stat .v{font-size:13px}
+
+  .tape{
+    position:fixed;top:calc(var(--mb-topbar) + env(safe-area-inset-top,0px));
+    left:0;right:0;z-index:59;
+    height:var(--mb-tape);min-height:var(--mb-tape);
+    background:rgba(10,10,12,.92);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+  /* ---- regions become full-screen scroll panels ---- */
+  /* let .onair + .markets escape .rightcol so each can be a panel */
+  .rightcol{display:contents !important;border:none !important}
+
+  .deck{display:block;height:auto;min-height:0}
+
+  /* every region: pinned between tape and nav, momentum scroll, hidden by default */
+  .wire,.onair,.markets,.stats{
+    position:fixed !important;
+    top:calc(var(--mb-top) + env(safe-area-inset-top,0px));
+    left:0;right:0;bottom:var(--mb-navfull);
+    width:100%;
+    margin:0;border:none !important;
+    overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    display:none !important;            /* inactive panels fully removed from a11y + paint */
+    z-index:10;
+    scrollbar-width:none}
+  .wire::-webkit-scrollbar,.onair::-webkit-scrollbar,
+  .markets::-webkit-scrollbar,.stats::-webkit-scrollbar{width:0;height:0}
+
+  /* active region per body tab-class (default WIRE, with no-JS fallback) */
+  body.m-tab-wire   .wire,
+  body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire{display:flex !important}
+  body.m-tab-onair  .onair  {display:block !important}
+  body.m-tab-markets .markets{display:flex !important}
+  body.m-tab-intel  .stats  {display:flex !important}
+
+  /* WIRE: re-assert absolute feed so it fills its panel + keeps the new-pill anchored */
+  .wire{flex-direction:column}
+  .wirewrap{flex:1;min-height:0;position:relative}
+  .feed{position:absolute !important;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pulse{flex:0 0 auto}
+
+  /* ON AIR + MARKETS as standalone panels (they normally live inside rightcol) */
+  .onair{border-bottom:none !important;padding-bottom:14px}
+  .markets{display:none}               /* default; tab rule above flips it on */
+  body.m-tab-markets .markets{display:flex !important;flex-direction:column}
+  .mk-list{flex:1;min-height:0;max-height:none}
+
+  /* INTEL (stats rail): comfy single column, breathable for thumbs */
+  .stats{padding:16px 16px calc(20px + var(--mb-safe-b));gap:20px}
+
+  /* footer is redundant on mobile (nav owns the bottom); reclaim the space */
+  .confluxbar{display:none}
+
+  /* ============================================================
+     THE LIQUID-GLASS BOTTOM TAB BAR
+     ============================================================ */
+  .mbnav{
+    display:flex;
+    position:fixed;left:0;right:0;bottom:0;z-index:80;
+    height:var(--mb-navfull);
+    padding:0 10px calc(var(--mb-safe-b)) 10px;   /* home-bar safe area */
+    align-items:stretch;
+    /* frosted translucent glass */
+    background:rgba(12,12,16,.62);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+            backdrop-filter:blur(24px) saturate(180%);
+    border-top:1px solid rgba(255,255,255,.08);
+    box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -18px 40px -28px rgba(0,0,0,.9)}
+  /* top sheen — the "liquid" highlight that sells the glass */
+  .mbnav::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)}
+
+  /* the inner rail that holds tabs + bubble (so bubble math = 1/N of this) */
+  .mbnav-rail{position:relative;display:flex;flex:1;min-width:0;height:var(--mb-nav)}
+
+  /* the sliding glass BUBBLE behind the active tab */
+  .mbnav-bubble{
+    position:absolute;top:9px;bottom:9px;left:0;
+    width:calc(100% / 4);                 /* 4 tabs */
+    transform:translateX(calc(var(--mb-i,0) * 100%));
+    transition:transform var(--phi) var(--ease);
+    pointer-events:none;z-index:0;
+    border-radius:16px;
+    background:linear-gradient(180deg,rgba(91,140,255,.26),rgba(91,140,255,.12));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.30),
+               inset 0 -1px 0 rgba(0,0,0,.25),
+               0 6px 18px -8px rgba(91,140,255,.65);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  /* a tiny inset margin so the pill sits inside the tab cell with air */
+  .mbnav-bubble::after{content:"";position:absolute;inset:0 8px;border-radius:14px;
+    box-shadow:inset 0 0 0 1px rgba(131,166,255,.35)}
+
+  .mbnav-tab{
+    position:relative;z-index:1;
+    flex:1 1 0;min-width:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:44px;                      /* thumb target */
+    padding:6px 2px;
+    background:none;border:none;cursor:pointer;
+    color:var(--dim);
+    font-family:var(--gk);font-size:9.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
+    -webkit-tap-highlight-color:transparent;
+    transition:color .24s var(--ease), transform .24s var(--ease)}
+  .mbnav-tab svg{width:21px;height:21px;display:block;
+    transition:transform .28s var(--ease), color .24s var(--ease)}
+  .mbnav-tab .mbnav-lbl{line-height:1;opacity:.85;transition:opacity .24s var(--ease)}
+  .mbnav-tab[aria-selected="true"]{color:var(--blue-hi)}
+  .mbnav-tab[aria-selected="true"] .mbnav-lbl{opacity:1}
+  .mbnav-tab[aria-selected="true"] svg{transform:translateY(-1px) scale(1.06)}
+  .mbnav-tab:active{transform:scale(.94)}
+  .mbnav-tab:focus-visible{outline:2px solid var(--blue);outline-offset:-3px;border-radius:14px}
+
+  /* a tiny live-dot the controller can show on ON AIR (optional hook) */
+  .mbnav-tab .mbnav-dot{position:absolute;top:7px;right:calc(50% - 16px);
+    width:6px;height:6px;border-radius:50%;background:var(--down);
+    box-shadow:0 0 6px var(--down);opacity:0;transition:opacity .3s var(--ease)}
+  .mbnav-tab.is-live .mbnav-dot{opacity:1;animation:lp var(--phi) infinite}
+
+  /* ---- View Transitions: cross-dissolve + subtle lift (named root) ---- */
+  /* fallback (no VT support): regions just swap instantly via display rules above */
+}
+
+/* View-Transition keyframes live OUTSIDE the media query (UA pseudo-elements
+   are global) but only fire because startViewTransition runs on mobile taps. */
+::view-transition-old(mbroot){animation:mb-vt-out calc(var(--phi)/4) var(--ease) both}
+::view-transition-new(mbroot){animation:mb-vt-in  calc(var(--phi)/4) var(--ease) both}
+@keyframes mb-vt-out{to{opacity:0;transform:translateY(-6px)}}
+@keyframes mb-vt-in{from{opacity:0;transform:translateY(8px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .mbnav-bubble{transition:none}
+  ::view-transition-old(mbroot),::view-transition-new(mbroot){animation:none}
+}
+
+/* never let the nav appear on desktop */
+@media (min-width:861px){ .mbnav{display:none !important} }
+
+/* --- glass --- */
+/* ============================================================
+   MARKET BUBBLE — MOBILE APP SHELL · LENS: LIQUID GLASS & SURFACES
+   Scoped to <=860px. Desktop is 100% untouched.
+   Paste at the very END of the <style> block (after all existing
+   @media rules) so it wins the cascade where it must.
+   ============================================================ */
+
+/* ---- 1. THE GLASS SYSTEM (reusable tokens; safe to define globally) ---- */
+:root{
+  /* blur + saturate: iOS-grade. Saturate revives color through the frost. */
+  --glass-blur: 22px;
+  --glass-sat: 1.7;
+  /* layered translucent studio-black surfaces (monochrome glass) */
+  --glass-bg:        rgba(14,14,18,.62);   /* primary chrome (top bar)        */
+  --glass-bg-strong: rgba(12,12,16,.78);   /* bottom nav — more opaque/legible */
+  --glass-bg-soft:   rgba(18,18,24,.55);   /* sticky section headers          */
+  --glass-bg-sheet:  rgba(16,16,21,.82);   /* the connect sheet               */
+  /* hairline borders — top highlight + base shadow = real depth */
+  --glass-hair:   rgba(255,255,255,.10);
+  --glass-hair-2: rgba(255,255,255,.055);
+  /* the ONE blue accent, as glass (active states only) */
+  --glass-blue:    rgba(91,140,255,.20);
+  --glass-blue-hi: rgba(131,166,255,.34);
+  /* soft depth shadows */
+  --glass-shadow:  0 -8px 28px rgba(0,0,0,.42), 0 -1px 0 var(--glass-hair) inset;
+  --sheet-shadow:  0 -18px 50px rgba(0,0,0,.55);
+  --radius-cap: 22px;   /* the bubble/pill aesthetic */
+}
+
+/* Reusable glass utility. */
+.glass{
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border:1px solid var(--glass-hair-2);
+  box-shadow:inset 0 1px 0 var(--glass-hair);
+}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  /* no-blur fallback: solid-translucent so it never looks broken */
+  .glass{ background:#121218; }
+  :root{
+    --glass-bg:#121218; --glass-bg-strong:#0F0F14; --glass-bg-soft:#16161c;
+    --glass-bg-sheet:#15151b;
+  }
+}
+
+/* desktop: the mobile chrome simply does not exist */
+.mnav,.msheet,.msheet-scrim{display:none}
+
+/* ============================================================
+   2. MOBILE APP SHELL  (<=860px)
+   ============================================================ */
+@media (max-width:860px){
+
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  /* the .app becomes a fixed shell; tape sticky, panes fill, nav floats */
+  .app{height:100dvh;min-height:0;display:flex;flex-direction:column;
+       padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+
+  /* ---- 2a. TOP BAR — sticky frosted glass; fix the .sl overlap ---- */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    flex:0 0 auto;height:auto;min-height:50px;flex-wrap:nowrap;
+    gap:12px;padding:8px 14px;
+    padding-top:calc(8px + env(safe-area-inset-top));
+    border-bottom:1px solid var(--glass-hair-2);
+    background:var(--glass-bg);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+    backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+    box-shadow:inset 0 1px 0 var(--glass-hair);
+  }
+  .brand{gap:9px;min-width:0}
+  .brand .logo{width:32px;height:32px;border-radius:9px}
+  .brand .tx .nm{font-size:15px}
+  .brand .tx .sl{display:none}          /* the overlap, gone */
+  .modetog{display:none}                /* no layout modes in single-region mobile */
+  .tb-stats{margin-left:auto;gap:14px;flex:0 0 auto}
+  .tb-stat .v{font-size:14px}
+  .tb-stat:nth-child(3){display:none}   /* header = Watching + LIVE; msg/min lives in INTEL */
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    .topbar{background:#0e0e13}
+  }
+
+  /* ---- 2b. TAPE — slim sticky glass strip ---- */
+  .tape{
+    position:sticky;top:50px;z-index:30;
+    flex:0 0 auto;height:32px;
+    border-bottom:1px solid var(--glass-hair-2);
+    background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(16px) saturate(1.5);
+    backdrop-filter:blur(16px) saturate(1.5);
+  }
+  .tape-tag{display:none}               /* reclaim width on phone */
+  .fng{padding:0 12px}
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    .tape{background:#15151b}
+  }
+
+  /* ---- 2c. THE DECK becomes a single-pane stage ---- */
+  .deck, body.watch .deck{
+    flex:1 1 auto;min-height:0;
+    display:block;position:relative;width:100%;
+    grid-template-columns:none;grid-template-areas:none;  /* neutralize inherited grid */
+  }
+  /* .rightcol dissolves so .onair + .markets become first-class panes */
+  .rightcol{display:contents}
+
+  /* every region = a fixed full-screen pane, stacked, one shown at a time */
+  .stats,.wire,.onair,.markets{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    border:none !important;border-right:none !important;border-left:none !important;
+    margin:0;min-height:0;max-height:none;
+    overflow:hidden;display:flex;flex-direction:column;
+    /* hidden by default; the active one is revealed below */
+    opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(8px);
+    transition:opacity .26s var(--ease), transform .32s var(--ease), visibility 0s linear .3s;
+  }
+  /* INTEL scrolls as a normal column */
+  .stats{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 28px;gap:18px}
+
+  /* reveal the active pane (data-mtab on body selects it) */
+  body[data-mtab="wire"]    .wire,
+  body[data-mtab="onair"]   .onair,
+  body[data-mtab="markets"] .markets,
+  body[data-mtab="intel"]   .stats{
+    opacity:1;visibility:visible;pointer-events:auto;transform:none;
+    transition:opacity .3s var(--ease), transform .4s var(--ease), visibility 0s;
+    z-index:2;
+  }
+  /* watch-mode hides .stats/.markets on desktop — re-show as tabs on mobile */
+  body.watch .stats, body.watch .markets, body.watch .onair{display:flex}
+  /* default before JS sets the attr: show WIRE, hide the rest */
+  body:not([data-mtab]) .wire{opacity:1;visibility:visible;pointer-events:auto;transform:none;z-index:2}
+
+  /* ---- 2d. THE WIRE pane — keep the live feed's scroll model intact ---- */
+  .wire{min-height:0}
+  .wire-head{
+    position:sticky;top:0;z-index:6;flex:0 0 auto;
+    padding:11px 16px;border-bottom:1px solid var(--glass-hair-2);
+    background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(18px) saturate(1.5);
+    backdrop-filter:blur(18px) saturate(1.5);
+  }
+  .wtabs{position:sticky;top:0;z-index:5;
+    background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    backdrop-filter:blur(16px) saturate(1.4);}
+  .wtabs button{padding:8px 13px;font-size:12px}     /* bigger taps */
+  /* The streammgmt is lifted into the Connect sheet by JS; hide the in-flow copy */
+  .wire > .streammgmt{display:none}
+  /* CRUCIAL: restore the absolute feed (the shipped 900px rule sets it relative,
+     which breaks feedEl autoscroll + #newPill). .wirewrap must be a sized box. */
+  .wirewrap{flex:1 1 auto;min-height:0;position:relative}
+  .feed{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .wmsg{padding:11px 16px}                            /* roomier rows for touch */
+  .wmsg .av{width:32px;height:32px}
+  .newpill{bottom:18px;padding:10px 17px;font-size:12px}
+
+  /* ---- 2e. ON AIR pane ---- */
+  .onair{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}
+  .oa-head{position:sticky;top:0;z-index:4;padding:12px 16px;
+    background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    backdrop-filter:blur(16px) saturate(1.4);}
+  .player{margin:14px;}
+  .feeds{display:flex;flex-wrap:wrap;aspect-ratio:auto;gap:6px}
+  .vf.hero{order:-1;flex:1 1 100%;aspect-ratio:16/9}
+  .vf:not(.hero){flex:1 1 calc(50% - 3px);aspect-ratio:16/10}
+
+  /* ---- 2f. MARKETS pane ---- */
+  .markets{display:flex;flex-direction:column}
+  .mk-head{position:sticky;top:0;z-index:4;
+    background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    backdrop-filter:blur(16px) saturate(1.4);}
+  .mk-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .mrow,.prow{padding:11px 16px}        /* touch density */
+  .mk-foot{position:sticky;bottom:0;background:var(--glass-bg-soft);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+
+  /* footer not needed in the shell */
+  .confluxbar{display:none}
+
+  /* ============================================================
+     3. THE LIQUID-GLASS BOTTOM TAB NAV  (the centerpiece)
+     ============================================================ */
+  .mnav{
+    display:flex;
+    position:fixed;left:0;right:0;bottom:0;z-index:80;
+    align-items:stretch;
+    height:calc(58px + env(safe-area-inset-bottom));
+    padding:0 10px env(safe-area-inset-bottom);
+    background:var(--glass-bg-strong);
+    -webkit-backdrop-filter:blur(26px) saturate(1.8);
+    backdrop-filter:blur(26px) saturate(1.8);
+    border-top:1px solid var(--glass-hair);
+    box-shadow:var(--glass-shadow);
+    --mi:0; --mtabs:4;   /* active-tab index; the bubble reads this */
+  }
+  .mnav-inner{position:relative;display:grid;grid-template-columns:repeat(4,1fr);
+    flex:1;align-items:center;height:58px}
+  /* the SLIDING GLASS BUBBLE behind the active tab */
+  .mnav-bubble{
+    position:absolute;top:7px;bottom:7px;left:0;
+    width:calc(100% / var(--mtabs));
+    transform:translateX(calc(var(--mi) * 100%));
+    transition:transform var(--phi) var(--ease);
+    pointer-events:none;z-index:0;box-sizing:border-box;
+  }
+  .mnav-bubble::before{
+    content:"";position:absolute;inset:0 6px;border-radius:var(--radius-cap);
+    background:var(--glass-blue);
+    -webkit-backdrop-filter:blur(6px) saturate(1.4);
+    backdrop-filter:blur(6px) saturate(1.4);
+    border:1px solid var(--glass-blue-hi);
+    box-shadow:0 4px 16px rgba(91,140,255,.22), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .mtab{
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:44px;background:none;border:none;cursor:pointer;
+    color:var(--dim);font-family:var(--gk);
+    font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    transition:color .25s var(--ease);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mtab svg{width:21px;height:21px;transition:transform .3s var(--ease)}
+  .mtab .mt-dot{position:absolute;top:7px;right:calc(50% - 16px);
+    width:6px;height:6px;border-radius:50%;background:var(--down);
+    box-shadow:0 0 8px var(--down);opacity:.95}
+  .mtab[aria-selected="true"]{color:var(--white)}
+  .mtab[aria-selected="true"] svg{transform:translateY(-1px) scale(1.06)}
+  .mtab:active svg{transform:scale(.9)}
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    .mnav{background:#0e0e14}
+    .mnav-bubble::before{background:rgba(91,140,255,.28)}
+  }
+
+  /* nav "+" FAB — opens the Connect sheet (glass, blue) */
+  .mfab{
+    flex:0 0 auto;align-self:center;
+    width:46px;height:46px;margin:0 2px 0 6px;border-radius:16px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color:#fff;border:1px solid var(--glass-blue-hi);
+    background:linear-gradient(180deg, rgba(91,140,255,.34), rgba(91,140,255,.20));
+    -webkit-backdrop-filter:blur(8px) saturate(1.4);
+    backdrop-filter:blur(8px) saturate(1.4);
+    box-shadow:0 6px 18px rgba(91,140,255,.30), inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .2s var(--ease);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mfab:active{transform:scale(.92)}
+  .mfab svg{width:22px;height:22px}
+
+  /* ============================================================
+     4. THE CONNECT SHEET (liquid glass bottom sheet)
+     ============================================================ */
+  .msheet-scrim{
+    display:block;position:fixed;inset:0;z-index:90;
+    background:rgba(4,4,6,.5);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+    opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s linear .3s;
+  }
+  .msheet{
+    display:block;position:fixed;left:0;right:0;bottom:0;z-index:91;
+    max-height:82dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:8px 16px calc(24px + env(safe-area-inset-bottom));
+    border-radius:26px 26px 0 0;
+    background:var(--glass-bg-sheet);
+    -webkit-backdrop-filter:blur(28px) saturate(1.8);
+    backdrop-filter:blur(28px) saturate(1.8);
+    border-top:1px solid var(--glass-hair);
+    box-shadow:var(--sheet-shadow);
+    transform:translateY(104%);
+    transition:transform var(--phi) var(--ease);
+  }
+  body.sheet-open .msheet-scrim{opacity:1;visibility:visible;transition:opacity .3s var(--ease)}
+  body.sheet-open .msheet{transform:translateY(0)}
+  .msheet-grab{width:38px;height:5px;border-radius:3px;background:var(--glass-hair);
+    margin:6px auto 12px;cursor:grab}
+  .msheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .msheet-h .t{font-family:var(--serif);font-weight:800;font-size:17px}
+  .msheet-x{width:34px;height:34px;border-radius:11px;border:1px solid var(--glass-hair-2);
+    background:rgba(255,255,255,.04);color:var(--dim);display:flex;align-items:center;
+    justify-content:center;cursor:pointer}
+  .msheet-x svg{width:16px;height:16px}
+  /* the relocated .streammgmt sits clean inside the glass sheet */
+  .msheet .streammgmt{display:block;background:none;border:none;padding:0}
+  .msheet .addrow input{padding:12px 13px;font-size:15px}  /* 15px = no iOS zoom-on-focus */
+  .msheet .addrow button{padding:0 15px}
+  .msheet .qchip{padding:8px 12px;font-size:12px}          /* thumb-friendly */
+  .msheet .chip{padding:7px 9px;font-size:12px}
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    .msheet{background:#15151b}
+  }
+
+  /* View Transitions polish (only fires where supported) */
+  ::view-transition-old(mb-pane),
+  ::view-transition-new(mb-pane){
+    animation-duration:.34s;animation-timing-function:var(--ease);
+  }
+
+  /* reduced-motion: kill slides, keep instant clarity */
+  @media (prefers-reduced-motion:reduce){
+    .stats,.wire,.onair,.markets{transition:none;transform:none}
+    .mnav-bubble{transition:none}
+    .msheet{transition:none}
+    ::view-transition-old(mb-pane),::view-transition-new(mb-pane){animation:none}
+  }
+} /* end <=860px */
+
+/* --- motion --- */
+/* ============================================================
+   MOBILE REMASTER — MOTION & TRANSITIONS LENS
+   Scope: everything below lives in @media(max-width:860px)
+   or the reduced-motion sub-block. Desktop untouched.
+   Paste at the END of the existing <style> (after line 432
+   ".vf.isLive::after{opacity:.12}"). Order matters: this must
+   come AFTER the existing @media blocks so it wins the cascade.
+   ============================================================ */
+@media(max-width:860px){
+
+  /* ---- shell: lock to the viewport, one scroll owner per view ---- */
+  html,body{overflow:hidden;height:100%;
+    /* dynamic vh so the iOS toolbar collapse never clips the nav */
+    height:100svh}
+  .app{height:100svh;height:100dvh;min-height:0;
+    /* the bottom tab bar is fixed; reserve its lane */
+    padding-bottom:calc(58px + env(safe-area-inset-bottom));
+    overflow:hidden}
+
+  /* ---- TOP BAR: condense, fix the .sl overlap on the wordmark ---- */
+  .topbar{height:52px;padding:0 12px;padding-top:env(safe-area-inset-top);
+    height:calc(52px + env(safe-area-inset-top));gap:10px;flex-wrap:nowrap}
+  .brand .tx{display:flex;flex-direction:column;justify-content:center;line-height:1}
+  .brand .tx .nm{font-size:15px}
+  .brand .tx .sl{display:none}           /* kill the overlap on phones */
+  .modetog{margin:0 0 0 auto;order:0;width:auto;padding:2px;gap:1px}
+  .modetog button{padding:7px 9px;font-size:0;gap:0}  /* icon-only, thumb-sized */
+  .modetog button svg{width:16px;height:16px}
+  .tb-stats{gap:12px;margin-left:0}
+  .tb-stat .v{font-size:13px}
+  .tb-stat:nth-child(3){display:none}    /* msg/min lives in INTEL on mobile */
+
+  /* ---- TAPE: slim sticky strip + horizontal scroll-snap ---- */
+  .tape{height:32px;position:relative}
+  .tape-l{flex:0 0 auto}
+  .tape-tag{display:none}
+  .tape-track{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+    scrollbar-width:none}
+  .tape-track::-webkit-scrollbar{display:none}
+  .tape:hover .tape-row{animation-play-state:running}   /* no hover-pause on touch */
+  .tape-row{animation:none;transform:none;width:max-content}  /* user-driven, not marquee */
+  .tt{scroll-snap-align:center;padding:0 2px}
+
+  /* ============================================================
+     APP SHELL ROUTER — one region fills the stage at a time.
+     body.mb-shell is added by JS on mobile; data-tab selects view.
+     We override the desktop grid entirely.
+     ============================================================ */
+  .deck,body.watch .deck,body.dash .deck,body.lay-spotlight .deck{
+    display:block;grid-template-columns:none;grid-template-areas:none;
+    position:relative;flex:1;min-height:0;height:100%;
+    overflow:hidden;contain:layout paint}
+
+  /* every region becomes a full-stage layer */
+  .stats,.wire,.rightcol{
+    position:absolute;inset:0;border:none!important;
+    display:none;flex-direction:column;min-height:0;height:100%;
+    contain:layout paint;
+    overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+  /* INTEL (.stats) */
+  body[data-tab="intel"] .stats{display:flex}
+  .stats{overflow-y:auto;padding:16px 14px calc(20px + env(safe-area-inset-bottom));gap:18px}
+  /* audience grid: snap rows for a tidy thumb-scroll */
+  .aud{scroll-snap-type:y proximity}
+  .aud .a{scroll-snap-align:start}
+
+  /* WIRE (.wire) — default tab */
+  body[data-tab="wire"] .wire{display:flex}
+  .wire{overflow:hidden}
+  /* keep .feed as its OWN absolute scroller so engine scroll math holds */
+  .wire .wirewrap{flex:1;min-height:0;position:relative}
+  .wire .feed{position:absolute;inset:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+    padding-bottom:8px}
+  /* collapse stream-management into a calmer block; tabs scroll horizontally */
+  .streammgmt{padding:10px 14px}
+  .wtabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    overscroll-behavior-x:contain;flex-wrap:nowrap}
+  .wtabs::-webkit-scrollbar{display:none}
+  .wtabs button{flex:0 0 auto}
+
+  /* ON AIR (.onair lives inside .rightcol) */
+  body[data-tab="onair"] .rightcol{display:flex}
+  body[data-tab="onair"] .rightcol .markets{display:none}
+  body[data-tab="onair"] .onair{flex:1 1 auto;display:flex;flex-direction:column;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;border:none}
+  body[data-tab="onair"] .player{margin:12px}
+  body[data-tab="onair"] .feeds{aspect-ratio:16/10}
+  body[data-tab="onair"] .oa-meta{padding:12px 14px calc(16px + env(safe-area-inset-bottom))}
+
+  /* MARKETS (.markets lives inside .rightcol) */
+  body[data-tab="markets"] .rightcol{display:flex}
+  body[data-tab="markets"] .rightcol .onair{display:none}
+  body[data-tab="markets"] .markets{display:flex;flex:1;min-height:0}
+  body[data-tab="markets"] .mk-list{flex:1;min-height:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  body[data-tab="markets"] .mk-foot{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
+
+  /* ============================================================
+     VIEW TRANSITIONS — name the stage so old/new cross-fade+slide
+     ============================================================ */
+  body.mb-shell .deck{view-transition-name:mbdeck}
+
+  /* directional slide+fade; direction set by body[data-vtdir] */
+  ::view-transition-old(mbdeck){
+    animation:mb-vt-out .34s var(--ease) both}
+  ::view-transition-new(mbdeck){
+    animation:mb-vt-in .34s var(--ease) both}
+  body[data-vtdir="back"]::view-transition-old(mbdeck){animation-name:mb-vt-out-b}
+  body[data-vtdir="back"]::view-transition-new(mbdeck){animation-name:mb-vt-in-b}
+
+  /* ---- FALLBACK (no View Transitions API): animate the shown region ---- */
+  body.mb-novt[data-tab] .stats,
+  body.mb-novt[data-tab] .wire,
+  body.mb-novt[data-tab] .rightcol{}
+  body.mb-novt.mb-anim[data-vtdir="fwd"] [data-mb-active]{animation:mb-vt-in .3s var(--ease) both}
+  body.mb-novt.mb-anim[data-vtdir="back"] [data-mb-active]{animation:mb-vt-in-b .3s var(--ease) both}
+
+  /* ============================================================
+     LIQUID-GLASS BOTTOM TAB BAR + sliding bubble
+     ============================================================ */
+  .mb-nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    display:grid;grid-template-columns:repeat(4,1fr);align-items:stretch;
+    height:calc(58px + env(safe-area-inset-bottom));
+    padding:6px 10px env(safe-area-inset-bottom);
+    background:rgba(10,10,12,.62);
+    -webkit-backdrop-filter:saturate(180%) blur(22px);
+    backdrop-filter:saturate(180%) blur(22px);
+    border-top:1px solid rgba(255,255,255,.06);
+    box-shadow:0 -1px 0 rgba(255,255,255,.04),0 -12px 30px rgba(0,0,0,.45)}
+  /* the glass bubble — translated on X only, refracts the bar */
+  .mb-nav .mb-bubble{
+    position:absolute;top:6px;left:0;height:46px;
+    width:var(--bubW,72px);
+    transform:translateX(var(--bubX,0));
+    border-radius:14px;pointer-events:none;
+    background:linear-gradient(180deg,rgba(91,140,255,.26),rgba(91,140,255,.12));
+    box-shadow:inset 0 0 0 1px rgba(131,166,255,.35),0 6px 18px rgba(91,140,255,.18);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    transition:transform .42s var(--ease),width .42s var(--ease);
+    will-change:transform,width}
+  .mb-tab{
+    position:relative;z-index:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;
+    min-height:44px;background:none;border:none;cursor:pointer;
+    font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--dim);
+    transition:color .26s var(--ease),transform .09s ease-out;
+    -webkit-tap-highlight-color:transparent}
+  .mb-tab svg{width:21px;height:21px;transition:transform .26s var(--ease)}
+  .mb-tab[aria-selected="true"]{color:var(--blue-hi)}
+  .mb-tab[aria-selected="true"] svg{transform:translateY(-1px) scale(1.04)}
+  .mb-tab:active{transform:scale(.92)}            /* Mario-coin */
+  .mb-tab .mb-dot{                                  /* live ping on ON AIR */
+    position:absolute;top:7px;right:calc(50% - 16px);width:6px;height:6px;
+    border-radius:50%;background:var(--down);box-shadow:0 0 6px var(--down);
+    animation:lp var(--phi) infinite}
+  .mb-tab .mb-badge{                                /* unread count on WIRE */
+    position:absolute;top:5px;right:calc(50% - 20px);min-width:15px;height:15px;
+    padding:0 4px;border-radius:8px;background:var(--blue);color:#fff;
+    font-family:var(--mono);font-size:9px;font-weight:700;line-height:15px;
+    text-align:center;transform:scale(0);transition:transform .3s var(--ease)}
+  .mb-tab .mb-badge.show{transform:scale(1)}
+
+  /* ---- press rhythm across the whole touch surface ---- */
+  .wtool:active,.obtn:active,.qchip:active,.chip:active,
+  .modetog button:active,.addrow button:active,.mk-foot:active{
+    transform:scale(.94);transition:transform .09s ease-out}
+
+  /* ---- #newPill: float above the tab bar, spring in ---- */
+  .newpill{bottom:calc(72px + env(safe-area-inset-bottom));padding:10px 17px;
+    font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+  .newpill:active{transform:translateX(-50%) scale(.95)}
+
+  /* ---- #pulse: full-bleed breathing waveform ---- */
+  .pulse{padding:6px 14px 7px}
+
+  /* tooltip is a desktop affordance — suppress on touch shell */
+  .tooltip{display:none}
+}
+
+/* desktop & up: the shell chrome never exists */
+@media(min-width:861px){
+  .mb-nav{display:none}
+}
+
+/* ============================================================
+   VIEW-TRANSITION KEYFRAMES (global; only engaged on mobile shell)
+   transform + opacity only — GPU, no jank
+   ============================================================ */
+@keyframes mb-vt-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes mb-vt-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-14px)}}
+@keyframes mb-vt-in-b{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes mb-vt-out-b{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(14px)}}
+
+/* ============================================================
+   REDUCED MOTION — scoped kill for MY layer (the global rule
+   already zeroes animation/transition; this also disarms the
+   View Transitions + bubble + snap-smoothing, keeps opacity)
+   ============================================================ */
+@media(prefers-reduced-motion:reduce){
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*){animation:none!important}
+  ::view-transition-old(mbdeck){opacity:0}
+  ::view-transition-new(mbdeck){opacity:1}
+  .mb-nav .mb-bubble{transition:none!important;will-change:auto}
+  .mb-tab:active,.wtool:active,.obtn:active,.qchip:active,.chip:active,
+  .modetog button:active,.newpill:active,.addrow button:active{transform:none!important}
+  .tape-track,.aud{scroll-snap-type:none}
+  html{scroll-behavior:auto}
+  /* fallback view-in animations: opacity only */
+  body.mb-novt.mb-anim [data-mb-active]{animation:none!important;opacity:1!important}
+}
+
+/* --- layout --- */
+/* ============================================================
+   MOBILE APP SHELL  —  ≤860px
+   Liquid-glass tab nav · one full-screen region · safe-area aware
+   Scoped entirely to mobile; desktop untouched. Paste AFTER the
+   existing <style> rules so this block is authoritative.
+   ============================================================ */
+@media (max-width:860px){
+
+  /* root brand tokens for the shell */
+  :root{
+    --nav-h:58px;
+    --top-h:50px;
+    --tape-h:30px;
+    --sat:env(safe-area-inset-top,0px);
+    --sab:env(safe-area-inset-bottom,0px);
+    --sal:env(safe-area-inset-left,0px);
+    --sar:env(safe-area-inset-right,0px);
+    --chrome:calc(var(--top-h) + var(--tape-h) + var(--sat));
+    --glass:rgba(14,14,18,.62);
+  }
+
+  /* 1 ─ RE-ASSERT FIXED VIEWPORT (override the 1240px auto-scroll) */
+  html,body{overflow:hidden!important;position:fixed;inset:0;width:100%;height:100%;
+    overscroll-behavior:none;-webkit-text-size-adjust:100%}
+  .app{height:100dvh!important;min-height:0!important;display:flex;flex-direction:column;
+    padding-left:var(--sal);padding-right:var(--sar)}
+
+  /* 2 ─ TOP BAR : condensed, fixed height, brand cleaned up */
+  .topbar{flex:0 0 auto;height:var(--top-h);min-height:var(--top-h);
+    padding:calc(var(--sat) + 0px) 12px 0;gap:10px;flex-wrap:nowrap;
+    background:var(--ink);box-shadow:0 1px 0 var(--line)}
+  .brand{gap:9px;min-width:0;flex:0 1 auto}
+  .brand .logo{width:32px;height:32px;border-radius:8px}
+  .brand .tx{min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .brand .tx .nm{font-size:15px;line-height:1;letter-spacing:.1px;white-space:nowrap}
+  .brand .tx .sl{font-size:7.5px;line-height:1.1;margin-top:3px;letter-spacing:.14em;
+    max-width:42vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* layout picker is the bottom nav's job on mobile → hide it */
+  .modetog{display:none!important}
+
+  /* compact HUD stats — keep watching + live, drop msg/min on small */
+  .tb-stats{gap:14px;margin-left:auto;flex:0 0 auto}
+  .tb-stat .v{font-size:13px} .tb-stat .v .eye{width:12px;height:12px}
+  .tb-stat .k{font-size:7px}
+  .tb-live{font-size:11px}
+
+  /* 3 ─ TAPE : slim sticky strip */
+  .tape{flex:0 0 auto;height:var(--tape-h);min-height:var(--tape-h)}
+  .tape-tag{display:none}                 /* reclaim width on phones */
+  .fng{padding:0 11px}
+  .fng .k{font-size:8px} .fng .v{font-size:12px} .fng .s{display:none}
+  .tape-row{gap:20px;padding:0 14px;height:var(--tape-h)}
+  .tt{font-size:11px}
+
+  /* 4 ─ DECK : grid → single stage; rightcol dissolves into siblings */
+  .deck,body.watch .deck,body.lay-spotlight .deck{
+    display:block!important;grid-template:none!important;
+    position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+  .rightcol{display:contents!important;border:none!important}
+
+  /* every region becomes a full-screen overlay between chrome + nav */
+  .stats,.wire,.onair,.markets{
+    position:absolute!important;left:0;right:0;top:0;bottom:0;
+    border:none!important;min-height:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    padding-bottom:calc(var(--nav-h) + var(--sab) + 10px);
+    scroll-snap-type:none}
+  .stats{padding:14px 14px calc(var(--nav-h) + var(--sab) + 16px)}
+
+  /* HIDE-ALL reset (beats body.watch/.dash display rules), then reveal one */
+  body .stats,body.watch .stats,
+  body .onair,body.watch .onair,
+  body .markets,body.watch .markets,
+  body .wire{display:none!important}
+
+  body.m-tab-intel  .stats {display:flex!important}
+  body.m-tab-wire   .wire  {display:flex!important;flex-direction:column}
+  body.m-tab-onair  .onair {display:flex!important;flex-direction:column}
+  body.m-tab-markets .markets{display:flex!important;flex-direction:column}
+
+  /* default if controller hasn't tagged the body yet → show WIRE */
+  body:not(.m-tab-wire):not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire{
+    display:flex!important;flex-direction:column}
+
+  /* 5 ─ WIRE region : feed fills, controls compact, pulse kept */
+  .wire-head{padding:11px 14px;gap:9px}
+  .wire-head .ttl{font-size:16px}
+  .wire-head .tools{gap:6px}
+  .wtool{width:40px;height:40px;border-radius:9px}          /* ≥44 hit w/ padding */
+  .wtool svg{width:16px;height:16px}
+  .wtool.surge{height:40px;padding:0 13px;font-size:10px}
+  .wtabs{padding:8px 10px;gap:4px;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;flex-wrap:nowrap}
+  .wtabs::-webkit-scrollbar{display:none}
+  .wtabs button{padding:9px 13px;font-size:12px;white-space:nowrap;flex:0 0 auto;min-height:40px}
+  .pulse{height:30px;padding:5px 14px 6px}
+  .wirewrap{flex:1 1 auto;min-height:0!important;position:relative}
+  .feed{position:absolute!important;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .wmsg{padding:11px 14px;gap:11px}
+  .wmsg .av{width:34px;height:34px}                          /* roomier on touch */
+  .wmsg .usr{font-size:14px}
+  .wmsg .txt{font-size:14px;line-height:1.45}
+  .newpill{bottom:calc(14px);padding:10px 17px;font-size:12px}
+
+  /* streammgmt becomes a SLIDE-UP SHEET (off-screen until summoned) */
+  .streammgmt{
+    position:fixed!important;left:0;right:0;
+    bottom:calc(var(--nav-h) + var(--sab));z-index:60;
+    margin:0;border:none;border-top:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    padding:16px 16px calc(16px + var(--sab));
+    background:var(--glass);
+    -webkit-backdrop-filter:saturate(160%) blur(22px);
+    backdrop-filter:saturate(160%) blur(22px);
+    box-shadow:0 -18px 50px rgba(0,0,0,.55);
+    transform:translateY(120%);
+    transition:transform var(--phi) var(--ease);
+    max-height:62dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  body.sheet-open .streammgmt{transform:translateY(0)}
+  .streammgmt::before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:2px;background:var(--dim-3)}
+  .streammgmt .mh{margin-top:6px}
+  .addrow{gap:9px}
+  .addrow input{padding:13px 13px;font-size:16px;border-radius:11px;min-height:48px} /* 16px = no iOS zoom */
+  .addrow button{padding:0 16px;min-height:48px;font-size:13px;border-radius:11px}
+  .chips{gap:7px;margin-top:12px}
+  .chip{padding:8px 10px;font-size:12px;min-height:40px}
+  .chip .rm{padding:0 4px;font-size:18px}
+  .qchips{gap:7px}
+  .qchip{padding:9px 13px;font-size:12px;min-height:40px}
+
+  /* dim scrim behind the open sheet */
+  body.sheet-open::after{content:"";position:fixed;inset:0;z-index:55;
+    background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+    animation:mbFade .25s var(--ease) both}
+  @keyframes mbFade{from{opacity:0}to{opacity:1}}
+
+  /* FAB to open the connect sheet — only on the WIRE tab */
+  .mb-fab{display:none}
+  body.m-tab-wire .mb-fab{display:flex}
+  .mb-fab{position:fixed;right:calc(14px + var(--sar));
+    bottom:calc(var(--nav-h) + var(--sab) + 14px);z-index:58;
+    width:54px;height:54px;border-radius:50%;border:1px solid var(--blue-hi);
+    align-items:center;justify-content:center;cursor:pointer;
+    background:linear-gradient(180deg,var(--blue-hi),var(--blue));color:#fff;
+    box-shadow:0 8px 26px rgba(91,140,255,.42),inset 0 1px 0 rgba(255,255,255,.35);
+    transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+  .mb-fab:active{transform:scale(.92)}
+  .mb-fab svg{width:24px;height:24px}
+  body.sheet-open .mb-fab{transform:rotate(45deg) scale(.96)}
+
+  /* 6 ─ ON AIR region : clean 16:9 hero, single feed */
+  .onair{flex:0 0 auto}
+  body.m-tab-onair .onair{padding-top:6px}
+  .oa-head{padding:11px 14px}
+  .player{margin:0 12px!important;border-radius:12px}
+  body.watch .player{margin:0 12px!important;flex:0 0 auto}
+  .feeds{display:block!important;aspect-ratio:16/9!important;height:auto!important;padding:0!important;gap:0}
+  body.watch .feeds{aspect-ratio:16/9!important;height:auto!important}
+  .vf{position:absolute!important;inset:0;border-radius:12px}
+  .vf:not(.hero){display:none!important}                     /* one clean hero */
+  .vf.hero{display:block!important;border-radius:12px}
+  .vf.hero .np .nm{font-size:20px}
+  body.watch .vf.hero .np .nm{font-size:20px}
+  .lt{left:10px;right:10px;bottom:10px}
+  .lt .ti{font-size:clamp(14px,4.4vw,20px)}
+  .oa-meta{padding:13px 14px calc(var(--nav-h) + var(--sab) + 20px)}
+  .oa-meta .ti{font-size:16px}
+  .oa-act{gap:9px;margin-top:13px}
+  .obtn{padding:13px 0;font-size:12px;min-height:48px}
+
+  /* 7 ─ MARKETS region : list fills, foot pinned above nav */
+  .markets{flex:1 1 auto}
+  body.watch .markets{flex:1 1 auto}
+  .mk-head{padding:12px 14px 10px}
+  .mk-list{flex:1 1 auto;min-height:0;max-height:none!important;-webkit-overflow-scrolling:touch}
+  .mrow,.prow{padding:11px 14px}
+  .mrow .nm .t,.prow .nm .t{font-size:13px}
+  .mk-foot{padding:11px 14px calc(11px + var(--sab));font-size:10px}
+
+  /* 8 ─ INTEL region : the stats rail, scrollable */
+  .stats{gap:18px}
+  .bignum{font-size:32px}
+  .gauge-wrap svg{width:180px;height:101px}
+
+  /* footer is desktop chrome — hidden; nav owns the bottom */
+  .confluxbar{display:none!important}
+
+  /* 9 ─ LIQUID-GLASS BOTTOM TAB NAV */
+  .mb-nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:70;
+    display:flex;align-items:stretch;
+    height:calc(var(--nav-h) + var(--sab));
+    padding:0 8px var(--sab);
+    background:var(--glass);
+    -webkit-backdrop-filter:saturate(180%) blur(26px);
+    backdrop-filter:saturate(180%) blur(26px);
+    border-top:1px solid rgba(255,255,255,.07);
+    box-shadow:0 -1px 0 rgba(0,0,0,.4),0 -14px 40px rgba(0,0,0,.45)}
+  .mb-nav::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent)}
+  /* sliding "bubble" pill behind the active tab */
+  .mb-nav .bubble{position:absolute;top:7px;height:var(--nav-h);
+    width:var(--bw,25%);left:var(--bx,0);
+    transform:translateX(0);height:calc(var(--nav-h) - 14px);
+    border-radius:14px;
+    background:linear-gradient(180deg,rgba(91,140,255,.30),rgba(91,140,255,.14));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 18px rgba(91,140,255,.30);
+    border:1px solid rgba(131,166,255,.45);
+    transition:left var(--phi) var(--ease),width var(--phi) var(--ease);
+    pointer-events:none;z-index:0}
+  .mb-tab{position:relative;z-index:1;flex:1 1 0;min-width:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;cursor:pointer;color:var(--dim);
+    font-family:var(--gk);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:0;min-height:44px;-webkit-tap-highlight-color:transparent;
+    transition:color .2s var(--ease)}
+  .mb-tab svg{width:21px;height:21px;transition:transform .2s var(--ease),color .2s var(--ease)}
+  .mb-tab[aria-selected="true"]{color:var(--blue-hi)}
+  .mb-tab[aria-selected="true"] svg{transform:translateY(-1px) scale(1.06)}
+  .mb-tab:active svg{transform:scale(.9)}
+  .mb-tab .dot{position:absolute;top:8px;right:24%;width:6px;height:6px;border-radius:50%;
+    background:var(--down);box-shadow:0 0 6px var(--down);display:none}
+  .mb-tab.has-live .dot{display:block;animation:lp var(--phi) infinite}
+  .mb-tab:focus-visible{outline:2px solid var(--blue);outline-offset:-3px;border-radius:12px}
+
+  /* tooltip can overflow the tiny stage — keep it from blocking the nav */
+  .tooltip{display:none!important}
+}
+
+/* show the nav only on mobile */
+.mb-nav,.mb-fab{display:none}
+
+/* 10 ─ VIEW TRANSITION : buttery region swap (supporting browsers) */
+@media (max-width:860px){
+  @supports (view-transition-name:root){
+    ::view-transition-old(root){animation:mbOut .26s var(--ease) both}
+    ::view-transition-new(root){animation:mbIn .30s var(--ease) both}
+  }
+}
+@keyframes mbOut{to{opacity:0;transform:translateY(-6px)}}
+@keyframes mbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media (prefers-reduced-motion:reduce){
+  .mb-nav .bubble{transition:none}
+  .streammgmt{transition:none}
+  ::view-transition-old(root),::view-transition-new(root){animation:none!important}
+}
+
+/* --- pwa-perf --- */
+/* ============================================================
+   MOBILE REMASTER — APP SHELL (≤860px) // additive, scoped.
+   Desktop is untouched: everything here lives in this media
+   query (plus a reduced-motion block). The bottom nav is
+   display:none above 860px.
+   ============================================================ */
+@media (max-width:860px){
+
+  /* ---- SHELL: fixed viewport, no page scroll; regions scroll inside ---- */
+  html,body{overflow:hidden;height:100%;height:100dvh;overscroll-behavior:none}
+  .app{height:100dvh;min-height:0}
+
+  /* TOP BAR — condensed, no wrap. Kill the subtext overlap. */
+  .topbar{height:52px;padding:0 12px;padding-top:env(safe-area-inset-top);
+    height:calc(52px + env(safe-area-inset-top));gap:10px;flex-wrap:nowrap}
+  .brand{gap:8px;min-width:0}
+  .brand .logo{width:30px;height:30px;border-radius:7px}
+  .brand .logo svg{width:17px;height:17px}
+  .brand .tx .nm{font-size:14px}
+  .brand .tx .sl{display:none}                 /* fixes wordmark overlap */
+  .modetog{display:none}                        /* bottom nav replaces it */
+  .tb-stats{gap:13px;margin-left:auto}
+  .tb-stat .v{font-size:13px}
+  .tb-stat .v .eye{width:12px;height:12px}
+  .tb-stat .k{font-size:7.5px}
+  /* keep only viewers + live on phone; msg/min lives in INTEL */
+  .tb-stats .tb-stat:last-child{display:none}
+
+  /* TAPE — slim sticky strip under the bar */
+  .tape{height:30px;position:sticky;top:0;z-index:25}
+  .tape-tag{display:none}
+  .fng{padding:0 11px}
+  .fng .k{font-size:8px}
+
+  /* ---- DECK becomes a single full-screen stage ---- */
+  .deck,body.watch .deck,body.lay-spotlight .deck{
+    display:block;grid-template:none;flex:1 1 auto;min-height:0;position:relative}
+  /* every region absolutely fills the stage; only the active one shows */
+  .stats,.wire,.rightcol,.onair,.markets{
+    border:none!important;min-height:0}
+  .stats,.wire,.onair,.markets{
+    position:absolute;inset:0;display:none;
+    /* room for the fixed glass nav + home bar */
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .stats,.markets{overflow-y:auto}
+  /* rightcol is just a passthrough container on mobile */
+  .rightcol{position:absolute;inset:0;display:contents}
+
+  /* TAB ROUTING — body[data-tab] decides the visible region.
+     View Transitions tags so swaps cross-fade natively. */
+  body[data-tab] .wire,body[data-tab] .onair,
+  body[data-tab] .markets,body[data-tab] .stats{view-transition-name:none}
+  body[data-tab="wire"]    .wire{display:flex;view-transition-name:region}
+  body[data-tab="onair"]   .onair{display:flex;flex-direction:column;view-transition-name:region}
+  body[data-tab="markets"] .markets{display:flex;view-transition-name:region}
+  body[data-tab="intel"]   .stats{display:flex;view-transition-name:region}
+  /* default before JS boots: show the wire */
+  body:not([data-tab]) .wire{display:flex}
+  body:not([data-tab]) .onair,
+  body:not([data-tab]) .markets,
+  body:not([data-tab]) .stats{display:none}
+  /* watch-mode hides stats/markets on desktop — force them back for tabs */
+  body.watch .stats,body.watch .markets{display:none}
+  body.watch[data-tab="intel"] .stats{display:flex}
+  body.watch[data-tab="markets"] .markets{display:flex}
+
+  /* fallback fade (runs when View Transitions unsupported) */
+  body.mt-anim[data-tab] .wire,body.mt-anim[data-tab] .onair,
+  body.mt-anim[data-tab] .markets,body.mt-anim[data-tab] .stats{
+    animation:mfade .34s var(--ease) both}
+  @keyframes mfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ---- WIRE: keep #feed as its own internal scroller (autoscroll!) ---- */
+  .wire{flex-direction:column}
+  .wire-head{padding:10px 14px}
+  .wire-head .src{display:none}
+  /* the desktop 900 query set .feed{position:relative} — undo it ≤860 */
+  .wirewrap{flex:1 1 auto;min-height:0;position:relative}
+  .feed{position:absolute;inset:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  /* off-screen rows skip layout+paint */
+  .wmsg{content-visibility:auto;contain-intrinsic-size:auto 58px}
+  .pulse{height:30px}
+
+  /* CONNECT as a bottom sheet (frees the feed) */
+  .streammgmt{position:fixed;left:0;right:0;bottom:0;z-index:60;
+    border-top:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;
+    padding:16px 16px calc(18px + env(safe-area-inset-bottom));
+    background:var(--panel);box-shadow:0 -14px 40px rgba(0,0,0,.55);
+    transform:translateY(112%);transition:transform var(--phi) var(--ease);
+    max-height:74vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  body.sheet-open .streammgmt{transform:translateY(0)}
+  .streammgmt::before{content:"";position:absolute;top:7px;left:50%;
+    transform:translateX(-50%);width:38px;height:4px;border-radius:99px;background:var(--line)}
+  .streammgmt .addrow input{padding:12px 13px;font-size:16px} /* ≥16px = no iOS zoom */
+  .streammgmt .addrow button{padding:0 15px;min-height:44px}
+  .qchip{padding:8px 11px}
+  /* scrim behind the sheet */
+  .mt-scrim{position:fixed;inset:0;z-index:55;background:rgba(4,4,6,.6);
+    opacity:0;pointer-events:none;transition:opacity .3s var(--ease);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  body.sheet-open .mt-scrim{opacity:1;pointer-events:auto}
+  /* Connect FAB — only on the WIRE tab */
+  .mt-fab{position:fixed;right:14px;z-index:50;display:none;
+    bottom:calc(80px + env(safe-area-inset-bottom));
+    width:52px;height:52px;border-radius:16px;border:1px solid var(--blue);
+    background:var(--blue);color:#fff;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(91,140,255,.4);cursor:pointer;
+    transition:transform .2s var(--ease)}
+  .mt-fab:active{transform:scale(.92)}
+  .mt-fab svg{width:24px;height:24px}
+  body[data-tab="wire"] .mt-fab,body:not([data-tab]) .mt-fab{display:flex}
+
+  /* ON AIR — let the player breathe; markets handled by its own tab */
+  .onair{flex:1 1 auto}
+  .player{margin:12px}
+  .feeds{display:flex;flex-wrap:wrap;aspect-ratio:auto;gap:6px}
+  .vf.hero{order:-1;flex:1 1 100%;aspect-ratio:16/9}
+  .vf:not(.hero){flex:1 1 calc(50% - 3px);aspect-ratio:4/3}
+  .oa-meta{padding:13px 16px 18px}
+  .oa-act .obtn{padding:13px 0;font-size:12px} /* fat-finger CTAs */
+
+  /* MARKETS as its own tab — always available */
+  body.watch .markets,.markets{display:none}
+  body[data-tab="markets"] .markets{display:flex;flex-direction:column}
+  .mk-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .mrow,.prow{padding:11px 16px} /* taller rows = comfy thumb scan */
+
+  /* INTEL (the stats rail) */
+  .stats{padding:16px 14px calc(80px + env(safe-area-inset-bottom));gap:18px}
+
+  /* footer hidden on phone — the nav owns the bottom */
+  .confluxbar{display:none}
+
+  /* ============================================================
+     LIQUID-GLASS BOTTOM TAB BAR
+     ============================================================ */
+  .mtab{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;
+    height:calc(64px + env(safe-area-inset-bottom));
+    padding:8px 10px env(safe-area-inset-bottom);
+    background:rgba(12,12,16,.62);
+    -webkit-backdrop-filter:saturate(180%) blur(22px);
+    backdrop-filter:saturate(180%) blur(22px);
+    border-top:1px solid rgba(255,255,255,.08);
+    box-shadow:0 -1px 0 rgba(255,255,255,.04),0 -16px 40px rgba(0,0,0,.5)}
+  /* faint top sheen — the "liquid" highlight */
+  .mtab::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)}
+  /* the sliding glass bubble (4 tabs → 25% slots) */
+  .mtab .bubble{position:absolute;top:8px;left:10px;
+    width:calc((100% - 20px)/4);height:48px;border-radius:14px;
+    background:rgba(91,140,255,.16);
+    box-shadow:inset 0 0 0 1px rgba(131,166,255,.35),0 4px 14px rgba(91,140,255,.22);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    transform:translateX(calc(var(--i,0) * 100%));
+    transition:transform var(--phi) var(--ease);will-change:transform;pointer-events:none}
+  .mtab button{position:relative;z-index:1;flex:1 1 0;min-width:44px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;cursor:pointer;color:var(--dim-2);
+    font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;transition:color .2s var(--ease)}
+  .mtab button svg{width:21px;height:21px;transition:transform .2s var(--ease)}
+  .mtab button[aria-selected="true"]{color:var(--blue-hi)}
+  .mtab button[aria-selected="true"] svg{transform:translateY(-1px) scale(1.04)}
+  .mtab button:active svg{transform:scale(.88)}
+  .mtab button .dot{position:absolute;top:7px;right:calc(50% - 18px);width:6px;height:6px;
+    border-radius:50%;background:var(--down);box-shadow:0 0 6px var(--down);
+    opacity:0;transform:scale(.4);transition:.25s var(--ease)}
+  .mtab button.has-new .dot{opacity:1;transform:scale(1)} /* live ping on WIRE */
+  .mtab button:focus-visible{outline:2px solid var(--blue);outline-offset:-3px;border-radius:14px}
+
+  /* nudge the new-pill above the nav so it's tappable */
+  .newpill{bottom:calc(80px + env(safe-area-inset-bottom))}
+}
+
+/* desktop & up: nav and mobile-only chrome never exist visually */
+.mtab,.mt-scrim,.mt-fab{display:none}
+
+/* View Transitions: name the stage swap; fall back gracefully */
+@media (max-width:860px){
+  ::view-transition-old(region),::view-transition-new(region){
+    animation-duration:.34s;animation-timing-function:var(--ease)}
+}
+
+/* reduced motion: kill bubble slide, fades, VT */
+@media (prefers-reduced-motion:reduce){
+  .mtab .bubble{transition:none}
+  body.mt-anim .wire,body.mt-anim .onair,body.mt-anim .markets,body.mt-anim .stats{animation:none}
+  .streammgmt{transition:none}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+
+/* ===================== /MOBILE APP-SHELL ===================== */
+  /* ===================== MOBILE REGION MACHINE — FINAL AUTHORITY ===================== */
+  @media (max-width:860px){
+    /* hide every region by default (beaten only by the active reveal below) */
+    html body .stats, html body .wire, html body .onair, html body .markets{ display:none !important; }
+    /* reveal EXACTLY the active pane — fully visible, correctly pinned between chrome + nav */
+    html body.m-tab-wire .wire,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire,
+    html body.m-tab-onair .onair,
+    html body.m-tab-markets .markets,
+    html body.m-tab-intel .stats{
+      display:flex !important; flex-direction:column !important;
+      /* .deck has contain:layout paint -> it is the containing block for these
+         fixed panes, and .deck already spans exactly chrome-bottom..nav. Fill it. */
+      position:fixed !important; top:0 !important; right:0 !important; bottom:0 !important; left:0 !important;
+      width:auto !important; height:auto !important; max-height:none !important; margin:0 !important;
+      z-index:10 !important; overflow-y:auto !important; overflow-x:hidden !important;
+      opacity:1 !important; visibility:visible !important; pointer-events:auto !important; transform:none !important;
+    }
+  }
+  /* ===================== /MOBILE REGION MACHINE ===================== */
 </style>
 
 <div class="app">
@@ -600,6 +1928,43 @@
     <span><b>CONFLUX</b> · the Market Bubble command deck · for <b>Banks</b> &amp; <b>Ansem</b></span>
     <span class="em">live every Thursday</span>🔔
   </footer>
+<!-- ░░ MOBILE APP-SHELL: liquid-glass bottom tab bar + Connect FAB ░░
+     ONE nav for the whole file. display:none on desktop (foundationCss + guard).
+     INSERT as the LAST children of <div class="app"> — i.e. immediately
+     AFTER the <footer class="confluxbar">…</footer> (line 602) and BEFORE
+     the closing </div> of .app (line 603). The FAB lives outside the rail so
+     it overlays the WIRE pane only (shown via body.m-tab-wire .mb-fab). -->
+
+  <button class="mb-fab" type="button" aria-label="Connect a stream" aria-haspopup="dialog" aria-controls="msheet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="mbnav" role="tablist" aria-label="Sections" aria-orientation="horizontal">
+    <div class="mbnav-rail">
+      <span class="mbnav-bubble" aria-hidden="true"></span>
+
+      <button class="mbnav-tab" data-tab="wire" role="tab" id="mbtab-wire" aria-controls="feed" aria-selected="true" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.3l-5 1.7 1.6-4.4A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/></svg>
+        <span class="mbnav-lbl">Wire</span>
+      </button>
+
+      <button class="mbnav-tab" data-tab="onair" role="tab" id="mbtab-onair" aria-controls="oa-player" aria-selected="false" tabindex="-1">
+        <span class="mbnav-dot" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="14" height="14" rx="2.5"/><path d="M16.5 9.5 21.5 6.5v11l-5-3"/></svg>
+        <span class="mbnav-lbl">On&nbsp;Air</span>
+      </button>
+
+      <button class="mbnav-tab" data-tab="markets" role="tab" id="mbtab-markets" aria-controls="mkList" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 3.5 3.5L21 6"/><path d="M21 11V6h-5"/></svg>
+        <span class="mbnav-lbl">Markets</span>
+      </button>
+
+      <button class="mbnav-tab" data-tab="intel" role="tab" id="mbtab-intel" aria-controls="channelList" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg>
+        <span class="mbnav-lbl">Intel</span>
+      </button>
+    </div>
+  </nav>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
@@ -1171,5 +2536,192 @@
   setInterval(function(){ ROSTER.slice(-6).forEach(noteFirstTimer); renderFirstTimers(); renderAudience(); }, 3500);
 
   init();
+})();
+
+/* ============================================================
+   MARKET BUBBLE — MOBILE NAV CONTROLLER (canonical, single IIFE)
+   ADDITIVE & FAIL-SAFE. Touches NO engine state. It only:
+     - on mobile, sets body.m-tab-{wire|onair|markets|intel}
+     - slides the liquid-glass .mbnav-bubble (transform only)
+     - assigns view-transition-name 'mbpane' to the ACTIVE region
+       and swaps via document.startViewTransition (fallback: instant)
+     - builds + drives the Connect SHEET by RELOCATING the existing
+       .streammgmt node (lossless; listeners live on inner ids)
+     - re-tails #feed.scrollTop on WIRE open; clears the unread dot
+   Paste as its OWN  at the very end of the file, AFTER the
+   existing  (the engine IIFE is closed; do NOT nest inside).
+   ============================================================ */
+(function(){
+  "use strict";
+  try{
+    var MQ     = window.matchMedia('(max-width:860px)');
+    var REDUCEm= window.matchMedia('(prefers-reduced-motion:reduce)');
+    var TABS   = ['wire','onair','markets','intel'];
+    var IDX    = {wire:0,onair:1,markets:2,intel:3};
+    var SEL    = {wire:'.wire',onair:'.onair',markets:'.markets',intel:'.stats'};
+    var nav    = document.querySelector('.mbnav');
+    if(!nav) return;                                   // markup missing -> no-op
+    var bubble = nav.querySelector('.mbnav-bubble');
+    var btns   = [].slice.call(nav.querySelectorAll('.mbnav-tab'));
+    var body   = document.body;
+    var current= 'wire';
+    var hasVT  = (typeof document.startViewTransition === 'function');
+
+    function feedEl(){ return document.getElementById('feed'); }
+    function tailFeed(){ var f=feedEl(); if(f) f.scrollTop=f.scrollHeight; }
+
+    /* ---- bubble: one GPU transform, 1/4 of the rail per tab ---- */
+    function moveBubble(){
+      if(!bubble) return;
+      bubble.style.transform = 'translateX(calc(' + (IDX[current]||0) + ' * 100%))';
+    }
+
+    /* ---- paint aria + the active state token ---- */
+    function paint(tab){
+      btns.forEach(function(b){
+        var on = b.getAttribute('data-tab') === tab;
+        b.setAttribute('aria-selected', on?'true':'false');
+        b.tabIndex = on ? 0 : -1;
+      });
+      // ONE state token: strip all, set one
+      TABS.forEach(function(t){ body.classList.remove('m-tab-'+t); });
+      body.classList.add('m-tab-'+tab);
+      // assign VT name to active pane only (so iframes aren't re-snapshotted)
+      try{
+        document.querySelectorAll('.wire,.onair,.markets,.stats').forEach(function(el){
+          el.style.viewTransitionName = '';
+        });
+        var act = document.querySelector(SEL[tab]);
+        if(act) act.style.viewTransitionName = 'mbpane';
+      }catch(_){}
+      if(tab==='wire'){ var w=nav.querySelector('.mbnav-tab[data-tab="wire"]'); if(w) w.classList.remove('is-live'); tailFeed(); }
+    }
+
+    function commit(tab){ current=tab; paint(tab); moveBubble(); }
+
+    function go(tab,viaKey){
+      if(TABS.indexOf(tab)<0) return;
+      if(tab===current){ if(tab==='wire') tailFeed(); return; }
+      body.setAttribute('data-vtdir', (IDX[tab]>IDX[current])?'fwd':'back');
+      var canVT = hasVT && !REDUCEm.matches && MQ.matches;
+      if(canVT){
+        try{ var vt=document.startViewTransition(function(){ commit(tab); });
+             if(vt&&vt.finished&&vt.finished.catch) vt.finished.catch(function(){}); return; }
+        catch(_){ /* fall through */ }
+      }
+      commit(tab);
+      if(viaKey){ var b=nav.querySelector('.mbnav-tab[data-tab="'+tab+'"]'); if(b) b.focus(); }
+    }
+
+    /* tap + roving keyboard */
+    nav.addEventListener('click', function(e){
+      var b=e.target.closest('.mbnav-tab'); if(b) go(b.getAttribute('data-tab'));
+    });
+    nav.addEventListener('keydown', function(e){
+      var i=IDX[current];
+      if(e.key==='ArrowRight'){ e.preventDefault(); go(TABS[(i+1)%4],true); }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); go(TABS[(i+3)%4],true); }
+      else if(e.key==='Home'){ e.preventDefault(); go(TABS[0],true); }
+      else if(e.key==='End'){ e.preventDefault(); go(TABS[3],true); }
+    });
+
+    /* ---- CONNECT SHEET: relocate the existing .streammgmt node ---- */
+    var scrim,sheet,sbody,mgmt,mgmtHome,mgmtAnchor;
+    (function buildSheet(){
+      mgmt = document.querySelector('.wire .streammgmt') || document.querySelector('.streammgmt');
+      if(!mgmt) return;
+      mgmtHome   = mgmt.parentNode;
+      mgmtAnchor = mgmt.nextSibling;
+      scrim = document.createElement('div'); scrim.className='mb-scrim'; scrim.id='mbScrim';
+      sheet = document.createElement('div'); sheet.className='msheet'; sheet.id='msheet';
+      sheet.setAttribute('role','dialog'); sheet.setAttribute('aria-modal','true');
+      sheet.setAttribute('aria-label','Connect a stream');
+      sheet.innerHTML =
+        '<div class="msheet-grab" id="msheetGrab" aria-hidden="true"></div>'+
+        '<div class="msheet-h"><span class="t">Connect a stream</span>'+
+        '<button class="msheet-x" id="msheetX" type="button" aria-label="Close">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
+        '<div class="msheet-body" id="msheetBody"></div>';
+      body.appendChild(scrim); body.appendChild(sheet);
+      sbody = document.getElementById('msheetBody');
+    })();
+    function dock(toMobile){
+      if(!mgmt||!sbody) return;
+      if(toMobile){ if(mgmt.parentNode!==sbody) sbody.appendChild(mgmt); }
+      else if(mgmtHome && mgmt.parentNode===sbody){ mgmtHome.insertBefore(mgmt,mgmtAnchor); }
+    }
+    var lastFocus=null;
+    function openSheet(){
+      if(!sheet) return;
+      lastFocus=document.activeElement; body.classList.add('sheet-open');
+      var inp=document.getElementById('addInput');
+      setTimeout(function(){ if(inp){ try{inp.focus({preventScroll:true});}catch(_){inp.focus();} } },340);
+    }
+    function closeSheet(){
+      body.classList.remove('sheet-open');
+      if(lastFocus&&lastFocus.focus){ try{lastFocus.focus();}catch(_){} }
+    }
+    var fab=document.querySelector('.mb-fab');
+    if(fab) fab.addEventListener('click', openSheet);
+    if(scrim) scrim.addEventListener('click', closeSheet);
+    var xb=document.getElementById('msheetX'); if(xb) xb.addEventListener('click', closeSheet);
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape' && body.classList.contains('sheet-open')) closeSheet();
+    });
+    /* close after a successful add / quick-add so the feed shows the result */
+    var addBtn=document.getElementById('addBtn');
+    if(addBtn) addBtn.addEventListener('click', function(){ setTimeout(closeSheet,140); });
+    var qc=document.getElementById('quickChips');
+    if(qc) qc.addEventListener('click', function(e){ if(e.target.closest('.qchip')) setTimeout(closeSheet,140); });
+    /* grabber swipe-down to dismiss */
+    var grab=document.getElementById('msheetGrab');
+    if(grab){
+      var y0=null;
+      grab.addEventListener('touchstart', function(e){ y0=(e.touches?e.touches[0]:e).clientY; }, {passive:true});
+      grab.addEventListener('touchmove', function(e){
+        if(y0==null||!sheet) return;
+        var dy=(e.touches?e.touches[0]:e).clientY - y0;
+        if(dy>4) sheet.style.transform='translateY('+Math.min(dy,420)+'px)';
+      }, {passive:true});
+      grab.addEventListener('touchend', function(e){
+        if(y0==null) return;
+        var dy=(e.changedTouches?e.changedTouches[0]:e).clientY - y0;
+        if(sheet) sheet.style.transform=''; y0=null;
+        if(dy>90) closeSheet();
+      });
+    }
+
+    /* ---- unread dot on WIRE while you're on another tab (passive) ---- */
+    (function(){
+      var f=feedEl(); var wireTab=nav.querySelector('.mbnav-tab[data-tab="wire"]');
+      if(!f||!wireTab||!('MutationObserver' in window)) return;
+      new MutationObserver(function(muts){
+        if(!MQ.matches || current==='wire') return;
+        for(var i=0;i<muts.length;i++){ if(muts[i].addedNodes&&muts[i].addedNodes.length){ wireTab.classList.add('is-live'); break; } }
+      }).observe(f,{childList:true});
+    })();
+
+    /* ---- breakpoint sync (desktop <-> mobile) ---- */
+    function sync(on){
+      if(on){ dock(true);
+        if(!body.className.match(/m-tab-/)){ current='wire'; }
+        commit(current);
+        requestAnimationFrame(function(){ requestAnimationFrame(moveBubble); });
+      } else {
+        closeSheet(); dock(false);
+        TABS.forEach(function(t){ body.classList.remove('m-tab-'+t); });
+        body.removeAttribute('data-vtdir');
+        try{ document.querySelectorAll('.wire,.onair,.markets,.stats').forEach(function(el){ el.style.viewTransitionName=''; }); }catch(_){}
+      }
+    }
+    if(MQ.addEventListener) MQ.addEventListener('change', function(e){ sync(e.matches); });
+    else if(MQ.addListener) MQ.addListener(function(e){ sync(e.matches); });
+    window.addEventListener('resize', function(){ if(MQ.matches) moveBubble(); }, {passive:true});
+    window.addEventListener('orientationchange', function(){ setTimeout(moveBubble,120); });
+
+    function boot(){ sync(MQ.matches); }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  }catch(err){ /* fail-safe: never break the wired engine */ }
 })();
 </script>
