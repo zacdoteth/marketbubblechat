@@ -253,6 +253,14 @@ footer b{color:var(--gold-deep);font-weight:400}
 .panel-setup{display:flex;flex-direction:column;gap:8px;padding:10px 14px 12px;border-bottom:2px solid color-mix(in srgb,var(--gold) 28%,transparent);background:rgba(232,199,126,.04);position:relative;z-index:2}
 .panel-setup .setup-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--gold-br);text-transform:uppercase;font-weight:700}
 .panel-setup .setup-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+/* X-broadcast worker command helper */
+.xb-help{flex-direction:column;gap:5px;margin-top:2px}
+.xb-help .xb-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--gold-br);text-transform:uppercase;font-weight:700}
+.xb-help .xb-cmd{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.xb-help .xb-cmd code{flex:1;min-width:0;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--ink);white-space:nowrap;overflow-x:auto;letter-spacing:.01em}
+.xb-help .xb-copy{flex:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:10px;letter-spacing:.04em;color:var(--gold);padding:4px 9px;border-radius:6px;border:1px solid var(--line);background:rgba(232,199,126,.04);transition:all .15s ease}
+.xb-help .xb-copy:hover{background:rgba(232,199,126,.12)}
+.xb-help .xb-copy.ok{color:#1a1305;background:linear-gradient(180deg,var(--gold-br),var(--gold-deep));border-color:transparent}
 
 /* ---------- channel (streamer) filter ---------- */
 .cfbar{display:none;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--line-soft);position:relative;z-index:2;background:rgba(232,199,126,.04)}
@@ -415,6 +423,7 @@ footer b{color:var(--gold-deep);font-weight:400}
       </div>
       <div id="connectMsg" aria-live="polite" style="font-family:'Space Mono',monospace;font-size:11px;line-height:1.4;min-height:0;display:none;"></div>
       <span id="connectList" class="connect-list"></span>
+      <div id="xbHelp" class="xb-help" style="display:none"></div>
     </div>
 
     <div class="hype" id="hype"><div class="fill" id="hypeFill"></div></div>
@@ -764,12 +773,13 @@ function renderStats(){
     const d=ps[s.id]||{viewers:0,msgsPerMin:0};
     const muted=!!STATE.streamMuted[s.id];
     const isLive=s.status==='live';
+    const name=streamName(s);              // label when present (e.g. X broadcaster handle), else channel id
     html+=`<div class="sp-row">`+
       `<span class="sp-dot" style="background:${PLAT_COLOR[s.platform]||'#fff'};box-shadow:0 0 5px ${PLAT_COLOR[s.platform]||'#fff'}"></span>`+
-      `<span class="sp-name" title="${esc(s.platform+'·'+s.channel)}">${esc(s.channel)}</span>`+
+      `<span class="sp-name" title="${esc(s.platform+'·'+name)}">${esc(name)}</span>`+
       `<span class="sp-indicator ${isLive?'live':'offline'}" title="${isLive?'live':'offline'}"></span>`+
       `<span class="sp-nums"><span class="sp-num">${kfmt2(d.viewers)}</span><span class="sp-sub">${d.msgsPerMin||0} msg/min</span></span>`+
-      `<button class="sp-mute${muted?' muted':''}" data-sid="${esc(s.id)}" title="${muted?'Unmute':'Mute'} ${esc(s.channel)}" aria-pressed="${muted}">${muted?ICON_EYE_OFF:ICON_EYE}</button>`+
+      `<button class="sp-mute${muted?' muted':''}" data-sid="${esc(s.id)}" title="${muted?'Unmute':'Mute'} ${esc(name)}" aria-pressed="${muted}">${muted?ICON_EYE_OFF:ICON_EYE}</button>`+
       `</div>`;
   }
   html+=`</div>`;
@@ -885,16 +895,22 @@ function doConnect(){
 }
 connectGo.addEventListener('click', doConnect);
 connectUrl.addEventListener('keydown', e=>{ if(e.key==='Enter') doConnect(); });
+// label fallback: backend may report a display name (e.g. an X broadcaster's handle)
+// in `label`; show it instead of the raw channel/broadcast id. Defensive: both fields
+// may be missing on existing streams.
+function streamName(s){ return (s&&s.label)?String(s.label):String((s&&s.channel)||''); }
+// source defaults to platform when absent (older streams without the new field).
+function streamSource(s){ return (s&&s.source)?String(s.source):String((s&&s.platform)||''); }
 function renderStreams(streams){
   latestStreams=streams||[];
   connectList.innerHTML='';
   streams.forEach(s=>{
     const el=document.createElement('span');
     el.className='connect-pill '+(s.status==='live'?'live':(s.status==='error'?'error':''));
-    el.innerHTML=`<span class="st"></span>${esc(s.platform)}·${esc(s.channel)} <span class="rm" data-id="${s.id}">&#x2715;</span>`;
+    el.innerHTML=`<span class="st"></span>${esc(s.platform)}·${esc(streamName(s))} <span class="rm" data-id="${s.id}">&#x2715;</span>`;
     // surface offline status in connect msg
     if(s.status==='offline'){
-      const key=s.platform+'·'+s.channel;
+      const key=s.platform+'·'+streamName(s);
       showConnectMsg(key+' is offline — no chat until it goes live',false);
     }
     connectList.appendChild(el);
@@ -902,12 +918,38 @@ function renderStreams(streams){
   // update broadcast stage streamer label dynamically
   const bcStreamers=document.getElementById('bcStreamers');
   if(bcStreamers){
-    const live=streams.filter(s=>s.status==='live').map(s=>s.platform+'·'+s.channel).filter(Boolean);
+    const live=streams.filter(s=>s.status==='live').map(s=>s.platform+'·'+streamName(s)).filter(Boolean);
     bcStreamers.textContent=live.length?live.join(' · '):'';
   }
+  renderXBroadcastHelp(streams);
   renderStats();
 }
+// When any connected stream is an X live broadcast, show a copy-ready worker command
+// per broadcast so the operator can start the capture worker. No token / backend URL
+// is rendered — those live in the worker's own environment.
+function renderXBroadcastHelp(streams){
+  const box=document.getElementById('xbHelp'); if(!box)return;
+  const casts=(streams||[]).filter(s=>streamSource(s)==='xbroadcast'&&s.channel);
+  if(!casts.length){ box.style.display='none'; box.innerHTML=''; return; }
+  let html='<span class="xb-lbl">&#9654; Start X capture:</span>';
+  casts.forEach(s=>{
+    const cmd='node x-broadcast-worker.mjs https://x.com/i/broadcasts/'+s.channel;
+    html+=`<div class="xb-cmd"><code>${esc(cmd)}</code>`+
+      `<button class="xb-copy" type="button" data-cmd="${esc(cmd)}" title="Copy command">copy</button></div>`;
+  });
+  box.innerHTML=html;
+  box.style.display='flex';
+}
 connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id, token: controlToken()}); });
+// copy a worker command (degrades gracefully where clipboard is unavailable)
+const xbHelpEl=document.getElementById('xbHelp');
+if(xbHelpEl) xbHelpEl.addEventListener('click', e=>{
+  const btn=e.target.closest('.xb-copy'); if(!btn)return;
+  const cmd=btn.dataset.cmd||''; if(!cmd)return;
+  const done=()=>{ const o=btn.textContent; btn.textContent='copied'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1400); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(cmd).then(done).catch(()=>{btn.textContent='copy failed';setTimeout(()=>{btn.textContent='copy';},1400);}); }
+  else { try{ const ta=document.createElement('textarea'); ta.value=cmd; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }catch(err){ btn.textContent='copy failed'; setTimeout(()=>{btn.textContent='copy';},1400); } }
+});
 onStreams.push(renderStreams);
 onSnapshot.push(snap=>{ renderStreams(snap.streams); });
 

@@ -4,16 +4,16 @@ import assert from 'node:assert/strict';
 import { parseStreamUrl } from '../src/urlParser.js';
 
 test('parses twitch url', () => {
-  assert.deepEqual(parseStreamUrl('https://twitch.tv/xQc'), { platform: 'twitch', channel: 'xqc' });
+  assert.deepEqual(parseStreamUrl('https://twitch.tv/xQc'), { platform: 'twitch', source: 'twitch', channel: 'xqc' });
 });
 test('parses kick url with www and trailing slash', () => {
-  assert.deepEqual(parseStreamUrl('https://www.kick.com/Trainwreckstv/'), { platform: 'kick', channel: 'trainwreckstv' });
+  assert.deepEqual(parseStreamUrl('https://www.kick.com/Trainwreckstv/'), { platform: 'kick', source: 'kick', channel: 'trainwreckstv' });
 });
 test('parses x url and strips @', () => {
-  assert.deepEqual(parseStreamUrl('x.com/@Banks'), { platform: 'x', channel: 'banks' });
+  assert.deepEqual(parseStreamUrl('x.com/@Banks'), { platform: 'x', source: 'x', channel: 'banks' });
 });
 test('parses twitter.com as x', () => {
-  assert.deepEqual(parseStreamUrl('https://twitter.com/Z'), { platform: 'x', channel: 'z' });
+  assert.deepEqual(parseStreamUrl('https://twitter.com/Z'), { platform: 'x', source: 'x', channel: 'z' });
 });
 test('rejects empty', () => {
   assert.ok(parseStreamUrl('   ').error);

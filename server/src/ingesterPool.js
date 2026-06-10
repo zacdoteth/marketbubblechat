@@ -3,8 +3,11 @@
 import { TwitchIngester } from './ingesters/twitch.js';
 import { KickIngester } from './ingesters/kick.js';
 import { XIngester } from './ingesters/x.js';
+import { XBroadcastIngester } from './ingesters/xBroadcast.js';
 
-const DEFAULT_INGESTERS = { twitch: TwitchIngester, kick: KickIngester, x: XIngester };
+// Keyed by `source` (not display platform): x.com/{handle} → 'x' (reply search),
+// x.com/i/broadcasts/{id} → 'xbroadcast' (worker-fed). Display platform stays 'x' for both.
+const DEFAULT_INGESTERS = { twitch: TwitchIngester, kick: KickIngester, x: XIngester, xbroadcast: XBroadcastIngester };
 
 export function createIngesterPool({
   ingesters = DEFAULT_INGESTERS,
@@ -15,22 +18,25 @@ export function createIngesterPool({
   const entries = new Map();          // poolKey -> entry
   const broadcasterToKey = new Map(); // broadcasterUserId(string) -> poolKey
 
-  const keyOf = (platform, channel) => platform + ':' + channel;
+  const keyOf = (source, channel) => source + ':' + channel;
 
-  async function subscribe(platform, channel, room) {
-    const key = keyOf(platform, channel);
+  // `source` selects the ingester + forms the pool key; `platform` is the display platform
+  // (equals source for twitch/kick/x; 'x' for source 'xbroadcast').
+  async function subscribe(source, channel, room, platform = source) {
+    const key = keyOf(source, channel);
     let entry = entries.get(key);
     if (entry) {
       if (entry.lingerTimer) { clearTimer(entry.lingerTimer); entry.lingerTimer = null; }
       entry.rooms.add(room);
       if (entry.lastStatus != null) room.onStatus(key, entry.lastStatus);
       if (entry.lastViewers != null) room.onViewers(key, entry.lastViewers);
+      if (entry.label != null) room.setLabel?.(key, entry.label);
       return key;
     }
-    entry = { platform, channel, ingester: null, rooms: new Set([room]),
-      broadcasterUserId: null, lastStatus: null, lastViewers: null, lingerTimer: null };
+    entry = { source, platform, channel, ingester: null, rooms: new Set([room]),
+      broadcasterUserId: null, lastStatus: null, lastViewers: null, label: null, lingerTimer: null };
     entries.set(key, entry);
-    const Ing = ingesters[platform];
+    const Ing = ingesters[source];
     const ing = new Ing(channel, {
       onMessage: (m) => { for (const r of entry.rooms) r.onMessage({ ...m, poolKey: key, platform }); },
       onViewers: (n) => { entry.lastViewers = n; for (const r of entry.rooms) r.onViewers(key, n); },
@@ -69,6 +75,36 @@ export function createIngesterPool({
     for (const r of entry.rooms) r.onMessage({ ...fields, poolKey: key, platform: 'kick' });
   }
 
+  // --- X broadcast: fed by the external worker via POST /ingest/x. Routing key is the
+  // broadcast id directly (it IS the channel), so no broadcaster map is needed. ---
+  function routeXChat(broadcastId, fields) {
+    const key = keyOf('xbroadcast', broadcastId);
+    const entry = entries.get(key);
+    if (!entry) return; // worker capturing a broadcast no room wants — drop
+    for (const r of entry.rooms) r.onMessage({ ...fields, poolKey: key, platform: 'x' });
+  }
+  function setXViewers(broadcastId, n) {
+    const key = keyOf('xbroadcast', broadcastId);
+    const entry = entries.get(key);
+    if (!entry) return;
+    entry.lastViewers = n;
+    for (const r of entry.rooms) r.onViewers(key, n);
+  }
+  function setXStatus(broadcastId, status) {
+    const key = keyOf('xbroadcast', broadcastId);
+    const entry = entries.get(key);
+    if (!entry) return;
+    entry.lastStatus = status;
+    for (const r of entry.rooms) r.onStatus(key, status);
+  }
+  function setXLabel(broadcastId, label) {
+    const key = keyOf('xbroadcast', broadcastId);
+    const entry = entries.get(key);
+    if (!entry) return;
+    entry.label = label;
+    for (const r of entry.rooms) r.setLabel?.(key, label);
+  }
+
   async function stopAll() {
     for (const key of [...entries.keys()]) {
       const entry = entries.get(key);
@@ -81,5 +117,5 @@ export function createIngesterPool({
     }
   }
 
-  return { subscribe, unsubscribe, routeKickChat, stopAll, _entries: entries, _broadcasterToKey: broadcasterToKey };
+  return { subscribe, unsubscribe, routeKickChat, routeXChat, setXViewers, setXStatus, setXLabel, stopAll, _entries: entries, _broadcasterToKey: broadcasterToKey };
 }

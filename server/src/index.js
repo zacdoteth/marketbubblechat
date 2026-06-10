@@ -1,6 +1,6 @@
 // server/src/index.js — http server (health + Kick webhook) + WS fan-out.
 import { createServer } from 'node:http';
-import { PORT, X_BEARER_TOKEN, KICK_CLIENT_ID, KICK_CLIENT_SECRET } from './config.js';
+import { PORT, X_BEARER_TOKEN, KICK_CLIENT_ID, KICK_CLIENT_SECRET, X_INGEST_TOKEN } from './config.js';
 import { startFanout } from './fanout.js';
 import { getKickPublicKey, verifyKickSignature, parseChatWebhook } from './ingesters/kickWebhook.js';
 
@@ -8,9 +8,55 @@ const MAX_BODY_SIZE = 1024 * 1024; // 1MB — real Kick chat events are ~hundred
 // idempotency: Kick retries deliveries; drop duplicates by Kick-Event-Message-Id.
 const recentKickMessageIds = new Set();
 const MAX_KICK_IDS = 5000;
+// idempotency for X-broadcast chat: the worker may resend history+live overlap or retry; dedup by uuid.
+const recentXUuids = new Set();
+const MAX_X_UUIDS = 5000;
 
 let hubRef = null;
 const server = createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/ingest/x') {
+    // X Live Broadcast chat from the external capture worker. Token-gated; disabled (503) if
+    // X_INGEST_TOKEN is unset, so there's no fake-injection surface by default.
+    if (!X_INGEST_TOKEN) { res.writeHead(503); res.end('x ingest disabled'); return; }
+    const chunks = []; let total = 0; let aborted = false;
+    req.on('data', c => {
+      if (aborted) return;
+      total += c.length;
+      if (total > MAX_BODY_SIZE) { aborted = true; try { res.writeHead(413); res.end('payload too large'); } catch {} req.destroy(); return; }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      if (aborted) return;
+      try {
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if (body?.token !== X_INGEST_TOKEN) { res.writeHead(401); res.end('unauthorized'); return; }
+        const broadcastId = body?.broadcastId;
+        if (!broadcastId) { res.writeHead(400); res.end('broadcastId required'); return; }
+        if (hubRef) {
+          if (typeof body.broadcaster === 'string' && body.broadcaster) hubRef.setXLabel(broadcastId, body.broadcaster);
+          if (typeof body.status === 'string') hubRef.setXStatus(broadcastId, body.status);
+          if (Number.isFinite(body.occupancy)) hubRef.setXViewers(broadcastId, body.occupancy);
+          for (const m of (Array.isArray(body.messages) ? body.messages : [])) {
+            const uuid = m?.uuid;
+            if (uuid) {
+              if (recentXUuids.has(uuid)) continue; // drop dup (history+live overlap / retry)
+              recentXUuids.add(uuid);
+              if (recentXUuids.size > MAX_X_UUIDS) {
+                const keep = Array.from(recentXUuids).slice(-Math.floor(MAX_X_UUIDS / 2));
+                recentXUuids.clear(); for (const id of keep) recentXUuids.add(id);
+              }
+            }
+            hubRef.routeXChat(broadcastId, { username: m.username, displayName: m.displayName, text: m.text, ts: m.ts || Date.now() });
+          }
+        }
+        res.writeHead(200); res.end('ok');
+      } catch (e) {
+        if (e instanceof SyntaxError) { res.writeHead(400); res.end('bad json'); }
+        else { console.error('[x-ingest] handler error:', e.message); res.writeHead(500); res.end('error'); }
+      }
+    });
+    return;
+  }
   if (req.method === 'POST' && req.url === '/webhooks/kick') {
     const chunks = [];
     let total = 0;
@@ -77,6 +123,7 @@ process.on('uncaughtException', (err) => { console.error('[fatal] uncaughtExcept
 // startup provider availability — make missing creds visible instead of failing silently later.
 if (!X_BEARER_TOKEN) console.warn('[startup] X ingestion disabled: X_BEARER_TOKEN not set');
 if (!KICK_CLIENT_ID || !KICK_CLIENT_SECRET) console.warn('[startup] Kick ingestion disabled: KICK_CLIENT_ID or KICK_CLIENT_SECRET not set');
+if (!X_INGEST_TOKEN) console.warn('[startup] X-broadcast ingest disabled: X_INGEST_TOKEN not set (POST /ingest/x → 503)');
 
 server.listen(PORT, () => console.log('CONFLUX backend on :' + PORT));
 

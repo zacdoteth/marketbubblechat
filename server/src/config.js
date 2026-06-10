@@ -7,6 +7,10 @@ export const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || '';
 // If unset (default), the control channel is open — fine for a local/demo run.
 export const CONTROL_TOKEN = process.env.CONTROL_TOKEN || '';
 
+// Shared secret for the X-broadcast capture worker → POST /ingest/x. If unset, the
+// ingest endpoint is DISABLED (503) — secure by default, no fake-injection surface.
+export const X_INGEST_TOKEN = process.env.X_INGEST_TOKEN || '';
+
 // Public, well-known unauthenticated identifiers (not secrets):
 export const TWITCH_GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 export const TWITCH_IRC_URL = 'wss://irc-ws.chat.twitch.tv:443';
