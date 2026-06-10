@@ -1831,6 +1831,35 @@
   .mbsay-send svg{width:18px;height:18px}
   /* ── streams are hoverable (who's coming from) ── */
   .chip,.statrow.channel{cursor:help}
+  /* ── ON AIR: ONE clean stage (single cam, no 3-up, no burned-in text) ── */
+  .feeds{grid-template-columns:1fr;aspect-ratio:16/9;padding:0;gap:0}
+  .feeds .vf.hero{border-radius:0;display:block}
+  .feeds .vf:not(.hero){display:none}
+  /* dope ambient idle — breathing brand mark + slow color field (Refik Anadol) */
+  .oa-idle{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;overflow:hidden;
+    background:radial-gradient(120% 86% at 50% 14%,rgba(91,140,255,.13),transparent 58%),linear-gradient(180deg,var(--panel-2),var(--ink))}
+  .oa-idle::before{content:"";position:absolute;width:150%;aspect-ratio:1;top:-25%;left:-25%;
+    background:conic-gradient(from 0deg,transparent,rgba(91,140,255,.07),transparent 55%);animation:oaspin 16s linear infinite}
+  .oa-idle-mark{position:relative;width:50px;height:50px;display:flex;align-items:center;justify-content:center;color:var(--blue-hi);
+    background:rgba(91,140,255,.12);border-radius:15px;box-shadow:0 0 38px -6px rgba(91,140,255,.55),inset 0 0 0 1px rgba(91,140,255,.26);animation:oabreath 3.4s var(--ease) infinite}
+  .oa-idle-mark svg{width:27px;height:27px}
+  .oa-idle-eyebrow{position:relative;font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+  .oa-idle-sub{position:relative;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--white);opacity:.85}
+  @keyframes oabreath{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @keyframes oaspin{to{transform:rotate(360deg)}}
+  .player.liveon .oa-idle{display:none}
+  /* live = nothing over the video except the on-demand switcher */
+  .feeds.has-live .vf .sil,.feeds.has-live .vf .vfc,.feeds.has-live .vf .np,.feeds.has-live .vf .vlive{display:none}
+  .oa-switch{opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+  .player:hover .oa-switch,.oa-switch:focus-within{opacity:1;pointer-events:auto}
+  @media(prefers-reduced-motion:reduce){ .oa-idle::before,.oa-idle-mark{animation:none} }
+  /* ── mobile: the stream sits clean at the top of the ON AIR pane ── */
+  @media(max-width:860px){
+    .onair{padding-top:10px}
+    .onair .player{margin:0 12px !important;border-radius:14px}
+    .onair .oa-idle-sub{font-size:14px}
+    .onair .oa-head{padding:2px 14px 8px}
+  }
 </style>
 
 <div class="app">
@@ -1978,14 +2007,16 @@
       <section class="onair">
         <div class="oa-head"><span class="lab"><span class="d"></span>On Air</span><span class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8l-9 10h6l-3 9 11-12h-7l2-7z"/></svg>Market Bubble</span></div>
         <div class="player">
-          <div class="pcl"><div><div class="c">New York</div><div class="t" id="nyc">—</div></div><div class="r"><div class="c">Los Angeles</div><div class="t" id="lax">—</div></div></div>
           <div class="feeds">
-            <div class="vf"><div class="sil"></div><div class="vfc l"><svg class="mk" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 2 7l10 5 10-5-10-5Z"/></svg>Bullpen</div><div class="np"><div class="rl"></div><div class="nm">Ansem</div><div class="rr">Host · NY</div></div></div>
-            <div class="vf hero"><div class="sil"></div><div class="vlive"><span class="d"></span>LIVE</div><div class="np"><div class="rl"></div><div class="nm">Erik Voorhees</div><div class="rr">Guest · ShapeShift</div></div></div>
-            <div class="vf"><div class="sil"></div><div class="vfc r"><svg class="mk" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 22 12 12 22 2 12Z"/></svg>Markets</div><div class="np"><div class="rl"></div><div class="nm">Banks</div><div class="rr">Co-host · LA</div></div></div>
+            <div class="vf hero">
+              <div class="oa-idle" aria-hidden="true">
+                <span class="oa-idle-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg></span>
+                <span class="oa-idle-eyebrow">On Air</span>
+                <span class="oa-idle-sub">Connect a stream — the stage goes live</span>
+              </div>
+            </div>
           </div>
           <div class="reacts" id="reacts"></div>
-          <div class="lt"><span class="tag">Live</span><span class="ti">With Erik Voorhees</span></div>
         </div>
         <div class="oa-meta">
           <div class="ti">Liquidity, Rate Cuts &amp; the Next Cycle</div>
@@ -2625,25 +2656,21 @@
       var live=(sources||[]).filter(function(s){return s.live&&(s.plat==='twitch'||s.plat==='kick')&&s.ch;});
       var hero=document.querySelector('.feeds .vf.hero'); var feeds=document.querySelector('.feeds'); var pl=document.querySelector('.player');
       if(!hero||!feeds) return;
-      if(!hero.dataset.defnm){ var dn=hero.querySelector('.np .nm'), dr=hero.querySelector('.np .rr'); hero.dataset.defnm=dn?dn.textContent:''; hero.dataset.defrr=dr?dr.textContent:''; }
       /* a freshly-added stream becomes the featured one */
       var keys=live.map(camKey), fresh=keys.filter(function(k){return !prevKeys[k];});
       if(fresh.length) featuredKey=fresh[fresh.length-1];
       prevKeys={}; keys.forEach(function(k){ prevKeys[k]=1; });
-      if(live.length===0){
+      if(live.length===0){      // idle: the dope ambient stage
         feeds.classList.remove('has-live'); if(pl)pl.classList.remove('liveon');
         var he=hero.querySelector('.vf-embed'); if(he)he.remove();
         hero.classList.remove('isLive'); hero.removeAttribute('data-ch');
-        var hnm=hero.querySelector('.np .nm'); if(hnm&&hero.dataset.defnm)hnm.textContent=hero.dataset.defnm;
-        var hrr=hero.querySelector('.np .rr'); if(hrr&&hero.dataset.defrr)hrr.textContent=hero.dataset.defrr;
         featuredKey=null; renderSwitch(live); return;
       }
+      /* live: JUST the stream — full-bleed, no overlay. The switcher reveals on hover. */
       var feat=null,i; for(i=0;i<live.length;i++){ if(camKey(live[i])===featuredKey){ feat=live[i]; break; } }
       if(!feat){ feat=live[live.length-1]; featuredKey=camKey(feat); }
       feeds.classList.add('has-live'); if(pl)pl.classList.add('liveon');
       setEmbed(hero,feat); hero.classList.add('isLive');
-      var nm=hero.querySelector('.np .nm'); if(nm)nm.textContent=feat.ch;
-      var rr=hero.querySelector('.np .rr'); if(rr)rr.textContent=(PLABEL[feat.plat]||feat.plat)+' · live';
       renderSwitch(live);
     }catch(e){}
   }
