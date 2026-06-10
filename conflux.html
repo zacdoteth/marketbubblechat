@@ -689,6 +689,19 @@ body.mode-watch .mkts{display:none}
 .bc-tab:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
 .bc-tab.t-twitch{--c:#BD9CFF}.bc-tab.t-kick{--c:#74FB45}
 @media(prefers-reduced-motion:reduce){ .bub,.bub.spawn{animation:none} .bub.popped{animation:none;opacity:0} .bub-float{animation:none;opacity:0} .bub-cnt.flash{animation:none} .bc-tab{transition:none} }
+
+/* ===== ON AIR — the dashboard command-monitor (top of the markets rail) ===== */
+.onair{border-bottom:1px solid var(--line-soft)}
+.onair-head{display:flex;align-items:center;gap:7px;padding:9px 10px 8px;flex-wrap:wrap}
+.onair-lbl{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--gold-br);text-transform:uppercase;font-weight:700}
+.onair-dot{width:6px;height:6px;border-radius:50%;background:#FF4D4D;box-shadow:0 0 7px #FF4D4D;animation:pulse 2s infinite;flex:none}
+.onair-tabs{display:inline-flex;gap:5px;flex-wrap:wrap;min-width:0}
+.onair-max{margin-left:auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;color:var(--gold);border:1px solid var(--line);background:rgba(232,199,126,.05);transition:all .15s ease;flex:none}
+.onair-max:hover{background:rgba(232,199,126,.14)}
+.onair-max:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
+.onair-frame{position:relative;aspect-ratio:16/9;width:100%;background:#000;overflow:hidden}
+.onair-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+@media(prefers-reduced-motion:reduce){ .onair-dot{animation:none} }
 </style>
 </head>
 <body class="mode-dashboard">
@@ -2564,17 +2577,34 @@ function loop(now){
 })();
 
 /* ============================================================
-   THE THEATER — Banks's vision: watch the stream + the combined
-   chat from the native dashboard. Twitch/Kick embed on the watch
-   stage with platform-colored channel tabs; X lives stay on the
-   river (no public embed — the river IS the X broadcast).
-   Iframes only mount in Watch mode and tear down on exit.
+   THE THEATER v2 — watch the stream EVERYWHERE.
+   Watch mode: full-stage embed. Dashboard: the ON AIR dock at the
+   top of the markets rail — Banks's "watch stream and chat from
+   our native dashboard". One iframe alive at a time; mounts only
+   where visible; X lives keep the river. Fail-safe throughout.
    ============================================================ */
 (function(){
   try{
     var bc=document.querySelector('.broadcast'); if(!bc) return;
-    var holder=document.createElement('div'); holder.className='bc-embed';
-    bc.insertBefore(holder, bc.firstChild);
+    var stageHolder=document.createElement('div'); stageHolder.className='bc-embed';
+    bc.insertBefore(stageHolder, bc.firstChild);
+    // ON AIR dock — first card of the markets rail (rail is built once, never wiped)
+    var dock=null, dockFrame=null, dockTabs=null;
+    var mk=document.getElementById('mkts');
+    if(mk){
+      dock=document.createElement('div'); dock.className='onair'; dock.id='onair'; dock.style.display='none';
+      dock.innerHTML='<div class="onair-head"><span class="onair-lbl"><i class="onair-dot"></i>On air</span>'+
+        '<span class="onair-tabs" id="onairTabs"></span>'+
+        '<button type="button" class="onair-max" id="onairMax" aria-label="Open theater view" title="Theater view"></button></div>'+
+        '<div class="onair-frame" id="onairFrame"></div>';
+      mk.insertBefore(dock, mk.firstChild);
+      dockFrame=dock.querySelector('#onairFrame'); dockTabs=dock.querySelector('#onairTabs');
+      var mx=dock.querySelector('#onairMax');
+      if(mx){
+        mx.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+        mx.addEventListener('click',function(){ var w=document.getElementById('vWatch'); if(w)w.click(); });
+      }
+    }
     var activeId=null, builtFor='';
     function embeddable(s){ return s && s.status==='live' && (s.platform==='twitch'||s.platform==='kick'); }
     function srcFor(s){
@@ -2582,6 +2612,19 @@ function loop(now){
       return 'https://player.kick.com/'+encodeURIComponent(s.channel)+'?muted=true&autoplay=true';
     }
     function nameOf(s){ try{ return (typeof streamName==='function')?streamName(s):String(s.channel||''); }catch(e){ return String(s.channel||''); } }
+    function tabsHtml(live){
+      return live.map(function(s){
+        return '<button type="button" class="bc-tab t-'+s.platform+'" data-id="'+esc(String(s.id))+'" aria-pressed="'+(s.id===activeId)+'"><i></i>'+esc(nameOf(s))+'</button>';
+      }).join('');
+    }
+    function mount(holder,cur,where){
+      var src=srcFor(cur), want=cur.id+'|'+src+'|'+where;
+      if(builtFor!==want){
+        stageHolder.innerHTML=''; if(dockFrame)dockFrame.innerHTML='';   // one live iframe, ever
+        holder.innerHTML='<iframe src="'+src.replace(/"/g,'&quot;')+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="'+esc(nameOf(cur))+' live stream"></iframe>';
+        builtFor=want;
+      }
+    }
     function apply(){
       var streams=(typeof latestStreams!=='undefined'&&latestStreams)||[];
       var live=streams.filter(embeddable);
@@ -2591,28 +2634,26 @@ function loop(now){
       if(!cur) cur=live[0]||null;
       activeId=cur?cur.id:null;
       var bs=document.getElementById('bcStreamers');
-      if(bs&&live.length){
-        bs.innerHTML='<span class="bc-tabs">'+live.map(function(s){
-          return '<button type="button" class="bc-tab t-'+s.platform+'" data-id="'+esc(String(s.id))+'" aria-pressed="'+(s.id===activeId)+'"><i></i>'+esc(nameOf(s))+'</button>';
-        }).join('')+'</span>';
-      }
-      if(watch && cur){
-        var src=srcFor(cur), want=cur.id+'|'+src;
-        if(builtFor!==want){
-          holder.innerHTML='<iframe src="'+src.replace(/"/g,'&quot;')+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="'+esc(nameOf(cur))+' live stream"></iframe>';
-          builtFor=want;
-        }
-        bc.classList.add('bc-embedded');
+      if(bs&&live.length) bs.innerHTML='<span class="bc-tabs">'+tabsHtml(live)+'</span>';
+      if(dockTabs) dockTabs.innerHTML=tabsHtml(live);
+      var deckVisible=false;
+      try{ deckVisible=!!(dock&&mk&&getComputedStyle(mk).display!=='none'); }catch(e){}
+      if(cur&&watch){
+        mount(stageHolder,cur,'stage'); bc.classList.add('bc-embedded');
+        if(dock)dock.style.display='none';
+      }else if(cur&&!watch&&dockFrame&&deckVisible){
+        mount(dockFrame,cur,'deck'); bc.classList.remove('bc-embedded');
+        dock.style.display='block';
       }else{
         bc.classList.remove('bc-embedded');
-        holder.innerHTML=''; builtFor='';
+        stageHolder.innerHTML=''; if(dockFrame)dockFrame.innerHTML='';
+        if(dock)dock.style.display='none';
+        builtFor='';
       }
     }
-    var bsEl=document.getElementById('bcStreamers');
-    if(bsEl) bsEl.addEventListener('click',function(e){
-      var t=e.target.closest('.bc-tab'); if(!t)return;
-      activeId=t.dataset.id; apply();
-    });
+    function onTabClick(e){ var t=e.target.closest('.bc-tab'); if(!t)return; activeId=t.dataset.id; builtFor=''; apply(); }
+    var bsEl=document.getElementById('bcStreamers'); if(bsEl) bsEl.addEventListener('click',onTabClick);
+    if(dockTabs) dockTabs.addEventListener('click',onTabClick);
     try{ if(typeof onStreams!=='undefined') onStreams.push(function(){ try{apply();}catch(e){} }); }catch(e){}
     try{ if(typeof onSnapshot!=='undefined') onSnapshot.push(function(){ try{apply();}catch(e){} }); }catch(e){}
     document.querySelectorAll('.viewseg button').forEach(function(b){ b.addEventListener('click',function(){ setTimeout(apply,30); }); });
