@@ -931,13 +931,8 @@ function renderXBroadcastHelp(streams){
   const box=document.getElementById('xbHelp'); if(!box)return;
   const casts=(streams||[]).filter(s=>streamSource(s)==='xbroadcast'&&s.channel);
   if(!casts.length){ box.style.display='none'; box.innerHTML=''; return; }
-  let html='<span class="xb-lbl">&#9654; Start X capture:</span>';
-  casts.forEach(s=>{
-    const cmd='node x-broadcast-worker.mjs https://x.com/i/broadcasts/'+s.channel;
-    html+=`<div class="xb-cmd"><code>${esc(cmd)}</code>`+
-      `<button class="xb-copy" type="button" data-cmd="${esc(cmd)}" title="Copy command">copy</button></div>`;
-  });
-  box.innerHTML=html;
+  // X chat is captured automatically by the always-on cloud worker — no setup needed.
+  box.innerHTML='<span class="xb-lbl">&#9654; X broadcast chat is captured automatically &mdash; give it a few seconds to go live.</span>';
   box.style.display='flex';
 }
 connectList.addEventListener('click', e=>{ const rm=e.target.closest('.rm'); if(rm) sendBackend({type:'disconnectStream', id:rm.dataset.id, token: controlToken()}); });
