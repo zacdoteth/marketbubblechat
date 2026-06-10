@@ -1913,6 +1913,12 @@
   .mix-legend .lg.tw i{background:var(--twitch)} .mix-legend .lg.kk i{background:var(--kick)} .mix-legend .lg.x i{background:#fff}
   .mix-legend b{color:var(--white);font-family:var(--mono);font-weight:700}
   @media(prefers-reduced-motion:reduce){ .mixbar i::after{animation:none;opacity:0} .needle{transition:transform .3s linear} }
+  /* ── DEMO REEL — euphoria bloom (the peak moment) ── */
+  .reel-bloom{position:fixed;inset:0;z-index:9000;pointer-events:none;opacity:0;
+    background:radial-gradient(60% 55% at 50% 48%,rgba(91,140,255,.34),rgba(74,222,128,.10) 38%,transparent 70%);
+    animation:reelbloom 1.9s var(--ease) forwards}
+  @keyframes reelbloom{0%{opacity:0;transform:scale(.82)}28%{opacity:1}100%{opacity:0;transform:scale(1.18)}}
+  @media(prefers-reduced-motion:reduce){ .reel-bloom{animation:none;opacity:0} }
 </style>
 
 <div class="app">
@@ -2763,6 +2769,50 @@
       paint();
     }catch(e){}
   }
+  /* ════ DEMO REEL — one-tap auto-performance (Shift+R, or ?reel=1) ════
+     Connects the REAL Market Bubble stream (twitch.tv/marketbubble), drops native
+     messages, reveals a stream's "who's coming from" card, flips layouts, and peaks
+     on a euphoria bloom. ~25s, hands-free. Best on desktop. Override the channel for a
+     live practice take with ?reel=twitch/<channel>. */
+  var REEL_STREAMS=['twitch/marketbubble'];
+  try{ var _rp=new URLSearchParams(location.search).get('reel');
+    if(_rp && _rp!=='1') REEL_STREAMS=[ _rp.indexOf('/')>0 ? _rp : ('twitch/'+_rp) ]; }catch(e){}
+  var reelRunning=false;
+  function reelWait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  function reelConnect(spec){ try{ var pp=String(spec).split('/'); var plat=pp[0], ch=pp[1]||pp[0];
+    var url=(plat==='kick'?'https://kick.com/':plat==='x'?'https://x.com/':'https://twitch.tv/')+ch;
+    if(backendReady){ sendBackend({type:'connectStream',url:url,token:controlToken()}); showConnectMsg('Connecting '+plat+'·'+ch+' …',false); } }catch(e){} }
+  function reelSay(t){ try{ var i=$('mbsay'); if(i){ i.value=t; sendNative(); } }catch(e){} }
+  function reelHover(){ try{ var chip=document.querySelector('#streamChips .chip'); var s=sources[0];
+    if(chip&&s){ var r=chip.getBoundingClientRect(); showStreamTip({clientX:r.left+r.width/2,clientY:r.bottom+8}, s); } }catch(e){} }
+  function reelBloom(){ try{ var b=document.createElement('div'); b.className='reel-bloom'; document.body.appendChild(b);
+    setTimeout(function(){ try{b.remove();}catch(_){}} ,1900); }catch(e){} }
+  function reelGolden(){ try{ sentiment=92; paintSentiment(); for(var i=0;i<10;i++)pulseHit(); reelBloom(); }catch(e){} }
+  async function runReel(){
+    if(reelRunning)return; reelRunning=true;
+    try{
+      setLayout('deck'); await reelWait(500);
+      REEL_STREAMS.forEach(function(s,i){ setTimeout(function(){ reelConnect(s); }, i*1300); });
+      await reelWait(900);
+      reelSay('gm Market Bubble 🫧 every chat, every platform — one feed');
+      await reelWait(4800);
+      reelHover(); await reelWait(2700); hideTip();
+      await reelWait(700);
+      reelSay('combined chat is unreal 📈 presented by Polymarket');
+      await reelWait(3600);
+      setLayout('spotlight'); await reelWait(3000);
+      setLayout('theater');   await reelWait(3600);
+      setLayout('deck');      await reelWait(1400);
+      reelGolden();           await reelWait(3600);
+    }catch(e){}
+    reelRunning=false;
+  }
+  document.addEventListener('keydown',function(e){
+    if((e.key==='R'||e.key==='r') && e.shiftKey){
+      var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)) return;
+      e.preventDefault(); runReel();
+    }
+  });
   function init(){
     clocks(); setInterval(clocks,1000);
     paintViewers();
@@ -2783,6 +2833,7 @@
     fetchFG();          setInterval(fetchFG,300000);
     pulseInit(); setInterval(pulseTick,220);
     soundInit();
+    try{ if(new URLSearchParams(location.search).get('reel')) setTimeout(runReel,3200); }catch(e){}
     renderOnAir(); setInterval(renderOnAir,6000);
     paintTop();
   }
