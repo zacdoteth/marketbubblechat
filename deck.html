@@ -1889,6 +1889,30 @@
     /* no hover on touch — show the source switcher when there's more than one stream */
     .oa-switch{opacity:1 !important;pointer-events:auto !important}
   }
+  /* ── AWWWARDS: sentiment gauge — mood fills the arc, glowing spring needle, ambient field ── */
+  .gauge-wrap{position:relative}
+  .gauge-glow{position:absolute;left:0;right:0;top:6px;height:84px;pointer-events:none;z-index:0;filter:blur(7px);transition:background 1s var(--ease)}
+  .gauge-wrap svg,.gauge-wrap .gauge-val,.gauge-wrap .gauge-scale{position:relative;z-index:1}
+  #gFill,#gFill2{transition:stroke-dasharray 1.1s var(--ease)}
+  .needle{transition:transform 1.05s cubic-bezier(.34,1.42,.5,1)}        /* spring overshoot */
+  .needle .ntip{filter:drop-shadow(0 0 4px rgba(255,255,255,.95))}
+  .gauge-val{transition:color .5s var(--ease)}
+  .gauge-val.pop{animation:sentpop .5s var(--ease)}
+  @keyframes sentpop{0%{transform:scale(.82);opacity:.5}55%{transform:scale(1.09)}100%{transform:scale(1);opacity:1}}
+  /* ── AWWWARDS: chat mix — glowing platform pills + shimmer + live legend ── */
+  .mixbar{height:7px;border-radius:6px;gap:3px;overflow:visible;background:transparent;opacity:1}
+  .mixbar i{border-radius:6px;position:relative;overflow:hidden;min-width:0}
+  .mixbar .m-tw{background:linear-gradient(90deg,var(--twitch),#b69bff);box-shadow:0 0 10px -2px var(--twitch)}
+  .mixbar .m-kk{background:linear-gradient(90deg,#37c00f,var(--kick));box-shadow:0 0 10px -2px rgba(83,252,24,.7)}
+  .mixbar .m-x{background:linear-gradient(90deg,#cfcfcf,#fff);box-shadow:0 0 8px -2px rgba(255,255,255,.5)}
+  .mixbar i::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 32%,rgba(255,255,255,.55) 50%,transparent 68%);transform:translateX(-130%);animation:mixshine 4s var(--ease) infinite}
+  @keyframes mixshine{0%,100%{transform:translateX(-130%)}48%,60%{transform:translateX(130%)}}
+  .mix-legend{display:flex;justify-content:space-between;gap:6px;margin-top:9px;font-family:var(--gk);font-size:9px;font-weight:600;letter-spacing:.04em;color:var(--dim)}
+  .mix-legend .lg{display:inline-flex;align-items:center;gap:5px}
+  .mix-legend .lg i{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+  .mix-legend .lg.tw i{background:var(--twitch)} .mix-legend .lg.kk i{background:var(--kick)} .mix-legend .lg.x i{background:#fff}
+  .mix-legend b{color:var(--white);font-family:var(--mono);font-weight:700}
+  @media(prefers-reduced-motion:reduce){ .mixbar i::after{animation:none;opacity:0} .needle{transition:transform .3s linear} }
 </style>
 
 <div class="app">
@@ -1950,11 +1974,16 @@
       <div class="sblock">
         <div class="bh lab">Chat Sentiment</div>
         <div class="gauge-wrap">
-          <svg viewBox="0 0 160 90">
-            <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#FF5765"/><stop offset="0.5" stop-color="#8C8C95"/><stop offset="1" stop-color="#4ADE80"/></linearGradient></defs>
-            <path d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="#1A1A20" stroke-width="12" stroke-linecap="round"/>
-            <path d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="url(#gg)" stroke-width="4" stroke-linecap="round" opacity=".8"/>
-            <g class="needle" id="needle"><line x1="80" y1="80" x2="80" y2="24" stroke="#F2F1ED" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="80" r="5" fill="#F2F1ED"/></g>
+          <div class="gauge-glow" id="gGlow" aria-hidden="true"></div>
+          <svg viewBox="0 0 160 92">
+            <defs>
+              <linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#FF5765"/><stop offset="0.5" stop-color="#8C8C95"/><stop offset="1" stop-color="#4ADE80"/></linearGradient>
+              <filter id="gblur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
+            </defs>
+            <path d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="#16161c" stroke-width="12" stroke-linecap="round"/>
+            <path id="gFill" pathLength="100" d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="url(#gg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="50 100" filter="url(#gblur)" opacity=".5"/>
+            <path id="gFill2" pathLength="100" d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="url(#gg)" stroke-width="5" stroke-linecap="round" stroke-dasharray="50 100"/>
+            <g class="needle" id="needle"><line x1="80" y1="80" x2="80" y2="27" stroke="#F2F1ED" stroke-width="3" stroke-linecap="round"/><circle class="ntip" cx="80" cy="27" r="3.6" fill="#fff"/><circle cx="80" cy="80" r="5.5" fill="#F2F1ED"/></g>
           </svg>
           <div class="gauge-val" id="sentLbl">Neutral</div>
           <div class="gauge-scale"><span class="fud">Fud</span><span>Neutral</span><span class="bull">Bull</span></div>
@@ -1964,6 +1993,7 @@
       <div class="sblock">
         <div class="bh lab">Chat Mix</div>
         <div class="mixbar"><i class="m-tw" id="mixTw" style="width:64%"></i><i class="m-kk" id="mixKk" style="width:22%"></i><i class="m-x" id="mixX" style="width:14%"></i></div>
+        <div class="mix-legend"><span class="lg tw"><i></i>Twitch <b id="mxTwP">64%</b></span><span class="lg kk"><i></i>Kick <b id="mxKkP">22%</b></span><span class="lg x"><i></i>X <b id="mxXP">14%</b></span></div>
       </div>
 
       <div class="sblock">
@@ -2373,9 +2403,9 @@
     $('sBig').textContent=total.toLocaleString();
     $('pTw').textContent=fmtK(vTw); $('pKk').textContent=fmtK(vKk); $('pX').textContent=fmtK(vX);
     var mt=vTw+vKk+vX;
-    $('mixTw').style.width=(vTw/mt*100).toFixed(0)+'%';
-    $('mixKk').style.width=(vKk/mt*100).toFixed(0)+'%';
-    $('mixX').style.width=(vX/mt*100).toFixed(0)+'%';
+    var _pc=function(v){return (mt>0?(v/mt*100):0).toFixed(0)+'%';};
+    $('mixTw').style.width=_pc(vTw); $('mixKk').style.width=_pc(vKk); $('mixX').style.width=_pc(vX);
+    var _mp=function(id,v){var e=$(id);if(e)e.textContent=_pc(v);}; _mp('mxTwP',vTw);_mp('mxKkP',vKk);_mp('mxXP',vX);
   }
 
   /* ===== STREAM CHIPS / CHANNELS ===== */
@@ -2532,11 +2562,16 @@
 
   /* ===== SENTIMENT GAUGE (variable emotional signal) ===== */
   function paintSentiment(){
-    var ang=(sentiment-50)/50*82; // -82..82 deg
-    $('needle').style.transform='rotate('+ang+'deg)';
-    var lbl = sentiment<35?'Fud': sentiment<46?'Bearish': sentiment<55?'Neutral': sentiment<68?'Bullish':'Euphoric';
-    var el=$('sentLbl'); el.textContent=lbl;
-    el.style.color = sentiment<46?'var(--down)': sentiment>55?'var(--up)':'var(--white)';
+    var s=Math.max(0,Math.min(100,sentiment));
+    var n=$('needle'); if(n)n.style.transform='rotate('+((s-50)/50*82)+'deg)';
+    var da=s.toFixed(1)+' 100';                       // pathLength=100 -> dash = mood %
+    var f1=$('gFill'),f2=$('gFill2'); if(f1)f1.setAttribute('stroke-dasharray',da); if(f2)f2.setAttribute('stroke-dasharray',da);
+    var lbl = s<35?'Fud': s<46?'Bearish': s<55?'Neutral': s<68?'Bullish':'Euphoric';
+    var el=$('sentLbl');
+    if(el){ if(el.textContent!==lbl){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+      el.textContent=lbl; el.style.color = s<46?'var(--down)': s>55?'var(--up)':'var(--white)'; }
+    var col = s<46?'255,87,101': s>55?'74,222,128':'140,140,149';
+    var g=$('gGlow'); if(g)g.style.background='radial-gradient(58% 82% at 50% 92%,rgba('+col+',.34),transparent 72%)';
   }
 
   $('pauseBtn').addEventListener('click',function(){
@@ -2705,9 +2740,26 @@
   }
   function soundInit(){
     try{ var a=document.getElementById('theme'), btn=document.getElementById('soundBtn'); if(!a||!btn)return;
-      var on=false;
-      function paint(){ btn.classList.toggle('on',on); btn.setAttribute('aria-pressed',on?'true':'false'); btn.title=on?'Mute theme':'Play theme'; }
-      btn.addEventListener('click',function(){ try{ if(on){ a.pause(); on=false; } else { a.volume=0.32; var p=a.play(); if(p&&p.catch)p.catch(function(){}); on=true; } }catch(e){} paint(); });
+      var on=false, fadeRAF=0, VOL=0.34;
+      function fadeTo(target,ms,done){
+        if(fadeRAF)cancelAnimationFrame(fadeRAF);
+        var from=a.volume, t0=0;
+        function step(ts){ if(!t0)t0=ts; var k=Math.min(1,(ts-t0)/ms);
+          a.volume=Math.max(0,Math.min(1, from+(target-from)*k));
+          if(k<1){ fadeRAF=requestAnimationFrame(step); } else { fadeRAF=0; if(done)done(); } }
+        fadeRAF=requestAnimationFrame(step);
+      }
+      function paint(){ btn.classList.toggle('on',on); btn.setAttribute('aria-pressed',on?'true':'false'); btn.title=on?'Mute theme music':'Play theme music'; }
+      btn.addEventListener('click',function(){
+        try{
+          if(on){ on=false; fadeTo(0,260,function(){ try{a.pause();}catch(_){} }); }
+          else { on=true; a.volume=0;                 // start SILENT so there's no onset click
+            var p=a.play();
+            if(p&&p.then){ p.then(function(){ fadeTo(VOL,650); }).catch(function(){ on=false; paint(); }); }
+            else { fadeTo(VOL,650); } }
+        }catch(e){}
+        paint();
+      });
       paint();
     }catch(e){}
   }
