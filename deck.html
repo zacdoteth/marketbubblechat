@@ -395,6 +395,15 @@
   }
   body.disconnected .tb-live{opacity:.45}
   body.disconnected .tb-live .d{animation:none;background:var(--dim)}
+  /* ── POLYMARKET partnership signature (we're an extension of the show) ── */
+  .pm-by{display:inline-flex;align-items:center;gap:5px;font-family:var(--gk);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim-2)}
+  .pm-logo{width:14px;height:14px;flex:0 0 auto;border-radius:4px}
+  .pm-by b{color:var(--blue-hi);font-weight:700;text-transform:none;letter-spacing:.01em;font-size:10.5px}
+  .pm-cat{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 4px;border-top:1px solid var(--line-soft)}
+  .pm-cat-l{font-family:var(--gk);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .pm-cat-n{font-family:var(--mono);font-size:9px;color:var(--dim-2);letter-spacing:.02em}
+  .pm-presented{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft);font-family:var(--gk);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim-2)}
+  .pm-presented b{color:var(--white);font-weight:700;text-transform:none;letter-spacing:0;font-size:12px}
 </style>
 
 <div class="app">
@@ -547,6 +556,7 @@
         <div class="oa-meta">
           <div class="ti">Liquidity, Rate Cuts &amp; the Next Cycle</div>
           <div class="who"><b>Market Bubble</b> · simulcast to Twitch · X · Kick</div>
+          <div class="pm-presented">presented by <svg class="pm-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="#2D6FF7"/><rect x="6.6" y="12.4" width="2.5" height="5" rx="1.25" fill="#fff"/><rect x="10.75" y="9" width="2.5" height="8.4" rx="1.25" fill="#fff"/><rect x="14.9" y="6.2" width="2.5" height="11.2" rx="1.25" fill="#fff"/></svg><b>Polymarket</b></div>
           <div class="oa-act"><button class="obtn">Follow</button><button class="obtn">Gift a sub</button><button class="obtn primary">Subscribe</button></div>
         </div>
       </section>
@@ -1000,12 +1010,24 @@
     return '<svg class="spk" width="64" height="22" viewBox="0 0 66 22"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.5"/></svg>';
   }
   var mix=[['TRUMP','Trump','1.64',-1.14],['MOODENG','Moo Deng','0.0376',-1.18],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['BTC','Bitcoin','61,330',-2.15],['POPCAT','Popcat','0.0404',-2.29],['ETH','Ethereum','1,626',-2.67],['WIF','Dogwifhat','0.1514',-3.13],['SOL','Solana','63.52',-3.90],['FARTCOIN','Fartcoin','0.1130',-3.87],['HYPE','Hyperliquid','55.91',-9.70]];
-  var preds=[['BTC above $150K by Q3?',61,'yes','$2.4M'],['SpaceX IPO mkt cap > $2T?',74,'yes','$1.1M'],['Fed cuts rates in July?',38,'no','$3.8M'],['ETH staking ETF approved 2026?',56,'yes','$890K'],['US recession before 2027?',23,'no','$1.6M'],['Remote IPO before 2027?',23,'no','$540K']];
+  var preds=[
+    ['BTC above $150K by Q3?',61,'yes','$2.4M','Crypto'],
+    ['ETH staking ETF approved 2026?',56,'yes','$890K','Crypto'],
+    ['SOL flips ETH mcap in 2026?',18,'no','$980K','Crypto'],
+    ['SpaceX IPO mkt cap > $2T?',74,'yes','$1.1M','Tech'],
+    ['OpenAI valuation hits $1T in 2026?',47,'no','$1.3M','Tech'],
+    ['Fed cuts rates in July?',38,'no','$3.8M','Macro'],
+    ['US recession before 2027?',23,'no','$1.6M','Macro'],
+    ['Trump approval > 50% by EOY?',41,'no','$720K','Politics'],
+    ['Govt shutdown in 2026?',33,'no','$410K','Politics']];
   function groupLabel(title,note){
     var el=document.createElement('div'); el.className='mk-group';
     el.innerHTML='<span class="lab">'+title+'</span><span class="note">'+note+'</span>';
     return el;
   }
+  var PMLOGO='<svg class="pm-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="#2D6FF7"/><rect x="6.6" y="12.4" width="2.5" height="5" rx="1.25" fill="#fff"/><rect x="10.75" y="9" width="2.5" height="8.4" rx="1.25" fill="#fff"/><rect x="14.9" y="6.2" width="2.5" height="11.2" rx="1.25" fill="#fff"/></svg>';
+  function predHeader(){ var el=document.createElement('div'); el.className='mk-group pm-head';
+    el.innerHTML='<span class="lab">Predictions</span><span class="pm-by">powered by '+PMLOGO+'<b>Polymarket</b></span>'; return el; }
   function renderMarkets(){
     var c=$('mkList'); c.innerHTML='';
     c.appendChild(groupLabel('Bullpen Mix','Spot · 24h'));
@@ -1014,13 +1036,19 @@
       el.innerHTML='<div class="nm"><div class="t">'+m[0]+'</div><div class="s">'+m[1]+'</div></div>'+spark(!up)+'<div class="pr"><div class="px">$'+m[2]+'</div><div class="ch">'+(up?'+':'')+Number(m[3]).toFixed(2)+'%</div></div>';
       c.appendChild(el);
     });
-    c.appendChild(groupLabel('Predictions','Polymarket'));
-    preds.forEach(function(p){
-      var el=document.createElement('div'); el.className='prow '+p[2]; el.title=p[0];
-      el.innerHTML='<div class="nm"><div class="t">'+p[0]+'</div><div class="s">'+p[3]+' Vol</div></div>'+
-        '<div class="pbar"><i style="width:'+p[1]+'%"></i></div>'+
-        '<div class="pr"><div class="px">'+p[1]+'%</div><div class="ch">'+(p[2]==='yes'?'YES':'NO')+'</div></div>';
-      c.appendChild(el);
+    c.appendChild(predHeader());
+    ['Crypto','Tech','Macro','Politics'].forEach(function(cat){
+      var rows=preds.filter(function(p){return p[4]===cat;}); if(!rows.length)return;
+      var ch=document.createElement('div'); ch.className='pm-cat';
+      ch.innerHTML='<span class="pm-cat-l">'+cat+'</span><span class="pm-cat-n">'+rows.length+' market'+(rows.length>1?'s':'')+'</span>';
+      c.appendChild(ch);
+      rows.forEach(function(p){
+        var el=document.createElement('div'); el.className='prow '+p[2]; el.title=p[0];
+        el.innerHTML='<div class="nm"><div class="t">'+p[0]+'</div><div class="s">'+p[3]+' Vol</div></div>'+
+          '<div class="pbar"><i style="width:'+p[1]+'%"></i></div>'+
+          '<div class="pr"><div class="px">'+p[1]+'%</div><div class="ch">'+(p[2]==='yes'?'YES':'NO')+'</div></div>';
+        c.appendChild(el);
+      });
     });
   }
 
