@@ -404,6 +404,13 @@
   .pm-cat-n{font-family:var(--mono);font-size:9px;color:var(--dim-2);letter-spacing:.02em}
   .pm-presented{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft);font-family:var(--gk);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim-2)}
   .pm-presented b{color:var(--white);font-weight:700;text-transform:none;letter-spacing:0;font-size:12px}
+  /* ── THE PULSE — Suno's waveform, flipped: the merged chat's live amplitude ── */
+  .pulse{flex:0 0 auto;display:flex;align-items:flex-end;gap:2px;height:34px;padding:6px 16px 7px;
+    border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--ink),var(--bg));overflow:hidden}
+  .pulse i{flex:1 1 0;min-width:0;height:6%;border-radius:1.5px 1.5px 0 0;
+    background:var(--pc,var(--blue));box-shadow:0 0 6px -1px var(--pc,var(--blue));
+    transition:height .22s cubic-bezier(.3,.8,.3,1),background .9s ease}
+  @media(prefers-reduced-motion:reduce){ .pulse i{transition:none} }
 </style>
 
 <div class="app">
@@ -533,6 +540,7 @@
         <button data-f="tickers">Tickers</button>
       </div>
 
+      <div class="pulse" id="pulse" aria-hidden="true" title="Live chat pulse"></div>
       <div class="wirewrap">
         <div class="feed" id="feed"></div>
         <button class="newpill" id="newPill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></svg><span id="newCount">0</span> new</button>
@@ -667,6 +675,20 @@
   function scoreText(t){ t=String(t||''); var s=0; if(BULL.test(t))s++; if(BEAR.test(t))s--; return s; }
 
   /* the single intake: one real message -> deck's addMsg + bookkeeping */
+  /* THE PULSE — live chat amplitude (Suno waveform, flipped to chat) */
+  var PULSE=null, PBUF=[], PN=56, _phit=0;
+  function pulseInit(){ var c=$('pulse'); if(!c)return; PULSE=[]; PBUF=[]; var f=document.createDocumentFragment();
+    for(var i=0;i<PN;i++){ var b=document.createElement('i'); f.appendChild(b); PULSE.push(b); PBUF.push(0); } c.appendChild(f); }
+  function pulseHit(){ _phit++; }
+  function pulseTick(){ if(!PULSE)return;
+    PBUF.shift(); PBUF.push(_phit); _phit=0;                 // scroll one bucket
+    var max=3; for(var k=0;k<PN;k++){ if(PBUF[k]>max)max=PBUF[k]; }
+    var v=(Math.max(5,Math.min(95,sentiment))-50)/45;        // -1..1 mood
+    var hue=v<0 ? Math.round(2+(1+v)*38) : Math.round(40+v*95); // red→amber→green
+    var col='hsl('+hue+',72%,62%)'; var c=$('pulse'); if(c)c.style.setProperty('--pc',col);
+    for(var i=0;i<PN;i++){ var h=Math.round((PBUF[i]/max)*100);
+      PULSE[i].style.height=Math.max(6,h)+'%'; PULSE[i].style.opacity=(0.32+0.62*(i/PN)).toFixed(2); }
+  }
   function ingest(m){
     if(!m||!m.platform)return;
     var meta=STREAMMAP[m.streamId]||{plat:m.platform,ch:(m.streamId||m.platform)};
@@ -675,7 +697,7 @@
       mod:false, host:!!m.streamer, bot:/(^|[^a-z])(streamelements|nightbot|streamlabs|moobot|bot)([^a-z]|$)/i.test(name) };
     ROSTER.push(v); if(ROSTER.length>140)ROSTER.shift();
     var sc=scoreText(m.text); if(sc) sentiment=Math.max(5,Math.min(95,sentiment+sc*5));
-    addMsg(v, cleanText(m.text));
+    addMsg(v, cleanText(m.text)); pulseHit();
   }
 
   /* ADAPTERS: hem's events -> the deck's renderers */
@@ -1071,6 +1093,7 @@
     // ── LIVE MARKETS ── real prices into the tape + markets + Fear & Greed
     fetchMarketsLive(); setInterval(fetchMarketsLive,90000);
     fetchFG();          setInterval(fetchFG,300000);
+    pulseInit(); setInterval(pulseTick,220);
     paintTop();
   }
   /* ── left-rail fillers: first-time chatters + live audience ── */
