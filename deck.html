@@ -1814,6 +1814,23 @@
   .tb-sound.on .eqi i:nth-child(3){animation-delay:0s}
   @keyframes eq{0%,100%{height:4px}50%{height:13px}}
   @media(prefers-reduced-motion:reduce){ .tb-sound.on .eqi i{animation:none;height:9px} }
+  /* ── NATIVE MB chat identity (brand blue) ── */
+  .wmsg.mb .usr{color:var(--blue-hi)}
+  .wmsg.mb .plat{background:rgba(91,140,255,.16);color:var(--blue-hi)}
+  .wmsg .av.mb{color:var(--blue-hi);background:rgba(91,140,255,.14);box-shadow:inset 0 0 0 1px rgba(91,140,255,.4)}
+  /* ── NATIVE composer — watch + chat from the dashboard ── */
+  .mbsay{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:10px 12px;border-top:1px solid var(--line);background:var(--ink)}
+  .mbsay-ic{flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--blue-hi);background:rgba(91,140,255,.12);border-radius:8px}
+  .mbsay-ic svg{width:16px;height:16px}
+  .mbsay-in{flex:1;min-width:0;height:38px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:0 13px;color:var(--white);font-family:var(--gk);font-size:13px;outline:none;transition:border-color .2s var(--ease),background .2s var(--ease)}
+  .mbsay-in::placeholder{color:var(--dim-2)}
+  .mbsay-in:focus{border-color:var(--blue);background:var(--panel-2)}
+  .mbsay-send{flex:0 0 auto;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:var(--blue);color:#fff;cursor:pointer;transition:background .2s var(--ease),transform .08s var(--ease)}
+  .mbsay-send:hover{background:var(--blue-hi)}
+  .mbsay-send:active{transform:scale(.93)}
+  .mbsay-send svg{width:18px;height:18px}
+  /* ── streams are hoverable (who's coming from) ── */
+  .chip,.statrow.channel{cursor:help}
 </style>
 
 <div class="app">
@@ -1949,6 +1966,11 @@
         <button class="newpill" id="newPill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></svg><span id="newCount">0</span> new</button>
       </div>
       <div class="pulse" id="pulse" aria-hidden="true" title="Live chat pulse — chat volume"></div>
+      <form class="mbsay" id="mbsayBar" autocomplete="off">
+        <span class="mbsay-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg></span>
+        <input class="mbsay-in" id="mbsay" type="text" maxlength="240" placeholder="Chat on Market Bubble — your message joins the unified feed" aria-label="Send a message to the unified chat" />
+        <button class="mbsay-send" id="mbsaySend" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14m-6-6 6 6-6 6"/></svg></button>
+      </form>
     </main>
 
     <!-- RIGHT: ON AIR + MARKETS -->
@@ -2053,9 +2075,10 @@
   var ICON = {
     twitch:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3 3 6v13h4v2l3-2h3l6-6V3H4Zm15 9-3 3h-4l-2 2v-2H6V5h13v7Z"/></svg>',
     x:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.9l-5.4-7-6.2 7H1.4l8-9.2L1 2h7l4.9 6.4L18.9 2Zm-1.2 18h1.9L7.1 4H5.1l12.6 16Z"/></svg>',
-    kick:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h6v6l5-6h7l-8 9 8 9h-7l-5-6v6H3z"/></svg>'
+    kick:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h6v6l5-6h7l-8 9 8 9h-7l-5-6v6H3z"/></svg>',
+    mb:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>'
   };
-  var PLABEL = {twitch:'Twitch', x:'X', kick:'Kick'};
+  var PLABEL = {twitch:'Twitch', x:'X', kick:'Kick', mb:'MB'};
   var platforms = ['twitch','x','kick'];
 
   // active aggregated streams (channels)
@@ -2218,6 +2241,25 @@
     el.addEventListener('mousemove',moveTip);
     el.addEventListener('mouseleave',hideTip);
   }
+  /* BANKS: hover a stream -> who's coming from (platform, live viewers, share of the main chat) */
+  function viewersFor(plat){ return plat==='twitch'?vTw:plat==='kick'?vKk:plat==='x'?vX:0; }
+  function showStreamTip(e,s){
+    tip.className='tooltip show '+s.plat;
+    var tot=0,kk; for(kk in chMsgCount){ tot+=chMsgCount[kk]; }
+    var share=tot?Math.round(((chMsgCount[s.ch]||0)/tot)*100):0;
+    tip.innerHTML='<div class="th"><span class="pp">'+ICON[s.plat]+PLABEL[s.plat]+'</span>'+(s.live?'<span class="bdg host">LIVE</span>':'<span class="bdg bot">OFFLINE</span>')+'</div>'+
+      '<div class="name">'+s.ch+'</div>'+
+      (s.live
+        ? '<div class="ml"><b>'+fmtK(viewersFor(s.plat))+'</b> watching on '+PLABEL[s.plat]+'<br><b>'+(chMsgCount[s.ch]||0)+'</b> msgs · <b>'+share+'%</b> of the main chat</div>'
+        : '<div class="ml">Offline — no chat until it goes live</div>')+
+      '<div class="sl">Feeding the <b style="color:var(--white)">unified feed</b></div>';
+    moveTip(e);
+  }
+  function attachStreamTip(el,s){
+    el.addEventListener('mouseenter',function(e){showStreamTip(e,s);});
+    el.addEventListener('mousemove',moveTip);
+    el.addEventListener('mouseleave',hideTip);
+  }
 
   /* ===== CLOCKS ===== */
   function clocks(){
@@ -2246,6 +2288,22 @@
   var _savedL='deck'; try{_savedL=localStorage.getItem('mb_layout')||'deck';}catch(e){}
   setLayout(_savedL);
 
+  /* ===== NATIVE CHAT — Banks's spec: chat from our own dashboard; the message
+     joins the unified feed as a Market Bubble (MB) source, attracting chatters
+     to the main chat. (Local echo today; when hem exposes a native-message
+     broadcast on the WS, also call sendBackend so every viewer sees it.) ===== */
+  function sendNative(){
+    var inp=$('mbsay'); if(!inp)return; var t=String(inp.value||'').trim(); if(!t)return; if(t.length>240)t=t.slice(0,240);
+    var v={ h:'you', plat:'mb', src:'marketbubble', watch:0, msgs:0, mod:false, host:false, bot:false };
+    ROSTER.push(v); if(ROSTER.length>140)ROSTER.shift();
+    var sc=scoreText(t); if(sc) sentiment=Math.max(5,Math.min(95,sentiment+sc*5));
+    addMsg(v, t, {you:true}); pulseHit();
+    feedEl.scrollTop=feedEl.scrollHeight;
+    inp.value=''; try{inp.focus();}catch(e){}
+    /* sendBackend({type:'nativeMessage',text:t,token:controlToken()}); // enable when backend supports it */
+  }
+  (function(){ var f=$('mbsayBar'); if(f) f.addEventListener('submit',function(e){ e.preventDefault(); sendNative(); }); })();
+
   /* ===== VIEWERS (social proof) ===== */
   var vTw=12200, vKk=4300, vX=2900, peak=21880;
   function fmtK(n){return n>=1000?(n/1000).toFixed(1)+'K':String(n);}
@@ -2267,7 +2325,7 @@
       var el=document.createElement('span');
       el.className='chip '+s.plat+(s.live?' live':'')+(s.featured?' featured':'');
       el.innerHTML='<span class="pf">'+PLABEL[s.plat]+'</span>'+s.ch+'<span class="rm" data-id="'+(s.id||'')+'">×</span>';
-      c.appendChild(el);
+      c.appendChild(el); attachStreamTip(el,s);
     });
     c.querySelectorAll('.rm').forEach(function(b){
       b.addEventListener('click',function(){ sendBackend({type:'disconnectStream',id:b.dataset.id,token:controlToken()}); });
@@ -2297,7 +2355,7 @@
       var el=document.createElement('div');
       el.className='statrow channel '+s.plat+(s.hot?' hot':'');
       el.innerHTML='<span class="dot"></span><span class="nm">'+s.ch+'</span><span class="rt"><span class="big">'+(s.live?fmtK(cnt):'<span style="color:var(--dim-2)">off</span>')+'</span><div class="mpm">'+(s.live?(s.hot?'204':Math.floor(Math.random()*40+5))+'/min':'offline')+'</div></span>';
-      c.appendChild(el);
+      c.appendChild(el); attachStreamTip(el,s);
     });
   }
 
