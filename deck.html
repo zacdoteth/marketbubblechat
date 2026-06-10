@@ -393,6 +393,8 @@
     body.lay-spotlight .player{margin:12px}
     body.lay-spotlight .feeds{aspect-ratio:16/6.4}
   }
+  body.disconnected .tb-live{opacity:.45}
+  body.disconnected .tb-live .d{animation:none;background:var(--dim)}
 </style>
 
 <div class="app">
@@ -583,14 +585,7 @@
   var platforms = ['twitch','x','kick'];
 
   // active aggregated streams (channels)
-  var sources = [
-    {plat:'twitch', ch:'jynxzi', live:true, hot:true, featured:false},
-    {plat:'twitch', ch:'fazebanks', live:true},
-    {plat:'kick', ch:'lospollostv', live:true},
-    {plat:'kick', ch:'adinross', live:true},
-    {plat:'x', ch:'marketbubble', live:true, featured:true},
-    {plat:'kick', ch:'trainwreckstv', live:false}
-  ];
+  var sources = [];
   var quickAdds = [
     {plat:'twitch', ch:'kaicenat'}, {plat:'twitch', ch:'xqc'},
     {plat:'kick', ch:'trainwreckstv'}, {plat:'x', ch:'zacxbt'},
@@ -612,6 +607,106 @@
   var chMsgCount={};
   var sentiment=50;
 
+  /* ============================================================
+     LIVE ENGINE — hem's real backend transplanted in. Replaces
+     every simulator: real Twitch/Kick/X chat over WS, real
+     viewers/stats, connect/disconnect, control token, reconnect.
+     Adapters route his events into the deck's own renderers.
+     ============================================================ */
+  var BACKEND_URL=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+    ? 'ws://localhost:8787' : 'wss://conflux-backend-production.up.railway.app';
+  var backendWS=null, backendReady=false;
+  var onSnapshot=[], onServerMessage=[], onStats=[], onStreams=[];
+  var reconnectDelay=1000+Math.random()*1000, RECONNECT_MAX=30000;
+  function scheduleReconnect(){ setTimeout(connectBackend,reconnectDelay); reconnectDelay=Math.min(reconnectDelay*1.5,RECONNECT_MAX); }
+  function connectBackend(){
+    try{
+      var ws=new WebSocket(BACKEND_URL); backendWS=ws;
+      ws.onopen=function(){ backendReady=true; setConn(true); reconnectDelay=1000+Math.random()*1000; };
+      ws.onmessage=function(e){ var m; try{m=JSON.parse(e.data);}catch(_){return;}
+        if(m.type==='snapshot') onSnapshot.forEach(function(f){try{f(m);}catch(_){}});
+        else if(m.type==='message') onServerMessage.forEach(function(f){try{f(m.message);}catch(_){}});
+        else if(m.type==='stats') onStats.forEach(function(f){try{f(m.stats);}catch(_){}});
+        else if(m.type==='streams') onStreams.forEach(function(f){try{f(m.streams);}catch(_){}});
+        else if(m.type==='error'){ try{showConnectMsg(String(m.error||'Error'),true);}catch(_){} }
+      };
+      ws.onclose=function(){ backendReady=false; setConn(false); scheduleReconnect(); };
+      ws.onerror=function(){ try{ws.close();}catch(_){} };
+    }catch(_){ setConn(false); scheduleReconnect(); }
+  }
+  function sendBackend(o){ if(backendReady) try{ backendWS.send(JSON.stringify(o)); }catch(_){} }
+  function setConn(ok){ document.body.classList.toggle('disconnected',!ok); }
+  function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g,':$1:'); }
+  function controlToken(){ try{ var k=new URLSearchParams(location.search).get('key'); if(k){localStorage.setItem('mb_ctl',k);return k;} return localStorage.getItem('mb_ctl')||''; }catch(_){ return ''; } }
+  var _cmT=null;
+  function showConnectMsg(msg,isErr){ var el=$('offlineNote'); if(!el)return;
+    el.innerHTML=msg?(isErr?'<b>'+msg+'</b>':msg):''; el.style.display=msg?'block':'none'; el.style.color=isErr?'var(--down)':'var(--dim)';
+    if(_cmT){clearTimeout(_cmT);_cmT=null;} if(msg&&!isErr)_cmT=setTimeout(function(){showConnectMsg('',false);},6000); }
+  function streamName(s){ return (s&&s.label)?String(s.label):String((s&&s.channel)||''); }
+  function streamSource(s){ return (s&&s.source)?String(s.source):String((s&&s.platform)||''); }
+
+  /* streamId -> {plat,ch} so msg counts/channels line up with real ids */
+  var STREAMMAP={};
+  function rememberStreams(streams){
+    sources=(streams||[]).map(function(s){ STREAMMAP[s.id]={plat:s.platform,ch:streamName(s)};
+      return {id:s.id, plat:s.platform, ch:streamName(s), live:s.status==='live', status:s.status, featured:streamSource(s)==='xbroadcast'}; });
+  }
+  /* sentiment from the real stream (crypto bull/bear lexicon) */
+  var BULL=/\b(lfg|moon|pump|green|up|wagmi|bullish|bull|ath|send|sending|sheesh|based|win|hodl|buy|long|gm|gmi|rally|ape|bid|pump)\b|🚀|🟢|🔥|📈|💎/i;
+  var BEAR=/\b(rip|dump|rekt|red|down|ngmi|bearish|bear|scam|rug|dead|crash|drop|fud|sell|sold|liq|short|panic|fear|loss|cope|jeet)\b|😭|🔴|📉|💀/i;
+  function scoreText(t){ t=String(t||''); var s=0; if(BULL.test(t))s++; if(BEAR.test(t))s--; return s; }
+
+  /* the single intake: one real message -> deck's addMsg + bookkeeping */
+  function ingest(m){
+    if(!m||!m.platform)return;
+    var meta=STREAMMAP[m.streamId]||{plat:m.platform,ch:(m.streamId||m.platform)};
+    var name=(m.displayName||m.username||'viewer');
+    var v={ h:name, plat:m.platform, src:(meta.ch||m.platform), watch:0, msgs:0,
+      mod:false, host:!!m.streamer, bot:/(^|[^a-z])(streamelements|nightbot|streamlabs|moobot|bot)([^a-z]|$)/i.test(name) };
+    ROSTER.push(v); if(ROSTER.length>140)ROSTER.shift();
+    var sc=scoreText(m.text); if(sc) sentiment=Math.max(5,Math.min(95,sentiment+sc*5));
+    addMsg(v, cleanText(m.text));
+  }
+
+  /* ADAPTERS: hem's events -> the deck's renderers */
+  onServerMessage.push(ingest);
+  onSnapshot.push(function(snap){ feedEl.innerHTML=''; rememberStreams(snap.streams); renderChips(); renderChannels();
+    (snap.messages||[]).forEach(ingest); feedEl.scrollTop=feedEl.scrollHeight; });
+  onStreams.push(function(streams){ rememberStreams(streams); renderChips(); renderChannels();
+    var off=(streams||[]).filter(function(s){return s.status==='offline';});
+    if(off.length) showConnectMsg(off[0].platform+'·'+streamName(off[0])+' is offline — no chat until it goes live',false); });
+  onStats.push(function(st){ if(!st||!st.combined)return; var pf=st.perPlatform||{};
+    vTw=((pf.twitch||{}).viewers)||0; vKk=((pf.kick||{}).viewers)||0; vX=((pf.x||{}).viewers)||0;
+    peak=Math.max(peak,vTw+vKk+vX); paintViewers();
+    var mpm=st.combined.msgsPerMin||0; velPeak=Math.max(velPeak,mpm);
+    var a=$('mpmTop'),b=$('sMpm2'),c=$('velNow'),d=$('velPeak');
+    if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; });
+
+  /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
+  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',TRUMP:'official-trump',MOODENG:'moo-deng',FARTCOIN:'fartcoin'};
+  function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
+  function fetchMarketsLive(){
+    if(typeof fetch!=='function')return;
+    var ids=Object.keys(CG).map(function(k){return CG[k];}).join(',');
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true',{cache:'no-store'})
+      .then(function(r){if(!r||!r.ok)throw 0;return r.json();})
+      .then(function(j){
+        tape.forEach(function(t){ var id=CG[t[0]],d=id&&j[id]; if(d){ t[1]=fmtPx(d.usd); if(typeof d.usd_24h_change==='number')t[2]=d.usd_24h_change; } });
+        var tr=$('tapeRow'); if(tr) tr.innerHTML=tape.map(tapeTick).join('')+tape.map(tapeTick).join('');
+        mix.forEach(function(mm){ var id=CG[mm[0]],d=id&&j[id]; if(d){ mm[2]=fmtPx(d.usd); if(typeof d.usd_24h_change==='number')mm[3]=d.usd_24h_change; } });
+        renderMarkets();
+      }).catch(function(){});
+  }
+  function fetchFG(){
+    if(typeof fetch!=='function')return;
+    fetch('https://api.alternative.me/fng/?limit=1',{cache:'no-store'}).then(function(r){if(!r||!r.ok)throw 0;return r.json();})
+      .then(function(j){ var d=j&&j.data&&j.data[0]; if(!d)return; var v=parseInt(d.value,10); if(isNaN(v))return;
+        var col=v<=24?'var(--down)':v<=44?'#FF9F45':v<=54?'var(--white)':v<=74?'#9BE36B':'var(--up)';
+        var el=$('fngVal'),lb=$('fngLbl'); if(el){el.textContent=v;el.style.color=col;} if(lb){lb.textContent=d.value_classification||'';lb.style.color=col;}
+      }).catch(function(){});
+  }
+
+
   /* ===== TOOLTIP ===== */
   var tip=$('tooltip');
   function showTip(e,v){
@@ -619,7 +714,7 @@
     var b=(v.host?'<span class="bdg host" style="margin-right:5px">Host</span>':'')+(v.mod?'<span class="bdg mod">Mod</span>':'');
     tip.innerHTML='<div class="th"><span class="pp">'+ICON[v.plat]+PLABEL[v.plat]+'</span>'+b+'</div>'+
       '<div class="name">'+v.h+'</div>'+
-      '<div class="ml">via <b>'+PLABEL[v.plat]+' · '+v.src+'</b><br>watching <b>'+v.watch+'m</b> · <b>'+v.msgs+'</b> msgs</div>'+
+      '<div class="ml">via <b>'+PLABEL[v.plat]+' · '+v.src+'</b><br><b>'+(topTally[v.h]||1)+'</b> msgs in this room</div>'+
       '<div class="sl">Source: <b style="color:var(--white)">'+PLABEL[v.plat]+'</b></div>';
     moveTip(e);
   }
@@ -683,11 +778,11 @@
     sources.forEach(function(s,i){
       var el=document.createElement('span');
       el.className='chip '+s.plat+(s.live?' live':'')+(s.featured?' featured':'');
-      el.innerHTML='<span class="pf">'+PLABEL[s.plat]+'</span>'+s.ch+'<span class="rm" data-i="'+i+'">×</span>';
+      el.innerHTML='<span class="pf">'+PLABEL[s.plat]+'</span>'+s.ch+'<span class="rm" data-id="'+(s.id||'')+'">×</span>';
       c.appendChild(el);
     });
     c.querySelectorAll('.rm').forEach(function(b){
-      b.addEventListener('click',function(){ sources.splice(+b.dataset.i,1); renderChips(); renderChannels(); });
+      b.addEventListener('click',function(){ sendBackend({type:'disconnectStream',id:b.dataset.id,token:controlToken()}); });
     });
   }
   function renderQuick(){
@@ -697,9 +792,10 @@
       el.className='qchip '+q.plat;
       el.innerHTML='<span class="ic">'+ICON[q.plat]+'</span>'+q.ch;
       el.addEventListener('click',function(){
-        sources.push({plat:q.plat, ch:q.ch, live:true});
-        quickAdds.splice(i,1);
-        renderChips(); renderQuick(); renderChannels();
+        var url=(q.plat==='twitch'?'https://twitch.tv/':q.plat==='kick'?'https://kick.com/':'https://x.com/')+q.ch;
+        if(!backendReady){ showConnectMsg('Connecting to server… one sec',true); return; }
+        sendBackend({type:'connectStream',url:url,token:controlToken()});
+        showConnectMsg('Connecting '+q.plat+'·'+q.ch+' …',false);
       });
       c.appendChild(el);
     });
@@ -873,12 +969,12 @@
   $('addBtn').addEventListener('click',addStream);
   $('addInput').addEventListener('keydown',function(e){if(e.key==='Enter')addStream();});
   function addStream(){
-    var raw=$('addInput').value.trim().toLowerCase(); if(!raw)return;
-    var plat='twitch';
-    if(raw.indexOf('kick')>-1)plat='kick'; else if(raw.indexOf('x.com')>-1||raw.indexOf('twitter')>-1)plat='x';
-    var ch=raw.replace(/.*\//,'').replace(/[^a-z0-9_]/g,'')||'channel';
-    sources.push({plat:plat,ch:ch,live:true}); $('addInput').value='';
-    renderChips(); renderChannels();
+    var raw=$('addInput').value.trim(); if(!raw)return;
+    if(!/(twitch\.tv|kick\.com|x\.com|twitter\.com)/i.test(raw)){ showConnectMsg("That's not a twitch.tv / kick.com / x.com link",true); return; }
+    if(!backendReady){ showConnectMsg('Connecting to server… try again in a sec',true); return; }
+    sendBackend({type:'connectStream',url:raw,token:controlToken()});
+    showConnectMsg('Connecting '+raw.replace(/^https?:\/\/(www\.)?/,'').replace(/\/+$/,'')+' …',false);
+    $('addInput').value='';
   }
 
   /* ===== REACTIONS ===== */
@@ -914,8 +1010,8 @@
     var c=$('mkList'); c.innerHTML='';
     c.appendChild(groupLabel('Bullpen Mix','Spot · 24h'));
     mix.forEach(function(m){
-      var el=document.createElement('div'); el.className='mrow dn';
-      el.innerHTML='<div class="nm"><div class="t">'+m[0]+'</div><div class="s">'+m[1]+'</div></div>'+spark(true)+'<div class="pr"><div class="px">$'+m[2]+'</div><div class="ch">'+m[3].toFixed(2)+'%</div></div>';
+      var up=Number(m[3])>=0; var el=document.createElement('div'); el.className='mrow '+(up?'up':'dn');
+      el.innerHTML='<div class="nm"><div class="t">'+m[0]+'</div><div class="s">'+m[1]+'</div></div>'+spark(!up)+'<div class="pr"><div class="px">$'+m[2]+'</div><div class="ch">'+(up?'+':'')+Number(m[3]).toFixed(2)+'%</div></div>';
       c.appendChild(el);
     });
     c.appendChild(groupLabel('Predictions','Polymarket'));
@@ -935,33 +1031,18 @@
     renderChips(); renderQuick(); renderChannels();
     renderMarkets();
     paintSentiment();
+    showConnectMsg('',false);
 
-    // seed feed
-    for(var i=0;i<18;i++){ var s=pickSource(); var v=makeViewer(s); addMsg(v, lines[Math.floor(Math.random()*lines.length)]); }
-    feedEl.scrollTop=feedEl.scrollHeight;
-
-    // viewer drift (social proof)
-    setInterval(function(){
-      vTw+=Math.floor(Math.random()*40-16); vKk+=Math.floor(Math.random()*22-9); vX+=Math.floor(Math.random()*18-7);
-      vTw=Math.max(200,vTw); vKk=Math.max(100,vKk); vX=Math.max(100,vX);
-      peak=Math.max(peak,vTw+vKk+vX);
-      paintViewers();
-    },2600);
-
-    // sentiment + channels + top chatters refresh
-    setInterval(function(){ sentiment=Math.max(8,Math.min(92,sentiment+(Math.random()*14-7))); paintSentiment(); },3200);
+    // sentiment eases toward neutral; the REAL chat drives it (see ingest)
+    setInterval(function(){ sentiment+=(50-sentiment)*0.05; paintSentiment(); },2200);
+    // live channels + leaderboard repaint
     setInterval(function(){ renderChannels(); paintTop(); },4000);
 
-    // msg/min readout
-    setInterval(function(){
-      var mpm=Math.round(msgPerMin*4); msgPerMin=0;
-      velPeak=Math.max(velPeak,mpm);
-      $('mpmTop').textContent=mpm; $('sMpm2').textContent=mpm;
-      $('velNow').innerHTML=mpm+'<small>msg/min</small>'; $('velPeak').textContent=velPeak;
-    },15000);
-
-    // start streams
-    if(!reduce){ setTimeout(streamMsg,900); setTimeout(hostChat,6000); }
+    // ── THE LIVE FEED ── connect to hem's backend; real chat + stats flow in
+    connectBackend();
+    // ── LIVE MARKETS ── real prices into the tape + markets + Fear & Greed
+    fetchMarketsLive(); setInterval(fetchMarketsLive,90000);
+    fetchFG();          setInterval(fetchFG,300000);
     paintTop();
   }
   /* ── left-rail fillers: first-time chatters + live audience ── */
