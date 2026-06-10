@@ -50,8 +50,8 @@
   .brand{display:flex;align-items:center;gap:10px}
   .brand .logo{width:36px;height:36px;background:#000;border:1px solid var(--line);border-radius:8px;
     display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-  .brand .tx .nm{font-family:var(--serif);font-weight:800;font-size:16px;line-height:.9;letter-spacing:.2px}
-  .brand .tx .sl{font-family:var(--gk);font-size:8px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--dim-2);margin-top:3px}
+  .brand .tx .nm{font-family:var(--serif);font-weight:800;font-size:16px;line-height:1.05;letter-spacing:.2px}
+  .brand .tx .sl{font-family:var(--gk);font-size:8px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--dim-2);margin-top:5px}
 
   .modetog{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;margin:0 auto}
   .modetog button{font-family:var(--gk);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -411,6 +411,24 @@
     background:var(--pc,var(--blue));box-shadow:0 0 6px -1px var(--pc,var(--blue));
     transition:height .22s cubic-bezier(.3,.8,.3,1),background .9s ease}
   @media(prefers-reduced-motion:reduce){ .pulse i{transition:none} }
+  /* ── SUNO LESSON: per-row identity (album-art -> platform-tinted avatar) ── */
+  .wmsg{display:flex;gap:10px;align-items:flex-start}
+  .wmsg .av{flex:0 0 auto;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-top:1px;
+    font-family:var(--gk);font-weight:700;font-size:11px;letter-spacing:-.02em;color:var(--dim);background:#16161b;box-shadow:inset 0 0 0 1px var(--line)}
+  .wmsg .av.twitch{color:var(--twitch-t);background:rgba(145,70,255,.13);box-shadow:inset 0 0 0 1px rgba(145,70,255,.34)}
+  .wmsg .av.kick{color:var(--kick-t);background:rgba(83,252,24,.11);box-shadow:inset 0 0 0 1px rgba(83,252,24,.30)}
+  .wmsg .av.x{color:var(--white);background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  .wmsg .body{flex:1;min-width:0}
+  /* ── SUNO LESSON: a designed empty state (no dead void) ── */
+  .feed:empty::before{content:'Paste a channel above — the wire fills the moment chat flows.';
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:32px;color:var(--dim-2);font-family:var(--gk);font-size:13px;line-height:1.6;letter-spacing:.01em}
+  /* ── ON AIR real-player embed ── */
+  .vf-embed{position:absolute;inset:0;z-index:1;background:#000;border-radius:8px;overflow:hidden}
+  .vf-embed iframe{width:100%;height:100%;border:0;display:block}
+  .vf.isLive .sil{display:none}
+  .vf.isLive::before{opacity:.16}
+  .vf.isLive::after{opacity:.12}
 </style>
 
 <div class="app">
@@ -704,7 +722,7 @@
   onServerMessage.push(ingest);
   onSnapshot.push(function(snap){ feedEl.innerHTML=''; rememberStreams(snap.streams); renderChips(); renderChannels();
     (snap.messages||[]).forEach(ingest); feedEl.scrollTop=feedEl.scrollHeight; });
-  onStreams.push(function(streams){ rememberStreams(streams); renderChips(); renderChannels();
+  onStreams.push(function(streams){ rememberStreams(streams); renderChips(); renderChannels(); renderOnAir();
     var off=(streams||[]).filter(function(s){return s.status==='offline';});
     if(off.length) showConnectMsg(off[0].platform+'·'+streamName(off[0])+' is offline — no chat until it goes live',false); });
   onStats.push(function(st){ if(!st||!st.combined)return; var pf=st.perPlatform||{};
@@ -881,9 +899,10 @@
     if(v.mod)badges+='<span class="bdg mod">Mod</span>';
     if(v.bot)badges+='<span class="bdg bot">Bot</span>';
     var verified=v.host?'<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .2.2 3L19.4 9 21 12l-1.6 3 .4 3-3 .2L15 21l-3-1.6L9 21l-1.8-2.6-3-.2.4-3L3 12l1.6-3-.2-3 3-.2L9.6 3.8z"/></svg>':'';
-    el.innerHTML='<div class="top"><span class="usr">'+v.h+'</span>'+verified+badges+
+    var _ini=(v.h||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||(v.h||'?').slice(0,2);
+    el.innerHTML='<div class="av '+v.plat+'" aria-hidden="true">'+_ini+'</div><div class="body"><div class="top"><span class="usr">'+v.h+'</span>'+verified+badges+
       '<span class="right"><span class="ch">'+PLABEL[v.plat].toLowerCase()+'·'+v.src+'</span><span class="plat">'+ICON[v.plat]+PLABEL[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
-      '<div class="txt">'+highlightText(text)+'</div>';
+      '<div class="txt">'+highlightText(text)+'</div></div>';
     attachTip(el,v);
     // apply current filter
     if(!matchFilter(el)) el.style.display='none';
@@ -1075,6 +1094,39 @@
   }
 
   /* ===== INIT + LOOPS ===== */
+  /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
+  function playerSrc(s){
+    if(s.plat==='twitch') return 'https://player.twitch.tv/?channel='+encodeURIComponent(s.ch)+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted=true&autoplay=true';
+    if(s.plat==='kick')   return 'https://player.kick.com/'+encodeURIComponent(s.ch)+'?muted=true&autoplay=true';
+    return '';
+  }
+  function renderOnAir(){
+    try{
+      var live=(sources||[]).filter(function(s){return s.live&&(s.plat==='twitch'||s.plat==='kick')&&s.ch;});
+      var cams=[]; var hero=document.querySelector('.feeds .vf.hero'); if(hero)cams.push(hero);
+      document.querySelectorAll('.feeds .vf:not(.hero)').forEach(function(v){cams.push(v);});
+      cams.forEach(function(vf,idx){
+        if(!vf.dataset.defnm){ var dn=vf.querySelector('.np .nm'), dr=vf.querySelector('.np .rr'); vf.dataset.defnm=dn?dn.textContent:''; vf.dataset.defrr=dr?dr.textContent:''; }
+        var s=live[idx];
+        if(s){
+          var key=s.plat+'/'+s.ch;
+          if(vf.getAttribute('data-ch')!==key){
+            var h=vf.querySelector('.vf-embed'); if(!h){ h=document.createElement('div'); h.className='vf-embed'; vf.insertBefore(h, vf.firstChild); }
+            h.innerHTML='<iframe src="'+playerSrc(s).replace(/"/g,'&quot;')+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="'+(s.ch||'')+'"></iframe>';
+            vf.setAttribute('data-ch',key);
+          }
+          vf.classList.add('isLive');
+          var nm=vf.querySelector('.np .nm'); if(nm)nm.textContent=s.ch;
+          var rr=vf.querySelector('.np .rr'); if(rr)rr.textContent=(PLABEL[s.plat]||s.plat)+' · live';
+        } else {
+          var h2=vf.querySelector('.vf-embed'); if(h2)h2.remove();
+          vf.classList.remove('isLive'); vf.removeAttribute('data-ch');
+          var nm2=vf.querySelector('.np .nm'); if(nm2&&vf.dataset.defnm)nm2.textContent=vf.dataset.defnm;
+          var rr2=vf.querySelector('.np .rr'); if(rr2&&vf.dataset.defrr)rr2.textContent=vf.dataset.defrr;
+        }
+      });
+    }catch(e){}
+  }
   function init(){
     clocks(); setInterval(clocks,1000);
     paintViewers();
@@ -1094,6 +1146,7 @@
     fetchMarketsLive(); setInterval(fetchMarketsLive,90000);
     fetchFG();          setInterval(fetchFG,300000);
     pulseInit(); setInterval(pulseTick,220);
+    renderOnAir(); setInterval(renderOnAir,6000);
     paintTop();
   }
   /* ── left-rail fillers: first-time chatters + live audience ── */
