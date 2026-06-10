@@ -506,7 +506,7 @@ footer b{color:var(--gold-deep);font-weight:400}
 
 /* ===== THE DROPLET — neoteny mascot empty-state ===== */
 .sp-mascot{display:flex;flex-direction:column;align-items:center;gap:13px;padding:26px 18px 24px;text-align:center}
-.drop{position:relative;width:62px;height:70px;transform-origin:50% 90%;animation:dropBob 3.4s ease-in-out infinite}
+.drop{position:relative;width:62px;height:76px;transform-origin:50% 90%;animation:dropBob 3.4s ease-in-out infinite}
 .drop .body{position:absolute;inset:0;animation:dropSquash 3.4s ease-in-out infinite;transform-origin:50% 92%}
 .drop .body svg{display:block;width:100%;height:100%;filter:drop-shadow(0 6px 16px rgba(232,199,126,.34))}
 .drop .eye{position:absolute;width:8px;height:11px;border-radius:50%;background:#1a1305;top:34px}
@@ -590,7 +590,7 @@ body.mode-watch .mkts{display:none}
 .mk-fg{padding:10px 14px 10px;border-bottom:1px solid var(--line-soft)}
 .mk-fg-dial{display:flex;justify-content:center;margin-top:2px}
 .mk-fg-svg{width:128px;height:72px;overflow:visible;display:block}
-.mk-fg-track{fill:none;stroke:rgba(232,199,126,.10);stroke-width:7;stroke-linecap:round}
+.mk-fg-track{fill:none;stroke:rgba(232,199,126,.18);stroke-width:7;stroke-linecap:round}
 .mk-fg-fill{fill:none;stroke:var(--fng-c,var(--gold));stroke-width:7;stroke-linecap:round;
   filter:drop-shadow(0 0 5px color-mix(in srgb,var(--fng-c,var(--gold)) 65%,transparent));
   transition:stroke-dashoffset .9s cubic-bezier(.34,1.2,.4,1),stroke .8s ease}
@@ -600,7 +600,7 @@ body.mode-watch .mkts{display:none}
 .mk-fg-scale{display:flex;justify-content:space-between;margin-top:10px;font-size:7.5px;letter-spacing:.12em;color:var(--muted-2);text-transform:uppercase}
 /* coin rows */
 .mk-list{padding:4px 0}
-.mk-row{display:grid;grid-template-columns:minmax(0,1fr) auto 64px;align-items:center;column-gap:10px;padding:7px 14px;transition:background .18s ease}
+.mk-row{display:grid;grid-template-columns:minmax(0,1fr) auto 64px;align-items:center;column-gap:10px;padding:5.5px 14px;transition:background .18s ease}
 .mk-row:hover{background:rgba(255,255,255,.03)}
 .mk-id{min-width:0;display:flex;flex-direction:column;gap:2px}
 .mk-sym{font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.02em;line-height:1}
@@ -2017,7 +2017,7 @@ function loop(now){
   var MASCOT = ''
     + '<div class="sp-mascot">'
     +   '<div class="drop" aria-hidden="true">'
-    +     '<div class="body"><svg viewBox="0 0 62 70" fill="none">'
+    +     '<div class="body"><svg viewBox="0 0 62 76" fill="none">'
     +       '<defs><radialGradient id="dropG" cx="38%" cy="30%" r="75%">'
     +         '<stop offset="0%" stop-color="#F6E0A6"/><stop offset="55%" stop-color="#E8C77E"/><stop offset="100%" stop-color="#C9A861"/>'
     +       '</radialGradient></defs>'
@@ -2241,16 +2241,25 @@ function loop(now){
 (function(){
   try{
     var host=document.getElementById('mkts'); if(!host) return;
+    // the BULLPEN MIX — majors + the venue (HYPE) + the Ansem-meta Solana basket
     var COINS=[
       {id:'bitcoin',sym:'BTC',name:'Bitcoin'},
       {id:'ethereum',sym:'ETH',name:'Ethereum'},
       {id:'solana',sym:'SOL',name:'Solana'},
-      {id:'dogecoin',sym:'DOGE',name:'Dogecoin'},
+      {id:'hyperliquid',sym:'HYPE',name:'Hyperliquid'},
       {id:'dogwifcoin',sym:'WIF',name:'dogwifhat'},
-      {id:'popcat',sym:'POPCAT',name:'Popcat'},
       {id:'bonk',sym:'BONK',name:'Bonk'},
-      {id:'pepe',sym:'PEPE',name:'Pepe'}];
-    var SEED={bitcoin:[61400,-2.1],ethereum:[1630,-2.6],solana:[64.2,-4.1],dogecoin:[0.084,-2.3],dogwifcoin:[0.152,-3.9],popcat:[0.0406,-3.4],bonk:[0.0000043,-2.7],pepe:[0.0000027,-2.4]};
+      {id:'popcat',sym:'POPCAT',name:'Popcat'},
+      {id:'fartcoin',sym:'FARTCOIN',name:'Fartcoin'},
+      {id:'peanut-the-squirrel',sym:'PNUT',name:'Peanut'},
+      {id:'moo-deng',sym:'MOODENG',name:'Moo Deng'},
+      {id:'goatseus-maximus',sym:'GOAT',name:'Goatseus'},
+      {id:'official-trump',sym:'TRUMP',name:'Trump'},
+      {id:'jupiter-exchange-solana',sym:'JUP',name:'Jupiter'},
+      {id:'raydium',sym:'RAY',name:'Raydium'},
+      {id:'pepe',sym:'PEPE',name:'Pepe'},
+      {id:'dogecoin',sym:'DOGE',name:'Dogecoin'}];
+    var SEED={bitcoin:[61166,-2.6],ethereum:[1618,-3.3],solana:[63.5,-4.7],hyperliquid:[55.4,-3.0],dogwifcoin:[0.1512,-4.3],bonk:[0.00000426,-3.6],popcat:[0.0402,-2.4],fartcoin:[0.114,-5.0],'peanut-the-squirrel':[0.0412,-4.1],'moo-deng':[0.0373,-4.4],'goatseus-maximus':[0.0127,-3.2],'official-trump':[1.63,-2.2],'jupiter-exchange-solana':[0.150,-3.1],raydium:[0.5645,-2.8],pepe:[0.0000027,-3.6],dogecoin:[0.0833,-3.1]};
     var data={}, haveLive=false;
     COINS.forEach(function(c){ var s=SEED[c.id]||[1,0];
       var spark=[],v=s[0];
@@ -2272,7 +2281,7 @@ function loop(now){
 
     var FG_DASH=170; // arc length of the 108px-wide semicircle
     host.innerHTML=
-      '<div class="mk-head"><span class="mk-lbl">Markets</span><span class="mk-live"><i></i><span id="mkSrc">live</span></span></div>'+
+      '<div class="mk-head"><span class="mk-lbl">Markets · Bullpen mix</span><span class="mk-live"><i></i><span id="mkSrc">live</span></span></div>'+
       '<div class="mk-fg"><div class="sp-section-lbl" style="margin-bottom:0">Fear &amp; Greed</div>'+
         '<div class="mk-fg-dial"><svg class="mk-fg-svg" viewBox="0 0 128 72" aria-hidden="true">'+
           '<path class="mk-fg-track" d="M10 66 A54 54 0 0 1 118 66"/>'+
