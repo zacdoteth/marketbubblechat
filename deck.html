@@ -361,6 +361,38 @@
     .streammgmt .chips{max-height:none}
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.lt::after{display:none}}
+  /* ── FIRST-TIME CHATTERS (engagement: newcomers, FOMO) ── */
+  .ftc{display:flex;flex-wrap:wrap;gap:5px}
+  .ftc .t{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:5px;border:1px solid var(--line);background:var(--panel-2);color:var(--dim);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .ftc .t.twitch{color:var(--twitch-t);border-color:rgba(145,70,255,.32)}
+  .ftc .t.kick{color:var(--kick-t);border-color:rgba(83,252,24,.30)}
+  .ftc .t.x{color:var(--x-t);border-color:rgba(255,255,255,.22)}
+  .ftc .t.nu{animation:min .4s var(--ease) both}
+  .ftc .empty{font-family:var(--gk);font-size:11px;color:var(--dim-2)}
+  /* ── LIVE AUDIENCE (social proof: the room, alive) ── */
+  .audh{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .audn{font-size:12px;font-weight:700;color:var(--up)}
+  .aud{display:grid;grid-template-columns:repeat(auto-fill,minmax(15px,1fr));gap:5px}
+  .aud .a{aspect-ratio:1;border-radius:4px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:8px;font-weight:700;color:var(--dim-2);position:relative;overflow:hidden;transition:.3s var(--ease)}
+  .aud .a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:2px;opacity:.85}
+  .aud .a.twitch::after{background:var(--twitch)} .aud .a.kick::after{background:var(--kick)} .aud .a.x::after{background:#e9e9e9}
+  .aud .a.nu{animation:min .45s var(--ease) both}
+  /* ── LAYOUT: SPOTLIGHT — big stage on top, deck intact below (desktop) ── */
+  @media(min-width:1181px){
+    body.lay-spotlight .deck{
+      grid-template-columns:296px minmax(0,1fr) 380px;
+      grid-template-rows:minmax(0,auto) minmax(0,1fr);
+      grid-template-areas:"stats onair onair" "stats wire markets";
+    }
+    body.lay-spotlight .rightcol{display:contents}
+    body.lay-spotlight .stats{grid-area:stats}
+    body.lay-spotlight .wire{grid-area:wire;border-right:1px solid var(--line)}
+    body.lay-spotlight .onair{grid-area:onair;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
+    body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);min-height:0;display:flex;flex-direction:column}
+    body.lay-spotlight .player{margin:12px}
+    body.lay-spotlight .feeds{aspect-ratio:16/6.4}
+  }
 </style>
 
 <div class="app">
@@ -372,9 +404,10 @@
       <span class="tx"><span class="nm">Market&nbsp;Bubble</span><span class="sl">Command Deck · Every chat, one feed</span></span>
     </a>
 
-    <div class="modetog" role="tablist" aria-label="View mode">
-      <button id="mDash" class="on" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</button>
-      <button id="mWatch" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 4 14 8-14 8z"/></svg>Watch</button>
+    <div class="modetog" role="tablist" aria-label="Layout">
+      <button id="mDeck" class="on" role="tab" title="Deck — video in the status corner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="9" height="18"/><rect x="14" y="3" width="7" height="8"/><rect x="14" y="13" width="7" height="8"/></svg>Deck</button>
+      <button id="mSpot" role="tab" title="Spotlight — big stage on top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="9"/><rect x="3" y="14" width="8" height="7"/><rect x="13" y="14" width="8" height="7"/></svg>Spotlight</button>
+      <button id="mTheater" role="tab" title="Theater — immersive watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="13" height="16"/><rect x="18" y="4" width="3" height="16"/></svg>Theater</button>
     </div>
 
     <div class="tb-stats">
@@ -443,6 +476,16 @@
       <div class="sblock">
         <div class="bh lab">Msg Velocity</div>
         <div class="velrow"><span class="now" id="velNow">312<small>msg/min</small></span><span class="pk">peak <span id="velPeak">680</span></span></div>
+      </div>
+
+      <div class="sblock">
+        <div class="bh lab">First-Time Chatters</div>
+        <div class="ftc" id="ftcList"></div>
+      </div>
+
+      <div class="sblock" style="margin-top:auto">
+        <div class="audh"><span class="lab">Live Audience</span><span class="audn num" id="audN">0</span></div>
+        <div class="aud" id="audGrid"></div>
       </div>
     </aside>
 
@@ -603,14 +646,22 @@
   }
 
   /* ===== MODE TOGGLE ===== */
-  function setMode(m){
-    document.body.classList.toggle('dash',m==='dash');
-    document.body.classList.toggle('watch',m==='watch');
-    $('mDash').classList.toggle('on',m==='dash');
-    $('mWatch').classList.toggle('on',m==='watch');
+  // three operator-selectable layouts (Banks runs the show — let him pick)
+  function setLayout(l){
+    var theater=(l==='theater');
+    document.body.classList.toggle('dash',!theater);
+    document.body.classList.toggle('watch',theater);
+    document.body.classList.toggle('lay-spotlight',l==='spotlight');
+    $('mDeck').classList.toggle('on',l==='deck');
+    $('mSpot').classList.toggle('on',l==='spotlight');
+    $('mTheater').classList.toggle('on',theater);
+    try{localStorage.setItem('mb_layout',l);}catch(e){}
   }
-  $('mDash').addEventListener('click',function(){setMode('dash');});
-  $('mWatch').addEventListener('click',function(){setMode('watch');});
+  $('mDeck').addEventListener('click',function(){setLayout('deck');});
+  $('mSpot').addEventListener('click',function(){setLayout('spotlight');});
+  $('mTheater').addEventListener('click',function(){setLayout('theater');});
+  var _savedL='deck'; try{_savedL=localStorage.getItem('mb_layout')||'deck';}catch(e){}
+  setLayout(_savedL);
 
   /* ===== VIEWERS (social proof) ===== */
   var vTw=12200, vKk=4300, vX=2900, peak=21880;
@@ -913,6 +964,27 @@
     if(!reduce){ setTimeout(streamMsg,900); setTimeout(hostChat,6000); }
     paintTop();
   }
+  /* ── left-rail fillers: first-time chatters + live audience ── */
+  var FT_SEEN={}, firstTimers=[];
+  function noteFirstTimer(v){ if(!v||FT_SEEN[v.h])return; FT_SEEN[v.h]=1; firstTimers.unshift(v); if(firstTimers.length>18)firstTimers.pop(); }
+  function renderFirstTimers(){
+    var c=$('ftcList'); if(!c)return;
+    if(!firstTimers.length){ c.innerHTML='<span class="empty">waiting for new chatters…</span>'; return; }
+    c.innerHTML=firstTimers.slice(0,16).map(function(v,i){ return '<span class="t '+v.plat+(i===0?' nu':'')+'">'+v.h+'</span>'; }).join('');
+  }
+  function renderAudience(){
+    var c=$('audGrid'); if(!c)return;
+    var pool=ROSTER.slice(-60).reverse(), n=Math.min(54,Math.max(18,pool.length)), out=[];
+    for(var i=0;i<n;i++){ var r=pool[i%(pool.length||1)]; var plat=r?r.plat:platforms[i%3]; var ini=r?(r.h[0]||'').toUpperCase():'';
+      out.push('<span class="a '+plat+(i===0?' nu':'')+'">'+ini+'</span>'); }
+    c.innerHTML=out.join('');
+    var nN=$('audN'); if(nN)nN.textContent=(vTw+vKk+vX).toLocaleString();
+  }
+  // seed from whoever's already in the roster, then keep them fresh
+  ROSTER.forEach(noteFirstTimer);
+  renderFirstTimers(); renderAudience();
+  setInterval(function(){ ROSTER.slice(-6).forEach(noteFirstTimer); renderFirstTimers(); renderAudience(); }, 3500);
+
   init();
 })();
 </script>
