@@ -551,6 +551,16 @@ footer b{color:var(--gold-deep);font-weight:400}
   .sp-velo.surge .sp-velo-now::after{animation:none;opacity:0}
 }
 /* ===================== /ZCADE ELEVATION ===================== */
+
+/* ===== FEAR & GREED — global market-mood badge (in THE TAPE) ===== */
+.fng{flex:none;display:inline-flex;align-items:center;gap:9px;padding:0 14px;position:relative;border-right:1px solid var(--line);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--fng-c,var(--gold)) 12%,transparent),transparent)}
+.fng-k{font-family:'Space Mono',monospace;font-size:7.5px;line-height:1.12;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;text-align:left}
+.fng-num{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;line-height:1;color:var(--fng-c,var(--gold-br));font-variant-numeric:tabular-nums;text-shadow:0 0 10px color-mix(in srgb,var(--fng-c,var(--gold-br)) 55%,transparent);transition:color .8s ease}
+.fng-cls{font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:9px;letter-spacing:.03em;color:var(--fng-c,var(--gold-br));text-transform:uppercase;white-space:nowrap;transition:color .8s ease}
+.fng::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:var(--fng-w,0%);background:var(--fng-c,var(--gold));box-shadow:0 0 8px var(--fng-c,var(--gold));transition:width .9s cubic-bezier(.34,1.1,.4,1),background .8s ease}
+@media (max-width:600px){ .fng{gap:6px;padding:0 10px} .fng-k,.fng-cls{display:none} }
+@media (prefers-reduced-motion:reduce){ .fng::after{transition:none} .fng-num,.fng-cls{transition:none} }
 </style>
 </head>
 <body class="mode-dashboard">
@@ -601,6 +611,7 @@ footer b{color:var(--gold-deep);font-weight:400}
 
 <div class="tape" id="tape" aria-label="Crypto markets ticker">
   <span class="tape-cap"><span class="tape-pulse"></span><span class="lbltxt">Tape</span></span>
+  <span class="fng" id="fng" title="Crypto Fear &amp; Greed Index"><span class="fng-k">Fear<br>Greed</span><span class="fng-num" id="fngNum">··</span><span class="fng-cls" id="fngCls">—</span></span>
   <div class="tape-vp" id="tapeVp"><div class="tape-track" id="tapeTrack"></div></div>
 </div>
 
@@ -2055,6 +2066,52 @@ function loop(now){
   }catch(e){}
 })();
 /* ===================== /ZCADE ELEVATION JS ===================== */
+
+
+/* ============================================================
+   FEAR & GREED — Crypto Fear & Greed Index (alternative.me, no key)
+   Global MARKET mood, paired with the chat-derived Mood Engine.
+   Fail-safe: 8s timeout + neutral fallback; never throws.
+   ============================================================ */
+(function(){
+  try{
+    var numEl=document.getElementById('fngNum'), clsEl=document.getElementById('fngCls'), root=document.getElementById('fng');
+    if(!numEl||!clsEl||!root) return;
+    function zone(v){
+      if(v<=24) return ['#FF5247','Extreme Fear'];
+      if(v<=44) return ['#FF9F45','Fear'];
+      if(v<=54) return ['#E8C77E','Neutral'];
+      if(v<=74) return ['#9BE36B','Greed'];
+      return ['#53FC18','Extreme Greed'];
+    }
+    var seeded=false;
+    function apply(v,cls){
+      v=Math.max(0,Math.min(100,Math.round(v||0)));
+      var z=zone(v);
+      numEl.textContent=v;
+      clsEl.textContent=cls||z[1];
+      root.style.setProperty('--fng-c',z[0]);
+      root.style.setProperty('--fng-w',v+'%');
+      try{ root.title='Crypto Fear & Greed Index \u2014 '+v+' \u00b7 '+(cls||z[1]); }catch(e){}
+      seeded=true;
+    }
+    function fallback(){ if(!seeded) apply(50,'Neutral'); }
+    function fetchFng(){
+      if(typeof fetch!=='function'){ fallback(); return; }
+      var done=false, to=setTimeout(function(){ if(!done){done=true; fallback();} },8000);
+      try{
+        fetch('https://api.alternative.me/fng/?limit=1',{cache:'no-store'})
+          .then(function(r){ if(!r||!r.ok) throw new Error('bad'); return r.json(); })
+          .then(function(j){ if(done)return; done=true; clearTimeout(to);
+            var d=j&&j.data&&j.data[0]; if(!d){ fallback(); return; }
+            apply(parseInt(d.value,10), d.value_classification); })
+          .catch(function(){ if(done)return; done=true; clearTimeout(to); fallback(); });
+      }catch(e){ if(!done){done=true; clearTimeout(to); fallback();} }
+    }
+    fetchFng();
+    setInterval(fetchFng, 300000);
+  }catch(e){}
+})();
 
 /* ---------- boot ---------- */
 try{ if(THREE_OK) initThree(); }catch(e){ THREE_OK=false; console.warn('3D disabled:',e); }
