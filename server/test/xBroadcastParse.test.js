@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseXFrame } from '../src/ingesters/xBroadcastParse.js';
+import { parseXFrame as vendoredParseXFrame } from '../../worker/xBroadcastParse.js';
 
 // Build a real-shaped chat frame the way the wire does: triple-nested JSON.
 function buildChatFrame(msg) {
@@ -40,6 +41,16 @@ test('parseXFrame: decodes occupancy/viewer-count from a real captured frame', (
 test('parseXFrame: emoji body survives', () => {
   const raw = buildChatFrame({ body: '😀😀', username: 'shellistonnn', displayName: 'Sheliston', timestamp: 2, uuid: 'u2' });
   assert.equal(parseXFrame(raw).msg.text, '😀😀');
+});
+
+test('vendored worker parser stays in sync with the canonical server parser', () => {
+  // The worker ships a vendored copy of this parser. Guard against drift: identical output.
+  const samples = [
+    buildChatFrame({ body: 'gm', username: 'zacxbt', displayName: 'zac', timestamp: 5, uuid: 'u', room: 'R' }),
+    '{"kind":2,"payload":"{\\"kind\\":4,\\"sender\\":{},\\"body\\":\\"{\\\\\\"room\\\\\\":\\\\\\"R\\\\\\",\\\\\\"occupancy\\\\\\":7}\\"}"}',
+    'garbage', '{"kind":9,"payload":"{}"}', '',
+  ];
+  for (const s of samples) assert.deepEqual(vendoredParseXFrame(s), parseXFrame(s));
 });
 
 test('parseXFrame: malformed / non-chat / unknown frames return null', () => {

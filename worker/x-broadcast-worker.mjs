@@ -25,7 +25,7 @@
 //   { token, broadcastId, broadcaster?, status?, occupancy?, messages?:[{uuid,username,displayName,text,ts}] }
 
 import { chromium } from 'playwright';
-import { parseXFrame } from '../server/src/ingesters/xBroadcastParse.js';
+import { parseXFrame } from './xBroadcastParse.js'; // vendored copy of server/src/ingesters/xBroadcastParse.js
 
 // ── config ────────────────────────────────────────────────────────────────
 const BACKEND_HTTP = (process.env.BACKEND_HTTP || 'http://localhost:8080').replace(/\/+$/, '');
