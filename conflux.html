@@ -702,6 +702,22 @@ body.mode-watch .mkts{display:none}
 .onair-frame{position:relative;aspect-ratio:16/9;width:100%;background:#000;overflow:hidden}
 .onair-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 @media(prefers-reduced-motion:reduce){ .onair-dot{animation:none} }
+
+/* ===== THE MARQUEE — Twitch-grade channel bar under the player ===== */
+.bc-marquee{position:absolute;left:0;right:0;bottom:0;height:46px;display:none;align-items:center;gap:10px;padding:0 12px;background:rgba(10,9,11,.97);border-top:1px solid var(--line-soft);z-index:3}
+.broadcast.bc-embedded .bc-marquee{display:flex}
+.broadcast.bc-embedded .bc-embed{bottom:46px}
+.broadcast.bc-embedded .bc-top,.broadcast.bc-embedded .bc-bottom{display:none}
+.mq-live{display:inline-flex;align-items:center;gap:6px;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;color:#fff;background:rgba(255,77,77,.16);border:1px solid rgba(255,77,77,.45);padding:3px 8px;border-radius:6px;flex:none}
+.mq-live i{width:6px;height:6px;border-radius:50%;background:#FF4D4D;box-shadow:0 0 7px #FF4D4D;animation:pulse 2s infinite}
+.mq-spacer{flex:1}
+.mq-viewers{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:12px;color:var(--gold-br);font-weight:700;font-variant-numeric:tabular-nums}
+.mq-viewers svg{width:14px;height:14px}
+.mq-full{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;color:var(--gold);border:1px solid var(--line);background:rgba(232,199,126,.05);transition:all .15s ease;flex:none}
+.mq-full:hover{background:rgba(232,199,126,.14)}
+.mq-full:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
+.mq-full svg{width:14px;height:14px}
+@media(prefers-reduced-motion:reduce){ .mq-live i{animation:none} }
 </style>
 </head>
 <body class="mode-dashboard">
@@ -2588,6 +2604,14 @@ function loop(now){
     var bc=document.querySelector('.broadcast'); if(!bc) return;
     var stageHolder=document.createElement('div'); stageHolder.className='bc-embed';
     bc.insertBefore(stageHolder, bc.firstChild);
+    // THE MARQUEE — Twitch-grade solid channel bar under the embedded player
+    var marquee=document.createElement('div'); marquee.className='bc-marquee';
+    marquee.innerHTML='<span class="mq-live"><i></i>LIVE</span><span class="bc-tabs" id="mqTabs"></span>'+
+      '<span class="mq-spacer"></span><span class="mq-viewers">'+((typeof ICON!=='undefined'&&ICON.eye)?ICON.eye:'')+'<b id="mqViewers">0</b></span>'+
+      '<button type="button" class="mq-full" id="mqFull" aria-label="Fullscreen" title="Fullscreen">'+((typeof ICON!=='undefined'&&ICON.full)?ICON.full:'')+'</button>';
+    bc.appendChild(marquee);
+    var mqTabs=marquee.querySelector('#mqTabs'), mqV=marquee.querySelector('#mqViewers'), mqF=marquee.querySelector('#mqFull');
+    if(mqF) mqF.addEventListener('click',function(){ try{ if(document.fullscreenElement) document.exitFullscreen(); else if(bc.requestFullscreen) bc.requestFullscreen(); }catch(e){} });
     // ON AIR dock — first card of the markets rail (rail is built once, never wiped)
     var dock=null, dockFrame=null, dockTabs=null;
     var mk=document.getElementById('mkts');
@@ -2636,6 +2660,8 @@ function loop(now){
       var bs=document.getElementById('bcStreamers');
       if(bs&&live.length) bs.innerHTML='<span class="bc-tabs">'+tabsHtml(live)+'</span>';
       if(dockTabs) dockTabs.innerHTML=tabsHtml(live);
+      if(mqTabs) mqTabs.innerHTML=tabsHtml(live);
+      try{ if(mqV&&typeof latestStats!=='undefined'&&latestStats&&latestStats.combined) mqV.textContent=(latestStats.combined.viewers||0).toLocaleString(); }catch(e){}
       var deckVisible=false;
       try{ deckVisible=!!(dock&&mk&&getComputedStyle(mk).display!=='none'); }catch(e){}
       if(cur&&watch){
@@ -2654,6 +2680,7 @@ function loop(now){
     function onTabClick(e){ var t=e.target.closest('.bc-tab'); if(!t)return; activeId=t.dataset.id; builtFor=''; apply(); }
     var bsEl=document.getElementById('bcStreamers'); if(bsEl) bsEl.addEventListener('click',onTabClick);
     if(dockTabs) dockTabs.addEventListener('click',onTabClick);
+    if(mqTabs) mqTabs.addEventListener('click',onTabClick);
     try{ if(typeof onStreams!=='undefined') onStreams.push(function(){ try{apply();}catch(e){} }); }catch(e){}
     try{ if(typeof onSnapshot!=='undefined') onSnapshot.push(function(){ try{apply();}catch(e){} }); }catch(e){}
     document.querySelectorAll('.viewseg button').forEach(function(b){ b.addEventListener('click',function(){ setTimeout(apply,30); }); });
