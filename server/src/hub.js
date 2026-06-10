@@ -12,6 +12,7 @@ export function createHub(poolOptions = {}) {
     setXViewers: (broadcastId, n) => pool.setXViewers(broadcastId, n),
     setXStatus: (broadcastId, s) => pool.setXStatus(broadcastId, s),
     setXLabel: (broadcastId, label) => pool.setXLabel(broadcastId, label),
+    activeXBroadcasts: () => pool.activeXBroadcasts(),
     stopAll: () => pool.stopAll(),
   };
 }

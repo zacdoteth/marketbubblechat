@@ -5,6 +5,13 @@ import { createRoom } from '../src/room.js';
 import { createIngesterPool } from '../src/ingesterPool.js';
 
 const noopSched = { setTimer: (fn) => ({ fn }), clearTimer: () => {} };
+// Inert ingesters for ALL sources so tests never touch the network (twitch/kick/x would
+// otherwise open real sockets). The pool entry is created regardless of ingester behavior.
+function inertIngesters() {
+  class Inert { constructor(_ch, cb = {}) { this.cb = cb; } async start() { this.cb.onStatus?.('connecting'); } async stop() {} }
+  return { twitch: Inert, kick: Inert, x: Inert, xbroadcast: Inert };
+}
+const mkPool = () => createIngesterPool({ ingesters: inertIngesters(), ...noopSched });
 
 test('urlParser: x.com/i/broadcasts/{id} → xbroadcast source, case-sensitive id', () => {
   const r = parseStreamUrl('https://x.com/i/broadcasts/1qGoNNwBAzvKv');
@@ -18,7 +25,7 @@ test('urlParser: x.com/i/broadcasts/{id} → xbroadcast source, case-sensitive i
 });
 
 test('X broadcast: chat/viewers/status/label route only to the subscribed room', async () => {
-  const pool = createIngesterPool({ ...noopSched }); // real ingesters; xbroadcast is inert (no network)
+  const pool = mkPool(); // real ingesters; xbroadcast is inert (no network)
   const sentA = [], sentB = [];
   const roomA = createRoom({ pool, send: (o) => sentA.push(o), now: () => 1000 });
   const roomB = createRoom({ pool, send: (o) => sentB.push(o), now: () => 1000 });
@@ -46,9 +53,20 @@ test('X broadcast: chat/viewers/status/label route only to the subscribed room',
 });
 
 test('X broadcast: routing to an unsubscribed broadcast id is a safe no-op', () => {
-  const pool = createIngesterPool({ ...noopSched });
+  const pool = mkPool();
   assert.doesNotThrow(() => pool.routeXChat('NOPE', { username: 'x', text: 'y', ts: 0 }));
   assert.doesNotThrow(() => pool.setXViewers('NOPE', 5));
   assert.doesNotThrow(() => pool.setXStatus('NOPE', 'live'));
   assert.doesNotThrow(() => pool.setXLabel('NOPE', 'whoever'));
+});
+
+test('X broadcast: activeXBroadcasts lists subscribed broadcast ids (for the cloud worker to poll)', async () => {
+  const pool = mkPool();
+  assert.deepEqual(pool.activeXBroadcasts(), []);
+  const roomA = createRoom({ pool, send: () => {}, now: () => 1000 });
+  const roomB = createRoom({ pool, send: () => {}, now: () => 1000 });
+  await roomA.connect('https://x.com/i/broadcasts/ABC123');
+  await roomB.connect('https://twitch.tv/someone'); // non-broadcast must NOT appear
+  await roomB.connect('https://x.com/i/broadcasts/XYZ789');
+  assert.deepEqual(pool.activeXBroadcasts().sort(), ['ABC123', 'XYZ789']);
 });

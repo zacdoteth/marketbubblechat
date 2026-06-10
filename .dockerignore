@@ -1,0 +1,12 @@
+# For the worker Docker build (context = repo root). Keep local/dev cruft out of the image.
+**/node_modules
+**/.env*
+.git
+.gitignore
+docs/
+*.png
+*.log
+.vercel
+.vercelignore
+.playwright-mcp/
+server/test/

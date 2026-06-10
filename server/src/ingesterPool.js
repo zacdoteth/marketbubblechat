@@ -104,6 +104,12 @@ export function createIngesterPool({
     entry.label = label;
     for (const r of entry.rooms) r.setLabel?.(key, label);
   }
+  // Broadcast ids currently subscribed by ≥1 room — the cloud worker polls this to know what to capture.
+  function activeXBroadcasts() {
+    const out = [];
+    for (const entry of entries.values()) if (entry.source === 'xbroadcast') out.push(entry.channel);
+    return out;
+  }
 
   async function stopAll() {
     for (const key of [...entries.keys()]) {
@@ -117,5 +123,5 @@ export function createIngesterPool({
     }
   }
 
-  return { subscribe, unsubscribe, routeKickChat, routeXChat, setXViewers, setXStatus, setXLabel, stopAll, _entries: entries, _broadcasterToKey: broadcasterToKey };
+  return { subscribe, unsubscribe, routeKickChat, routeXChat, setXViewers, setXStatus, setXLabel, activeXBroadcasts, stopAll, _entries: entries, _broadcasterToKey: broadcasterToKey };
 }

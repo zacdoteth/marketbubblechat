@@ -110,6 +110,16 @@ const server = createServer((req, res) => {
     });
     return;
   }
+  if (req.method === 'GET' && req.url === '/x/active') {
+    // The cloud worker polls this to learn which broadcasts to capture. Token-gated via header
+    // (no secret in the URL/logs); disabled if X_INGEST_TOKEN unset.
+    if (!X_INGEST_TOKEN) { res.writeHead(503); res.end('x ingest disabled'); return; }
+    if (req.headers['x-ingest-token'] !== X_INGEST_TOKEN) { res.writeHead(401); res.end('unauthorized'); return; }
+    const broadcasts = hubRef ? hubRef.activeXBroadcasts() : [];
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ broadcasts }));
+    return;
+  }
   if (req.url === '/health') { res.writeHead(200); res.end('ok'); return; }
   res.writeHead(200, { 'content-type': 'text/plain' }); res.end('CONFLUX backend live');
 });
