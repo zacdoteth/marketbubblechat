@@ -6,7 +6,7 @@
 <title>CONFLUX — Unified Live Chat & Viewer Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,900&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700;6..72,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
 :root{
@@ -40,7 +40,7 @@ header{position:relative;z-index:3;display:flex;align-items:center;justify-conte
 .mark.ping{animation:ping .55s ease}
 @keyframes ping{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-5deg)}100%{transform:scale(1)}}
 .brand-tx{display:flex;flex-direction:column;line-height:1;min-width:0}
-.wordmark{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(20px,2.4vw,26px);letter-spacing:.5px;background:linear-gradient(180deg,var(--gold-br),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.wordmark{font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:clamp(20px,2.4vw,26px);letter-spacing:.5px;background:linear-gradient(180deg,var(--gold-br),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
 .tagline{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.26em;color:var(--muted);text-transform:uppercase;margin-top:5px;white-space:nowrap}
 
 .viewseg{display:inline-flex;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px}
@@ -80,7 +80,7 @@ body.mode-watch .panel-setup{display:none}
   box-shadow:0 0 0 1px rgba(0,0,0,.4),0 30px 80px -30px rgba(0,0,0,.9),inset 0 0 120px rgba(0,0,0,.5);background:rgba(0,0,0,.12)}
 .bc-scan{position:absolute;inset:0;pointer-events:none;opacity:.06;background:repeating-linear-gradient(0deg,transparent 0 2px,#000 2px 3px)}
 .bc-wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
-.bc-wm span{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(28px,5vw,60px);letter-spacing:2px;color:rgba(237,235,230,.12)}
+.bc-wm span{font-family:'Newsreader',serif;font-weight:900;font-size:clamp(28px,5vw,60px);letter-spacing:2px;color:rgba(237,235,230,.12)}
 .bc-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);z-index:2}
 .bc-live{display:inline-flex;align-items:center;gap:7px;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:11px;letter-spacing:.1em;color:#fff;background:rgba(255,77,77,.18);border:1px solid rgba(255,77,77,.5);padding:4px 10px;border-radius:7px}
 .bc-live i{width:7px;height:7px;border-radius:50%;background:#FF4D4D;box-shadow:0 0 8px #FF4D4D;animation:pulse 2s infinite}
@@ -241,7 +241,7 @@ footer b{color:var(--gold-deep);font-weight:400}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes pop{0%{opacity:0;transform:scale(.2)}100%{opacity:1;transform:scale(1)}}
 @keyframes fadein{to{opacity:.5}}
-.boot-word{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(34px,6vw,52px);letter-spacing:2px;opacity:0;transform:translateY(10px);
+.boot-word{font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:clamp(34px,6vw,52px);letter-spacing:2px;opacity:0;transform:translateY(10px);
   background:linear-gradient(180deg,var(--gold-br),var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent;animation:riseup .7s ease .85s forwards}
 .boot-sub{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.32em;color:var(--muted);text-transform:uppercase;opacity:0;animation:riseup .7s ease 1.05s forwards}
 @keyframes riseup{to{opacity:1;transform:none}}
@@ -326,7 +326,7 @@ footer b{color:var(--gold-deep);font-weight:400}
   overflow:hidden;contain:content;animation:tapeIn .8s ease .2s both}
 @keyframes tapeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .tape-cap{flex:none;display:inline-flex;align-items:center;gap:7px;padding:0 14px 0 clamp(14px,3.5vw,34px);
-  font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:11px;letter-spacing:.22em;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;font-size:11px;letter-spacing:.22em;
   color:var(--gold-br);text-transform:uppercase;
   background:linear-gradient(90deg,rgba(200,198,191,.10),transparent);
   border-right:1px solid var(--line);position:relative;z-index:2}
@@ -426,7 +426,7 @@ footer b{color:var(--gold-deep);font-weight:400}
 .mood-glow{fill:var(--mood-c,var(--gold-br));opacity:.18;animation:moodBreath var(--mood-period,1.618s) ease-in-out infinite}
 @keyframes moodBreath{0%,100%{opacity:.10;transform:scale(.9)}50%{opacity:.34;transform:scale(1.18)}}
 .mood-readout{display:flex;align-items:baseline;justify-content:center;gap:7px;margin-top:-6px}
-.mood-label{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:17px;letter-spacing:.2px;
+.mood-label{font-family:'Newsreader',Georgia,serif;font-weight:600;font-size:17px;letter-spacing:.2px;
   color:var(--mood-c,var(--gold-br));transition:color .9s cubic-bezier(.4,0,.2,1);line-height:1}
 .mood-idx{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
 .mood-scale{display:flex;justify-content:space-between;margin-top:3px;padding:0 2px;
@@ -754,13 +754,13 @@ body{background:radial-gradient(120% 90% at 50% -10%, rgba(244,240,230,.04), tra
 .lpill[aria-pressed="true"] .lcue,.lpill[aria-pressed="true"] .lsvg{opacity:1}
 
 /* — serif slab section headers (nameplates) — */
-.sp-lbl,.mk-lbl{display:inline-block;font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:11px;letter-spacing:.07em;color:var(--ink-blk);background:var(--paper);padding:3px 9px 4px;border-radius:1px}
-.sp-section-lbl,.setup-lbl,.qs-lbl,.sources .lbl,.onair-lbl{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:.13em;color:var(--paper)}
+.sp-lbl,.mk-lbl{display:inline-block;font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:11px;letter-spacing:.07em;color:var(--ink-blk);background:var(--paper);padding:3px 9px 4px;border-radius:1px}
+.sp-section-lbl,.setup-lbl,.qs-lbl,.sources .lbl,.onair-lbl{font-family:'Newsreader',Georgia,serif;font-weight:700;letter-spacing:.13em;color:var(--paper)}
 .tape-cap{color:var(--paper)}
 
 /* — broadsheet numbers for the headline stats — */
-.sp-combined-num{font-family:'Fraunces',Georgia,serif;font-weight:900;color:var(--paper);letter-spacing:0}
-.vcount b{font-family:'Fraunces',Georgia,serif;font-weight:900;color:var(--paper)}
+.sp-combined-num{font-family:'Newsreader',Georgia,serif;font-weight:900;color:var(--paper);letter-spacing:0}
+.vcount b{font-family:'Newsreader',Georgia,serif;font-weight:900;color:var(--paper)}
 .vcount .eye{color:var(--paper)}
 
 /* — newsprint CTAs — */
@@ -888,7 +888,7 @@ body{
 /* — SHARED NAMEPLATE: the unifying broadcast slab motif — */
 .slab{
   display:inline-block;
-  font-family:'Fraunces',Georgia,serif;font-weight:700;
+  font-family:'Newsreader',Georgia,serif;font-weight:700;
   font-size:var(--t-micro);line-height:1;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-blk);
   background:linear-gradient(180deg,#E4E0D7,var(--paper-2));
@@ -951,7 +951,7 @@ header .brand:hover .mark{ transform:translateY(-1px) rotate(-2deg); }
 /* ---- the wordmark: heavy serif, TWO LINES, tight, black ink ---- */
 header .brand .brand-tx{ display:flex; flex-direction:column; line-height:1; min-width:0; }
 header .brand .wordmark{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-optical-sizing:auto;
   font-weight:900;
   font-size:clamp(21px,2.3vw,30px);
@@ -967,7 +967,7 @@ header .brand .wordmark{
 
 /* ---- the tagline: letterpress small-caps serif micro-label, gray ink ---- */
 header .brand .tagline{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:600;
   font-size:9px;
   line-height:1.2;
@@ -1009,7 +1009,7 @@ header .brand .tagline{
 .vcount .eye{ color:var(--paper); align-self:center; display:flex; }
 .vcount .eye svg{ width:18px; height:18px; }
 .vcount b{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-optical-sizing:auto;
   font-weight:900;
   font-size:22px;
@@ -1019,13 +1019,13 @@ header .brand .tagline{
   font-variant-numeric:tabular-nums;
 }
 .vcount .vlbl{
-  font-family:'Fraunces',Georgia,serif; font-weight:600;
+  font-family:'Newsreader',Georgia,serif; font-weight:600;
   font-size:8.5px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--muted); align-self:center;
 }
 .live{
   display:flex; align-items:center; gap:7px;
-  font-family:'Fraunces',Georgia,serif; font-weight:700;
+  font-family:'Newsreader',Georgia,serif; font-weight:700;
   font-size:11px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--ink);
 }
@@ -1047,7 +1047,7 @@ header .brand .tagline{
   font-variant-numeric:tabular-nums; letter-spacing:.01em;
 }
 .stat span{
-  font-family:'Fraunces',Georgia,serif; font-weight:600;
+  font-family:'Newsreader',Georgia,serif; font-weight:600;
   font-size:8px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--muted);
 }
@@ -1136,7 +1136,7 @@ header .brand .tagline{
 /* the injected nameplate (htmlEdit) — a small paper slab, broadcast caption */
 .panel-head .feed-name{
   display:inline-flex;align-items:baseline;gap:8px;min-width:0;
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:12px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--ink);white-space:nowrap;
 }
@@ -1342,7 +1342,7 @@ header .brand .tagline{
   background:linear-gradient(180deg, var(--paper), var(--paper-2));
   color:var(--ink-blk);
   border-radius:3px;
-  font-family:'Fraunces',Georgia,serif;font-weight:700;
+  font-family:'Newsreader',Georgia,serif;font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;font-size:10.5px;
   box-shadow:0 12px 28px -12px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.4);
 }
@@ -1385,14 +1385,14 @@ header .brand .tagline{
 
 /* ---- THE UNIFYING MOTIF: paper-slab broadcast nameplate ---- */
 .sp-lbl,.mk-lbl{
-  display:inline-block;font-family:'Fraunces',Georgia,serif;font-weight:900;
+  display:inline-block;font-family:'Newsreader',Georgia,serif;font-weight:900;
   font-size:11px;line-height:1;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-blk);background:linear-gradient(180deg,#E4E0D7,var(--paper-2));
   padding:4px 9px 5px;border-radius:2px;
   box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 -1px 0 rgba(22,19,13,.10) inset,0 4px 12px -6px rgba(0,0,0,.7);
 }
 .sp-section-lbl{
-  display:inline-block;font-family:'Fraunces',Georgia,serif;font-weight:800;
+  display:inline-block;font-family:'Newsreader',Georgia,serif;font-weight:800;
   font-size:9.5px;line-height:1;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-blk);background:linear-gradient(180deg,#E4E0D7,var(--paper-2));
   padding:3px 8px 4px;border-radius:2px;margin-bottom:10px;
@@ -1412,7 +1412,7 @@ header .brand .tagline{
 /* ---- THE HERO: combined viewers as a markets-page close ---- */
 .sp-head .sp-lbl{margin-bottom:11px}
 .sp-combined-num{
-  font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:30px;line-height:.92;
+  font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:30px;line-height:.92;
   color:var(--ink);letter-spacing:-.03em;font-variant-numeric:tabular-nums;
 }
 .sp-combined-sub{
@@ -1425,7 +1425,7 @@ header .brand .tagline{
 .sp-dot{width:6px;height:6px}
 .sp-name{font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;color:var(--ink);letter-spacing:.005em}
 .sp-num{
-  font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:13px;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:700;font-size:13px;color:var(--ink);
   letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.05;
 }
 .sp-sub{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--muted-2);letter-spacing:.06em;font-variant-numeric:tabular-nums}
@@ -1448,7 +1448,7 @@ header .brand .tagline{
 .mood-hub{fill:var(--ink);filter:none}
 .mood-glow{fill:var(--mood-c);opacity:.10}
 .mood-label{
-  font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:17px;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:700;font-size:17px;color:var(--ink);
   letter-spacing:.1px;
 }
 .mood-idx{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1470,7 +1470,7 @@ header .brand .tagline{
 .sp-lead-name{font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;color:var(--ink);letter-spacing:0}
 .sp-lead-row:first-child .sp-lead-name{color:var(--ink);font-weight:600}
 .sp-lead-cnt{
-  font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:12.5px;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:700;font-size:12.5px;color:var(--ink);
   font-variant-numeric:tabular-nums;letter-spacing:-.01em;
 }
 .sp-lead-bar{height:2px;border-radius:1px;background:rgba(242,240,234,.07)}
@@ -1479,7 +1479,7 @@ header .brand .tagline{
 
 /* ============== MSG VELOCITY — the throughput tape ============== */
 .sp-velo-now{
-  font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:20px;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:20px;color:var(--ink);
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;
 }
 .sp-velo-unit{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
@@ -1503,7 +1503,7 @@ header .brand .tagline{
 .mk-fg-track{stroke:rgba(242,240,234,.12)}
 .mk-fg-fill{stroke:var(--fng-c);filter:none}
 .mk-fg-num{
-  font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:24px;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:900;font-size:24px;color:var(--ink);
   font-variant-numeric:tabular-nums;text-shadow:none;letter-spacing:-.02em;
 }
 .mk-fg-cls{
@@ -1517,7 +1517,7 @@ header .brand .tagline{
 .mk-row{padding:6px 14px;border-bottom:1px solid var(--line-soft);transition:background .18s ease}
 .mk-row:last-child{border-bottom:none}
 .mk-row:hover{background:rgba(242,240,234,.03)}
-.mk-sym{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:12px;color:var(--ink);letter-spacing:.01em}
+.mk-sym{font-family:'Newsreader',Georgia,serif;font-weight:700;font-size:12px;color:var(--ink);letter-spacing:.01em}
 .mk-name{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase}
 .mk-px{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .mk-chg{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0}
@@ -1563,7 +1563,7 @@ header .brand .tagline{
 
 /* — COMBINED: a ghost of paper serif behind the broadcast — */
 .bc-wm span{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:900;
   letter-spacing:.06em;
   color:rgba(242,240,234,.07);
@@ -1585,7 +1585,7 @@ header .brand .tagline{
 
 /* — LIVE: the one marker-red tag, solid & alive — */
 .bc-live{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:700;
   font-size:11px;
   letter-spacing:.2em;
@@ -1601,7 +1601,7 @@ header .brand .tagline{
 
 /* — name-slate: white serif caps, the "LIVE WITH …" headline voice — */
 .bc-streamers{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:600;
   font-size:var(--t-name);
   letter-spacing:.04em;
@@ -1625,7 +1625,7 @@ header .brand .tagline{
 
 /* — the headline title: serif caps slate — */
 .bc-title{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:600;
   font-size:14.5px;
   letter-spacing:.03em;
@@ -1670,7 +1670,7 @@ header .brand .tagline{
   border-top:1px solid rgba(242,240,234,.1);
 }
 .mq-live{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:700;
   font-size:10px;
   letter-spacing:.2em;
@@ -1727,7 +1727,7 @@ header .brand .tagline{
 }
 /* the "ON AIR" slug becomes a paper-stock nameplate card */
 .onair-lbl{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:700;
   font-size:9.5px;
   letter-spacing:.2em;
@@ -1759,7 +1759,7 @@ header .brand .tagline{
   line-height:1.95;
 }
 .signal .sg-line b{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:700;
   font-style:normal;
   letter-spacing:.12em;
@@ -1773,7 +1773,7 @@ header .brand .tagline{
 }
 /* the appointment line — "PRESENTED BY"-style sub-rule + big serif countdown */
 .sg-show{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:600;
   font-size:10px;
   letter-spacing:.2em;
@@ -1786,7 +1786,7 @@ header .brand .tagline{
 }
 /* the one marker-red handwriting moment — "live thursdays" */
 .sg-show .mk-hand{
-  font-family:'Caveat','Fraunces',cursive;
+  font-family:'Caveat','Newsreader',cursive;
   font-weight:700;
   font-size:18px;
   letter-spacing:0;
@@ -1796,7 +1796,7 @@ header .brand .tagline{
   margin:0 2px;
 }
 .sg-show .sg-count{
-  font-family:'Fraunces',Georgia,serif;
+  font-family:'Newsreader',Georgia,serif;
   font-weight:900;
   font-size:18px;
   letter-spacing:.04em;
@@ -1833,7 +1833,7 @@ footer{
 }
 footer b{color:var(--ink);font-weight:700}
 footer .ft-hand{
-  font-family:'Caveat','Fraunces',cursive;
+  font-family:'Caveat','Newsreader',cursive;
   font-weight:700;
   font-size:15px;
   letter-spacing:0;
@@ -1912,14 +1912,14 @@ footer .ft-hand{
 .boot-word{
   background:none;-webkit-background-clip:initial;background-clip:initial;
   -webkit-text-fill-color:var(--ink-blk);color:var(--ink-blk);
-  font-family:'Fraunces',Georgia,serif;font-weight:900;
+  font-family:'Newsreader',Georgia,serif;font-weight:900;
   font-size:clamp(40px,7.2vw,64px);line-height:.84;letter-spacing:-.012em;
   text-align:center;text-transform:none;
 }
 .boot-word .l2{display:block}
 .boot-sub{
   color:var(--ink-soft);
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:11px;letter-spacing:.22em;text-transform:uppercase;
   margin-top:14px;
 }
@@ -1941,7 +1941,7 @@ footer .ft-hand{
   border-bottom:1px solid var(--line);
 }
 .tape-cap{
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:11px;letter-spacing:.20em;text-transform:uppercase;
   color:var(--ink-blk);
   background:linear-gradient(180deg, #E2DED5, var(--paper-2));
@@ -1964,7 +1964,7 @@ footer .ft-hand{
 .fng{border-right:1px solid var(--line);
   background:linear-gradient(90deg, color-mix(in srgb,var(--fng-c,var(--muted)) 14%, transparent), transparent)}
 .fng-k{
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:8px;letter-spacing:.14em;color:var(--ink-soft);color:var(--muted);
 }
 .fng-num{color:var(--fng-c,var(--ink));text-shadow:0 0 10px color-mix(in srgb,var(--fng-c,var(--ink)) 45%, transparent)}
@@ -1979,7 +1979,7 @@ footer .ft-hand{
   border-bottom:1px solid var(--line);
 }
 .panel-setup .setup-lbl{
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:9.5px;letter-spacing:.20em;text-transform:uppercase;
   color:var(--muted);
 }
@@ -2022,7 +2022,7 @@ footer .ft-hand{
 
 /* X-broadcast worker helper — same newsprint register */
 .xb-help .xb-lbl{
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;
 }
 .xb-help .xb-cmd{background:rgba(0,0,0,.34);border:1px solid var(--line);border-radius:3px}
@@ -2039,7 +2039,7 @@ footer .ft-hand{
    QUICK-ADD CHIPS — letterpress
    ============================================================ */
 .qs-lbl{
-  font-family:'Fraunces',Georgia,serif;font-weight:600;
+  font-family:'Newsreader',Georgia,serif;font-weight:600;
   font-size:9px;letter-spacing:.18em;text-transform:uppercase;
   color:var(--muted);
 }
@@ -2084,6 +2084,53 @@ footer .ft-hand{
 }
 /* ============================================================ /COMMAND DECK FOUNDATION ============================================================ */
 /* ===================== /THE BROADSHEET EDITION ===================== */
+
+/* ============================================================
+   THE FRONT PAGE — the WEBSITE cut, not the TV graphic.
+   Market Bubble on marketbubble.com would be white serif on
+   black, gray small-caps labels, hairlines, ONE primary action.
+   The white BOX was the broadcast lower-third pasted into UI —
+   cheesy on a site. So: kill white FILLS on chrome; keep white
+   TYPE (the brand voice) and the single white primary CTA.
+   Newsreader (news serif) replaces the old display serif.
+   ============================================================ */
+
+/* --- masthead: no card. confident white serif + white mark on the black wall --- */
+header .brand{background:none;box-shadow:none;padding:0;border-radius:0}
+header .brand::after{display:none}
+header .brand .mark{color:var(--ink);filter:none}
+header .brand .wordmark{color:var(--ink);-webkit-text-fill-color:var(--ink);font-weight:800;line-height:.88;letter-spacing:-.01em}
+header .brand .tagline{color:var(--muted)}
+
+/* --- section titles: white news-serif, no slab, riding a hairline --- */
+.sp-lbl,.mk-lbl{
+  display:block;background:none;box-shadow:none;color:var(--ink);
+  font-family:'Newsreader',Georgia,serif;font-weight:700;font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;
+  padding:0 0 8px;border-radius:0;
+}
+.mk-head{align-items:baseline}
+.tape-cap{background:none;box-shadow:none;color:var(--muted)}
+.onair-lbl{background:none;box-shadow:none;color:var(--ink);padding:0}
+.sp-section-lbl,.setup-lbl,.qs-lbl,.sources .lbl{color:var(--muted)}
+
+/* --- active states: a quiet wash, never a white box --- */
+.viewseg button.on{background:rgba(236,234,227,.10);color:var(--ink);box-shadow:none}
+.lensbar .lglide{background:rgba(236,234,227,.07);box-shadow:none;border:1px solid var(--line)}
+.lpill[aria-pressed="true"]{color:var(--ink)}
+.tool.active{background:rgba(236,234,227,.10);color:var(--ink);box-shadow:none}
+.plat-pill[aria-pressed="true"]{background:rgba(236,234,227,.08)}
+
+/* --- cashtags: a subtle dark token, white ink — not a white coin in the feed --- */
+.cashtag{background:rgba(236,234,227,.07);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.row.golden .cashtag,.row:hover .cashtag{background:rgba(236,234,227,.13);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* --- one red, for what is ALIVE (LIVE dots were paper-white) --- */
+.bc-live i,.mq-live i,.dot,.lv,.onair-dot,.tape-pulse{background:var(--red);box-shadow:0 0 7px rgba(216,66,60,.75)}
+
+/* keep deliberately WHITE (hierarchy = one action): #connectGo, .jump,
+   .surge-chip,.gh-chip, .bc-play, .sg-cursor, ::selection — untouched. */
+/* ===================== /THE FRONT PAGE ===================== */
 </style>
 </head>
 <body class="mode-dashboard">
