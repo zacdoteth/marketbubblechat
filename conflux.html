@@ -2131,6 +2131,37 @@ header .brand .tagline{color:var(--muted)}
 /* keep deliberately WHITE (hierarchy = one action): #connectGo, .jump,
    .surge-chip,.gh-chip, .bc-play, .sg-cursor, ::selection — untouched. */
 /* ===================== /THE FRONT PAGE ===================== */
+
+/* ============================================================
+   THE BYLINE — the SOURCE leads. (Banks-san #1: know who each
+   message is from at a glance.) Platform color is the FIRST thing
+   read: a left dateline column → speaker → the quote. The eye
+   scans one column of color, never travels right-to-left.
+   ============================================================ */
+.row{grid-template-columns:62px minmax(0,1fr) auto;column-gap:11px}
+/* the dateline tag: colored platform mark + label, no chip, leading the row */
+.row .badge{
+  grid-column:1;grid-row:1;justify-self:start;align-self:center;
+  background:none;border:none;padding:0;border-radius:0;gap:5px;min-width:0;max-width:100%;
+}
+.row:hover .badge{background:none;border:none}
+.row .badge svg{width:12px;height:12px;color:var(--c)}
+.row .badge .h{
+  color:var(--c);font-family:'Space Mono',monospace;font-weight:700;
+  font-size:9px;letter-spacing:.07em;text-transform:uppercase;opacity:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+/* speaker byline + message, both aligned in the second column (clean left rag) */
+.row .meta{grid-column:2;grid-row:1;min-width:0}
+.row .time{grid-column:3;grid-row:1;justify-self:end;align-self:center}
+.row .msg{grid-column:2 / -1;grid-row:2}
+/* phones: icon-only dateline, message reclaims the gutter */
+@media(max-width:600px){
+  .row{grid-template-columns:18px minmax(0,1fr) auto;column-gap:9px}
+  .row .badge .h{display:none}
+  .row .msg{grid-column:2 / -1}
+}
+/* ===================== /THE BYLINE ===================== */
 </style>
 </head>
 <body class="mode-dashboard">
