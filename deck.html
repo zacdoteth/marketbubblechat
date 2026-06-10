@@ -244,9 +244,9 @@
   .oa-head .lab .d{width:6px;height:6px;border-radius:50%;background:var(--down);animation:lp var(--phi) infinite}
   .oa-head .feat{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--twitch-t)}
   .player{position:relative;margin:0 12px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--ink)}
-  body.watch .player{flex:1;margin:12px}
+  body.watch .player{flex:1;margin:12px;display:flex;align-items:center;justify-content:center}
   .feeds{display:grid;grid-template-columns:1fr 1.7fr 1fr;gap:7px;padding:7px;aspect-ratio:16/8.6}
-  body.watch .feeds{aspect-ratio:16/8.2;height:100%}
+  body.watch .feeds{aspect-ratio:16/9;width:100%;height:auto;max-height:100%}
   .vf{position:relative;border-radius:8px;overflow:hidden;min-height:0;
     background:radial-gradient(120% 90% at 50% 26%,#2a2a30,#15151a 52%,#0b0b0e 100%)}
   .vf::before{content:"";position:absolute;inset:0;background:radial-gradient(42% 38% at 50% 38%,rgba(255,255,255,.12),transparent 62%),radial-gradient(120% 120% at 50% 120%,transparent 40%,rgba(0,0,0,.55) 100%);mix-blend-mode:screen}
@@ -323,8 +323,8 @@
   .mk-foot b{color:var(--white)}
 
   /* ───────── CONFLUX FOOTER ───────── */
-  .confluxbar{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;height:30px;border-top:1px solid var(--line);
-    background:var(--ink);font-family:var(--gk);font-size:11px;color:var(--dim-2)}
+  .confluxbar{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:7px;height:22px;border-top:1px solid var(--line);
+    background:var(--ink);font-family:var(--gk);font-size:9px;letter-spacing:.02em;color:var(--dim-2)}
   .confluxbar b{color:var(--white);font-weight:600}
   .confluxbar .em{font-family:var(--serif);font-style:italic;color:var(--blue)}
 
@@ -1803,11 +1803,13 @@
   .predtape-l .pm-lockup{height:12px;width:65px;color:var(--blue-hi)}
   .pm-by .pm-lockup{height:11px;width:60px;color:var(--blue-hi)}
   /* ── theme music EQ toggle ── */
-  .tb-sound{flex:0 0 auto;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--dim);cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+  .tb-sound{flex:0 0 auto;height:34px;display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--dim);cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
   .tb-sound:hover{color:var(--white)}
-  .tb-sound .eqi{display:flex;align-items:flex-end;gap:2px;height:14px}
+  .tb-sound .snd-note{width:14px;height:14px;flex:0 0 auto}
+  .tb-sound .eqi{display:none;align-items:flex-end;gap:2px;height:13px}
   .tb-sound .eqi i{width:2.5px;height:5px;border-radius:1px;background:currentColor}
   .tb-sound.on{color:var(--blue-hi);border-color:rgba(91,140,255,.4);background:rgba(91,140,255,.10)}
+  .tb-sound.on .eqi{display:flex}
   .tb-sound.on .eqi i{animation:eq .9s ease-in-out infinite}
   .tb-sound.on .eqi i:nth-child(1){animation-delay:-.2s}
   .tb-sound.on .eqi i:nth-child(2){animation-delay:-.55s}
@@ -1860,6 +1862,33 @@
     .onair .oa-idle-sub{font-size:14px}
     .onair .oa-head{padding:2px 14px 8px}
   }
+  @media(max-width:860px){
+    /* ── WIRE/LIVE tab = video on top (16/9), chat below — like the Twitch app ── */
+    html body.m-tab-wire .onair,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair{
+      display:block !important; position:fixed !important;
+      top:0 !important; left:0 !important; right:0 !important; bottom:auto !important;
+      height:min(56.25vw,40vh) !important; max-height:40vh !important;
+      z-index:11 !important; overflow:hidden !important; margin:0 !important; padding:0 !important;
+      border:none !important; border-bottom:1px solid var(--line) !important; border-radius:0 !important;
+      opacity:1 !important; visibility:visible !important; pointer-events:auto !important; transform:none !important}
+    /* strip chrome: just the player fills the strip (no head/meta over the chat view) */
+    html body.m-tab-wire .onair .oa-head, html body.m-tab-wire .onair .oa-meta,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .oa-head,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .oa-meta{display:none !important}
+    html body.m-tab-wire .onair .player,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .player{
+      margin:0 !important; border:none !important; border-radius:0 !important; height:100% !important; width:100% !important; display:block !important}
+    html body.m-tab-wire .onair .feeds,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .feeds{
+      height:100% !important; width:100% !important; aspect-ratio:auto !important}
+    /* chat starts right under the video strip */
+    html body.m-tab-wire .wire,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire{
+      top:min(56.25vw,40vh) !important}
+    /* no hover on touch — show the source switcher when there's more than one stream */
+    .oa-switch{opacity:1 !important;pointer-events:auto !important}
+  }
 </style>
 
 <div class="app">
@@ -1884,7 +1913,7 @@
       <div class="tb-stat"><span class="tb-live"><span class="d"></span>LIVE</span></div>
       <div class="tb-stat"><span class="v"><span id="mpmTop">312</span></span><span class="k">Msg / min</span></div>
     </div>
-    <button class="tb-sound" id="soundBtn" type="button" title="Play theme" aria-pressed="false" aria-label="Theme music"><span class="eqi"><i></i><i></i><i></i></span></button>
+    <button class="tb-sound" id="soundBtn" type="button" title="Play theme music" aria-pressed="false" aria-label="Theme music"><svg class="snd-note" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg><span class="eqi" aria-hidden="true"><i></i><i></i><i></i></span></button>
   </header>
 
   <!-- TAPE -->
@@ -2051,7 +2080,7 @@
 
   <!-- CONFLUX FOOTER -->
   <footer class="confluxbar">
-    <span><b>CONFLUX</b> · the Market Bubble command deck · for <b>Banks</b> &amp; <b>Ansem</b></span>
+    <span>The <b>Market Bubble</b> command deck · for <b>Banks</b> &amp; <b>Ansem</b></span>
     <span class="em">live every Thursday</span>🔔
   </footer>
 <!-- ░░ MOBILE APP-SHELL: liquid-glass bottom tab bar + Connect FAB ░░
