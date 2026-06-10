@@ -186,9 +186,10 @@ async function captureOnce() {
         if (broadcaster) return;
         if (!/broadcasts\/show\.json/i.test(resp.url())) return;
         const j = await resp.json().catch(() => null);
-        // Shape varies; probe the common spots for a display name / handle.
-        const b = j?.broadcasts?.[0] || j?.broadcast || j || {};
-        const name = b.user_display_name || b.username || j?.user_display_name || j?.username;
+        // Real shape: { broadcasts: { "<id>": { user_display_name, username, twitter_username, ... } } }
+        const bc = j?.broadcasts;
+        const b = (bc && (bc[broadcastId] || Object.values(bc)[0])) || j?.broadcast || j || {};
+        const name = b.user_display_name || b.username || b.twitter_username;
         if (name) { setBroadcaster(name); log(`broadcaster → ${broadcaster}`); }
       } catch { /* non-fatal: label is best-effort */ }
     });
@@ -262,11 +263,19 @@ async function captureOnce() {
     log(`opening broadcast ${broadcastId} …`);
     await page.goto(BROADCAST_URL, { waitUntil: 'domcontentloaded', timeout: 45_000 });
 
-    // Fallback label from the page <title> if show.json didn't yield one.
-    try {
-      const title = (await page.title()) || '';
-      if (!broadcaster && title) { setBroadcaster(title.replace(/\s*[\/|·].*$/, '')); }
-    } catch { /* non-fatal */ }
+    // Fallback label from the page <title>, POLLED — X is an SPA, so at domcontentloaded
+    // the title is still "X"/empty; it becomes the broadcast title only after the client renders.
+    (async () => {
+      await sleep(2500); // give broadcasts/show.json (the broadcaster's name) first dibs over the title
+      for (let i = 0; i < 12 && !broadcaster && !stopped; i++) {
+        try {
+          const title = (await page.title()) || '';
+          const cleaned = title.replace(/^\(\d+\)\s*/, '').replace(/\s*[\/|·]\s*X\s*$/i, '').trim();
+          if (cleaned && !/^(x|untitled)$/i.test(cleaned)) { setBroadcaster(cleaned); log(`broadcaster → ${broadcaster}`); break; }
+        } catch { /* non-fatal: label is best-effort */ }
+        await sleep(1000);
+      }
+    })();
 
     await waitForSocket();
     await ended; // resolves only when the broadcast is judged ended
