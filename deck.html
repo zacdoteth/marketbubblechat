@@ -164,8 +164,6 @@
   .wtool{width:30px;height:30px;border:1px solid var(--line);background:var(--panel);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--dim);transition:.18s}
   .wtool:hover{color:var(--white);border-color:var(--dim-3)}
   .wtool svg{width:14px;height:14px}
-  .wtool.surge{width:auto;padding:0 11px;gap:6px;font-family:var(--gk);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-color:var(--down);color:var(--down)}
-  .wtool.surge.on{background:var(--down);color:#fff}
   .wtool.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 
   /* stream management */
@@ -1382,7 +1380,6 @@
   .wire-head .tools{gap:6px}
   .wtool{width:40px;height:40px;border-radius:9px}          /* ≥44 hit w/ padding */
   .wtool svg{width:16px;height:16px}
-  .wtool.surge{height:40px;padding:0 13px;font-size:10px}
   .wtabs{padding:8px 10px;gap:4px;overflow-x:auto;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;flex-wrap:nowrap}
   .wtabs::-webkit-scrollbar{display:none}
@@ -1757,6 +1754,34 @@
     }
   }
   /* ===================== /MOBILE REGION MACHINE ===================== */
+  /* ── POLYMARKET PREDICTIONS CRAWL — the broadcast ticker (counter-scrolls the coin tape) ── */
+  .predtape{flex:0 0 auto;display:flex;align-items:stretch;height:34px;border-top:1px solid var(--line);background:var(--ink)}
+  .predtape-l{display:flex;align-items:center;gap:8px;padding:0 14px;border-right:1px solid var(--line);flex:0 0 auto}
+  .predtape-l .pm-logo{width:15px;height:15px;flex:0 0 auto;border-radius:4px}
+  .predtape-l .pm-word{font-family:var(--gk);font-weight:700;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-hi)}
+  .predtape-l .pm-live{display:flex;align-items:center;gap:5px;font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .predtape-l .pm-live .d{width:5px;height:5px;border-radius:50%;background:var(--up);box-shadow:0 0 6px var(--up);animation:lp var(--phi) infinite}
+  .predtape-track{flex:1;overflow:hidden;position:relative}
+  .predtape-track::before,.predtape-track::after{content:"";position:absolute;top:0;bottom:0;width:38px;z-index:2;pointer-events:none}
+  .predtape-track::before{left:0;background:linear-gradient(90deg,var(--ink),transparent)}
+  .predtape-track::after{right:0;background:linear-gradient(270deg,var(--ink),transparent)}
+  .predtape-row{display:flex;align-items:center;gap:22px;padding:0 22px;height:34px;width:max-content;animation:marq 64s linear infinite reverse}
+  .predtape:hover .predtape-row{animation-play-state:paused}
+  @media(prefers-reduced-motion:reduce){ .predtape-row{animation:none} }
+  .ptk{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+  .ptk .q{font-family:var(--gk);font-size:11px;color:var(--white);opacity:.84;letter-spacing:.01em}
+  .ptk .od{font-family:var(--mono);font-size:11px;font-weight:700}
+  .ptk .oc{font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.05em;padding:1.5px 5px;border-radius:4px}
+  .ptk.yes .od{color:var(--up)} .ptk.yes .oc{color:var(--up);background:rgba(74,222,128,.12)}
+  .ptk.no .od{color:var(--down)} .ptk.no .oc{color:var(--down);background:rgba(255,87,101,.12)}
+  .ptk .dot{width:3px;height:3px;border-radius:50%;background:var(--dim-3);margin-left:3px}
+  @media(max-width:860px){ .predtape{display:none} }  /* phones read predictions in the MARKETS tab */
+  /* ── ON AIR: live streams take over the stage; placeholders vanish ── */
+  .feeds.has-live .vf:not(.isLive){display:none}
+  .feeds.has-live{grid-template-columns:1fr}
+  .feeds.live-2{grid-template-columns:1fr 1fr}
+  .feeds.live-3{grid-template-columns:1fr 1fr 1fr}
+  .feeds.live-1{aspect-ratio:16/9}
 </style>
 
 <div class="app">
@@ -1784,7 +1809,6 @@
   <!-- TAPE -->
   <div class="tape">
     <div class="tape-l">
-      <div class="tape-tag">Tape</div>
       <div class="fng"><span class="k">Fear &amp; Greed</span><span class="v" id="fngVal">9</span><span class="s" id="fngLbl">Extreme Fear</span></div>
     </div>
     <div class="tape-track"><div class="tape-row" id="tapeRow"></div></div>
@@ -1859,7 +1883,6 @@
         <span class="ttl">The Wire</span>
         <span class="src">All sources</span>
         <div class="tools">
-          <button class="wtool surge" id="surgeBtn" title="Hype surge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>Surge</button>
           <button class="wtool" id="pauseBtn" title="Pause feed"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></button>
           <button class="wtool" id="clearBtn" title="Clear feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m-9 0v14h10V6"/></svg></button>
         </div>
@@ -1921,6 +1944,12 @@
         <div class="mk-foot"><span>MCAP <b id="mcap">$2.15T</b></span><span>24H VOL <b>$105B</b></span><span>BTC DOM <b>56.0%</b></span></div>
       </section>
     </aside>
+  </div>
+
+  <!-- POLYMARKET PREDICTIONS CRAWL — broadcast ticker -->
+  <div class="predtape" aria-label="Live Polymarket predictions">
+    <div class="predtape-l"><svg class="pm-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="#2D6FF7"/><rect x="6.6" y="12.4" width="2.5" height="5" rx="1.25" fill="#fff"/><rect x="10.75" y="9" width="2.5" height="8.4" rx="1.25" fill="#fff"/><rect x="14.9" y="6.2" width="2.5" height="11.2" rx="1.25" fill="#fff"/></svg><span class="pm-word">Polymarket</span><span class="pm-live"><span class="d"></span>Live</span></div>
+    <div class="predtape-track"><div class="predtape-row" id="predRow"></div></div>
   </div>
 
   <!-- CONFLUX FOOTER -->
@@ -2001,7 +2030,7 @@
   var ROSTER = [];
   var R_TICK = 1;
 
-  var feedEl=$('feed'), filter='all', autoscroll=true, paused=false, surge=false;
+  var feedEl=$('feed'), filter='all', autoscroll=true, paused=false;
   var msgPerMin=0, velPeak=680, newCount=0, mentionTotal=0, allTotal=0;
   var recent=[]; // for rivalry/hype
   var topTally={};
@@ -2310,8 +2339,8 @@
       addMsg(v,text);
       if(Math.random()<0.45)spawnReact();
     }
-    var base = surge ? 180 : 620;
-    setTimeout(streamMsg, base + Math.random()*(surge?260:1200));
+    var base = 620;
+    setTimeout(streamMsg, base + Math.random()*1200);
   }
 
   /* ===== HOST CHATTER (Banks & Z appear, they stream on X) ===== */
@@ -2348,11 +2377,6 @@
     el.style.color = sentiment<46?'var(--down)': sentiment>55?'var(--up)':'var(--white)';
   }
 
-  /* ===== HYPE SURGE ===== */
-  $('surgeBtn').addEventListener('click',function(){
-    surge=!surge; this.classList.toggle('on',surge);
-    if(surge){ for(var i=0;i<6;i++)setTimeout(spawnReact,i*120); }
-  });
   $('pauseBtn').addEventListener('click',function(){
     paused=!paused; this.classList.toggle('on',paused);
     this.innerHTML = paused
@@ -2458,6 +2482,11 @@
     });
   }
 
+  /* ── POLYMARKET predictions crawl (broadcast ticker, presented by Polymarket) ── */
+  function predTick(p){ var yes=p[2]==='yes'; var q=p[0]; if(q.charAt(q.length-1)==='?')q=q.slice(0,-1);
+    return '<span class="ptk '+(yes?'yes':'no')+'"><span class="q">'+q+'</span><span class="od">'+p[1]+'%</span><span class="oc">'+(yes?'YES':'NO')+'</span><span class="dot"></span></span>'; }
+  function renderPredTape(){ var r=$('predRow'); if(!r)return; var h=preds.map(predTick).join(''); r.innerHTML=h+h; }
+
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
   function playerSrc(s){
@@ -2490,13 +2519,19 @@
           var rr2=vf.querySelector('.np .rr'); if(rr2&&vf.dataset.defrr)rr2.textContent=vf.dataset.defrr;
         }
       });
+      /* SHIP MODE: when real Market Bubble streams are live, THEY are the broadcast.
+         The co-host silhouettes are TEST placeholders — drop them, fit the grid to the live count. */
+      var feeds=document.querySelector('.feeds');
+      if(feeds){ feeds.classList.remove('has-live','live-1','live-2','live-3');
+        var ln=Math.min(live.length,3);
+        if(ln>0) feeds.classList.add('has-live','live-'+ln); }
     }catch(e){}
   }
   function init(){
     clocks(); setInterval(clocks,1000);
     paintViewers();
     renderChips(); renderQuick(); renderChannels();
-    renderMarkets();
+    renderMarkets(); renderPredTape();
     paintSentiment();
     showConnectMsg('',false);
 
