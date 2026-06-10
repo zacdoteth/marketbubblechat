@@ -719,33 +719,78 @@ body.mode-watch .mkts{display:none}
 .mq-full svg{width:14px;height:14px}
 @media(prefers-reduced-motion:reduce){ .mq-live i{animation:none} }
 
-/* ===== THE LOWER THIRD — Market Bubble broadcast language (river stage only) ===== */
-.l3{position:absolute;left:clamp(14px,3cqw,30px);right:clamp(14px,3cqw,30px);bottom:58px;z-index:2;display:none;align-items:stretch;pointer-events:none;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
-body.mode-watch .broadcast:not(.bc-embedded) .l3{display:flex}
-.l3-card{flex:none;display:flex;flex-direction:column;justify-content:center;padding:10px 18px 12px;background:#F4F0E6;color:#171206;position:relative}
-.l3-card .t1{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(15px,1.6cqw,21px);line-height:1.02;letter-spacing:.2px}
-.l3-card::after{content:"";position:absolute;left:18px;bottom:-9px;border:9px solid transparent;border-top-color:#F4F0E6;border-left-width:7px;border-right-width:7px}
-.l3-main{flex:1;min-width:0;display:flex;flex-direction:column}
-.l3-kicker{display:flex;align-items:center;gap:10px;padding:4px 14px;background:rgba(10,9,11,.88);border-bottom:1px solid rgba(244,240,230,.16);font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;color:#CFC8B8;text-transform:uppercase;white-space:nowrap;overflow:hidden}
-.l3-kicker b{color:var(--gold-br);font-weight:700}
-.l3-head{flex:1;display:flex;align-items:center;background:#F4F0E6;padding:6px 16px;overflow:hidden;min-height:38px}
-.l3-head .hl{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(17px,2.4cqw,30px);line-height:1.04;color:#171206;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.l3-head .hl.swap{animation:l3swap .5s cubic-bezier(.22,.9,.3,1)}
-@keyframes l3swap{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:none}}
-/* dual-coast newsroom slates */
-.l3-slate{position:absolute;top:52px;z-index:2;display:none;flex-direction:column;gap:1px;padding:6px 11px;background:rgba(8,7,9,.66);border:1px solid rgba(244,240,230,.18);backdrop-filter:blur(4px);pointer-events:none}
-body.mode-watch .broadcast:not(.bc-embedded) .l3-slate{display:flex}
-.l3-slate .city{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:10px;letter-spacing:.18em;color:#F4F0E6;text-transform:uppercase}
-.l3-slate .tm{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold-br);font-variant-numeric:tabular-nums}
-.l3-slate.ny{left:16px}.l3-slate.la{right:16px;align-items:flex-end}
-@media(max-width:640px){ .l3{bottom:46px} .l3-card{display:none} .l3-slate{display:none!important} }
-@media(prefers-reduced-motion:reduce){ .l3-head .hl.swap{animation:none} }
 /* the show's own rooms — gold-ringed quick chips */
 .qs-chip.q-x{--c:#F4F4F6}
 .qs-chip.qs-host{border-color:color-mix(in srgb,var(--gold) 50%,transparent);box-shadow:0 0 12px -3px rgba(232,199,126,.55),inset 0 0 8px rgba(232,199,126,.07)}
 /* the appointment — next-broadcast countdown */
 .sg-show{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;color:var(--muted-2);text-transform:uppercase;line-height:2;margin-top:2px}
 .sg-show .sg-count{display:block;font-size:14px;letter-spacing:.1em;color:var(--gold-br);font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(246,224,166,.35)}
+
+/* ============================================================
+   THE MASTHEAD EDITION — the Market Bubble letterpress skin.
+   Their set: black studio, paper-white slabs, black serif ink,
+   red LIVE, and the warm lamp glow. So: gold retires from the
+   chrome and returns to what it is on their desk — the light.
+   Paper carries the brand. Ink carries the words. CSS-only.
+   ============================================================ */
+:root{
+  --paper:#F4F0E6; --ink-blk:#171206;
+  --bg:#080705; --ink:#F0EBDE; --muted:#9C9480; --muted-2:#7D7666;
+  --line:rgba(244,240,230,.14); --line-soft:rgba(244,240,230,.08);
+}
+body{background:radial-gradient(120% 90% at 50% -10%, rgba(244,240,230,.04), transparent 55%),radial-gradient(90% 70% at 50% 120%, rgba(232,199,126,.05), transparent 60%),var(--bg)}
+
+/* — the masthead: brand becomes their letterpress card, bubble tail and all — */
+.brand{background:var(--paper);padding:6px 13px 8px;border-radius:2px;position:relative;box-shadow:0 12px 32px -14px rgba(0,0,0,.9)}
+.brand::after{content:"";position:absolute;left:13px;bottom:-8px;border:8px solid transparent;border-top-color:var(--paper);border-left-width:6px;border-right-width:6px}
+.wordmark{background:none;-webkit-background-clip:initial;background-clip:initial;-webkit-text-fill-color:var(--ink-blk);color:var(--ink-blk)}
+.tagline{color:#6B6353}
+.mark{filter:drop-shadow(0 1px 2px rgba(23,18,6,.25))}
+
+/* — paper-active controls: the travelling nameplate — */
+.viewseg button.on{background:var(--paper);color:var(--ink-blk);box-shadow:0 6px 18px -8px rgba(0,0,0,.75)}
+.lensbar .lglide{background:var(--paper);border-color:transparent;box-shadow:0 6px 18px -8px rgba(0,0,0,.75)}
+.lpill[aria-pressed="true"]{color:var(--ink-blk)}
+.lpill[aria-pressed="true"] .lcue,.lpill[aria-pressed="true"] .lsvg{opacity:1}
+
+/* — serif slab section headers (nameplates) — */
+.sp-lbl,.mk-lbl{display:inline-block;font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:11px;letter-spacing:.07em;color:var(--ink-blk);background:var(--paper);padding:3px 9px 4px;border-radius:1px}
+.sp-section-lbl,.setup-lbl,.qs-lbl,.sources .lbl,.onair-lbl{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:.13em;color:var(--paper)}
+.tape-cap{color:var(--paper)}
+
+/* — broadsheet numbers for the headline stats — */
+.sp-combined-num{font-family:'Fraunces',Georgia,serif;font-weight:900;color:var(--paper);letter-spacing:0}
+.vcount b{font-family:'Fraunces',Georgia,serif;font-weight:900;color:var(--paper)}
+.vcount .eye{color:var(--paper)}
+
+/* — newsprint CTAs — */
+.jump,.surge-chip,.gh-chip{background:var(--paper);color:var(--ink-blk);box-shadow:0 10px 26px -10px rgba(0,0,0,.85)}
+#connectGo{background:var(--paper);color:var(--ink-blk);border-color:transparent;font-weight:800}
+#connectGo:hover{background:#FFFBEF}
+
+/* — square the glass: editorial slabs, not app bubbles — */
+.panel,.statspanel,.mkts,.broadcast{border-radius:6px}
+.panel::before{border-radius:6px}
+@media (max-width:600px){ .panel,.broadcast{border-radius:6px} }
+
+/* — setup strip turns paper-tinted — */
+.panel-setup{background:rgba(244,240,230,.05);border-bottom-color:rgba(244,240,230,.2)}
+
+/* — boot: letterpress title card — */
+.boot-word{background:none;-webkit-background-clip:initial;background-clip:initial;-webkit-text-fill-color:var(--paper);color:var(--paper)}
+
+/* — one red, theirs — */
+.dot,.lv,.bc-live i,.mq-live i,.onair-dot,.connect-pill.error .st{background:var(--red,#E5484D)}
+.bc-live{background:rgba(229,72,77,.16);border-color:rgba(229,72,77,.45)}
+.mq-live{background:rgba(229,72,77,.16);border-color:rgba(229,72,77,.45)}
+
+/* — paper scrollbars + host-chip ring stays warm — */
+.feed::-webkit-scrollbar-thumb,.mkts::-webkit-scrollbar-thumb,.statspanel::-webkit-scrollbar-thumb{background:rgba(244,240,230,.22)}
+.qs-chip.qs-host{border-color:rgba(244,240,230,.5);box-shadow:0 0 12px -3px rgba(244,240,230,.4),inset 0 0 8px rgba(244,240,230,.06)}
+
+/* — signal + countdown read newsprint — */
+.sg-show .sg-count{color:var(--paper);text-shadow:0 0 14px rgba(244,240,230,.3)}
+/* ============================================================ /MASTHEAD ============================================================ */
 </style>
 </head>
 <body class="mode-dashboard">
@@ -2734,58 +2779,6 @@ function loop(now){
   }catch(e){}
 })();
 
-
-/* ============================================================
-   THE LOWER THIRD — Market Bubble's broadcast language on the
-   river stage: paper nameplate card + self-writing broadsheet
-   headlines (derived live from the deck: movers, fear&greed,
-   sentiment, cashtags, top chatter) + dual-coast newsroom
-   slates. River mode only — embedded streams carry the show's
-   own graphics. DOM-derived, fail-safe, sleeps off-stage.
-   ============================================================ */
-(function(){
-  try{
-    var bc=document.querySelector('.broadcast'); if(!bc) return;
-    var l3=document.createElement('div'); l3.className='l3';
-    l3.innerHTML='<div class="l3-card"><span class="t1">Market<br>Bubble</span></div>'+
-      '<div class="l3-main"><div class="l3-kicker">COMMAND DECK · <b>CONFLUX</b> · LIVE THURSDAYS 1PM PST</div>'+
-      '<div class="l3-head"><span class="hl" id="l3hl">EVERY CHAT · ONE RIVER</span></div></div>';
-    bc.appendChild(l3);
-    var ny=document.createElement('div'); ny.className='l3-slate ny'; ny.innerHTML='<span class="city">New York</span><span class="tm" id="l3ny"></span>'; bc.appendChild(ny);
-    var la=document.createElement('div'); la.className='l3-slate la'; la.innerHTML='<span class="city">Los Angeles</span><span class="tm" id="l3la"></span>'; bc.appendChild(la);
-    function clockTz(tz){ try{ return new Date().toLocaleTimeString('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
-    function slates(){ var a=document.getElementById('l3ny'), b=document.getElementById('l3la');
-      if(a)a.textContent=clockTz('America/New_York')+' ET'; if(b)b.textContent=clockTz('America/Los_Angeles')+' PT'; }
-    slates(); setInterval(slates,30000);
-    // the self-writing news desk — the rendered deck is the source of truth
-    function headlines(){
-      var out=[];
-      try{ var sym=document.querySelector('.mk-sym'), chg=document.querySelector('.mk-chg');
-        if(sym&&chg){ var v=parseFloat(chg.textContent);
-          if(!isNaN(v)) out.push(sym.textContent+(v>=0?' RIPS +':' BLEEDS \u2212')+Math.abs(v).toFixed(1)+'% ON THE DAY'); } }catch(e){}
-      try{ var fn=document.getElementById('fngNum'), fc=document.getElementById('fngCls');
-        if(fn&&fc&&fn.textContent&&fn.textContent!=='\u00b7\u00b7') out.push('FEAR & GREED AT '+fn.textContent+' \u2014 '+fc.textContent); }catch(e){}
-      try{ var ml=document.getElementById('moodLabel');
-        if(ml&&ml.textContent&&ml.textContent!=='\u2014') out.push('CHAT READS '+ml.textContent.toUpperCase()); }catch(e){}
-      try{ var tags={},best=null,n=0;
-        document.querySelectorAll('#feed .cashtag').forEach(function(t){ var k=t.textContent; tags[k]=(tags[k]||0)+1; if(tags[k]>n){n=tags[k];best=k;} });
-        if(best&&n>1) out.push('CHAT IS TRADING '+best); }catch(e){}
-      try{ var ld=document.querySelector('.sp-lead-name');
-        if(ld&&ld.textContent) out.push(ld.textContent.toUpperCase()+' LEADS THE ROOM'); }catch(e){}
-      if(!out.length) out=['EVERY CHAT \u00b7 ONE RIVER','ALL EYES ON THE CONFLUENCE','LIVE THURSDAYS \u00b7 1PM PST'];
-      return out;
-    }
-    var qi=0;
-    function rotate(){
-      var el=document.getElementById('l3hl'); if(!el) return;
-      if(!document.body.classList.contains('mode-watch')) return;   // sleeps off-stage
-      var hs=headlines(); qi=(qi+1)%hs.length;
-      el.classList.remove('swap'); void el.offsetWidth;
-      el.textContent=hs[qi]; el.classList.add('swap');
-    }
-    setInterval(rotate,13000);
-  }catch(e){}
-})();
 
 /* ---------- boot ---------- */
 try{ if(THREE_OK) initThree(); }catch(e){ THREE_OK=false; console.warn('3D disabled:',e); }
