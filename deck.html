@@ -1895,7 +1895,7 @@
   .gauge-wrap svg,.gauge-wrap .gauge-val,.gauge-wrap .gauge-scale{position:relative;z-index:1}
   #gFill,#gFill2{transition:stroke-dasharray 1.1s var(--ease)}
   .needle{transition:transform 1.05s cubic-bezier(.34,1.42,.5,1)}        /* spring overshoot */
-  .needle .ntip{filter:drop-shadow(0 0 4px rgba(255,255,255,.95))}
+  .needle .ndl{filter:drop-shadow(0 0 5px rgba(255,255,255,.85))}
   .gauge-val{transition:color .5s var(--ease)}
   .gauge-val.pop{animation:sentpop .5s var(--ease)}
   @keyframes sentpop{0%{transform:scale(.82);opacity:.5}55%{transform:scale(1.09)}100%{transform:scale(1);opacity:1}}
@@ -1919,6 +1919,35 @@
     animation:reelbloom 1.9s var(--ease) forwards}
   @keyframes reelbloom{0%{opacity:0;transform:scale(.82)}28%{opacity:1}100%{opacity:0;transform:scale(1.18)}}
   @media(prefers-reduced-motion:reduce){ .reel-bloom{animation:none;opacity:0} }
+  /* ── MARKETS columnception — coins | predictions side by side (dense, scannable) ── */
+  .mk-split{flex-direction:row !important;gap:0}
+  .mk-pane{flex:1 1 50% !important;min-width:0}
+  .mk-pane.coins{flex:1 1 50% !important;border-bottom:none !important;border-right:1px solid var(--line) !important}
+  .mk-pane.preds{flex:1 1 50% !important}
+  .mk-pane-h{padding:9px 11px 6px;gap:3px;flex-wrap:wrap}
+  .mk-pane-h .lab{font-size:9px}
+  .mk-pane-h .note{font-size:8px}
+  .mk-pane-h .pm-by{font-size:7px;gap:3px}
+  .mk-pane-h .pm-by .pm-lockup{height:9px;width:48px}
+  /* coins -> tight ticker list (drop the sparkline + full name in the narrow column) */
+  .markets .mrow{padding:6px 11px;gap:6px}
+  .markets .mrow .spk{display:none}
+  .markets .mrow .nm .s{display:none}
+  .markets .mrow .nm .t{font-size:11px}
+  .markets .mrow .pr .px{font-size:11px}
+  .markets .mrow .pr .ch{font-size:9px}
+  /* predictions -> compact 2-line cards (question wraps, bar + odds beneath) */
+  .markets .prow{display:grid;grid-template-columns:1fr auto;grid-template-areas:"q q" "bar pr";gap:5px 8px;align-items:center;padding:8px 11px}
+  .markets .prow .nm{grid-area:q;min-width:0}
+  .markets .prow .nm .t{white-space:normal;font-size:10.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .markets .prow .nm .s{font-size:8px}
+  .markets .prow .pbar{grid-area:bar;width:auto;align-self:center}
+  .markets .prow .pr{grid-area:pr;margin-left:0;text-align:right}
+  .markets .prow .pr .px{font-size:11px}
+  .markets .prow .pr .ch{font-size:8px}
+  .markets .pm-cat{padding:7px 11px 3px}
+  .markets .pm-cat-l{font-size:8px} .markets .pm-cat-n{font-size:8px}
+  .mk-list::-webkit-scrollbar{width:4px}
 </style>
 
 <div class="app">
@@ -1989,10 +2018,10 @@
             <path d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="#16161c" stroke-width="12" stroke-linecap="round"/>
             <path id="gFill" pathLength="100" d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="url(#gg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="50 100" filter="url(#gblur)" opacity=".5"/>
             <path id="gFill2" pathLength="100" d="M14 80 A66 66 0 0 1 146 80" fill="none" stroke="url(#gg)" stroke-width="5" stroke-linecap="round" stroke-dasharray="50 100"/>
-            <g class="needle" id="needle"><line x1="80" y1="80" x2="80" y2="27" stroke="#F2F1ED" stroke-width="3" stroke-linecap="round"/><circle class="ntip" cx="80" cy="27" r="3.6" fill="#fff"/><circle cx="80" cy="80" r="5.5" fill="#F2F1ED"/></g>
+            <g class="needle" id="needle"><polygon class="ndl" points="80,23 84,72 80,67 76,72" fill="#F2F1ED"/><circle cx="80" cy="80" r="3.5" fill="#F2F1ED"/></g>
           </svg>
           <div class="gauge-val" id="sentLbl">Neutral</div>
-          <div class="gauge-scale"><span class="fud">Fud</span><span>Neutral</span><span class="bull">Bull</span></div>
+          <div class="gauge-scale"><span class="fud">Bear</span><span>Neutral</span><span class="bull">Bull</span></div>
         </div>
       </div>
 
@@ -2572,7 +2601,7 @@
     var n=$('needle'); if(n)n.style.transform='rotate('+((s-50)/50*82)+'deg)';
     var da=s.toFixed(1)+' 100';                       // pathLength=100 -> dash = mood %
     var f1=$('gFill'),f2=$('gFill2'); if(f1)f1.setAttribute('stroke-dasharray',da); if(f2)f2.setAttribute('stroke-dasharray',da);
-    var lbl = s<35?'Fud': s<46?'Bearish': s<55?'Neutral': s<68?'Bullish':'Euphoric';
+    var lbl = s<35?'Bear': s<46?'Bearish': s<55?'Neutral': s<68?'Bullish':'Euphoric';
     var el=$('sentLbl');
     if(el){ if(el.textContent!==lbl){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
       el.textContent=lbl; el.style.color = s<46?'var(--down)': s>55?'var(--up)':'var(--white)'; }
