@@ -652,6 +652,43 @@ body.mode-watch .mkts{display:none}
 @keyframes sgPulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.06);opacity:1}}
 @media(prefers-reduced-motion:reduce){ .signal .sg-cursor{animation:none} .signal .sg-mark{animation:none} .mk-row.tick{animation:none} .mk-live i{animation:none} .mk-fg-fill,.mk-fg-num,.mk-fg-cls{transition:none} .qs-chip{transition:none} }
 /* ===================== /THE TRADING FLOOR ===================== */
+
+/* ===== THE BUBBLE — pop the market bubble (footer secret, Mario-coin feel) ===== */
+.bub-wrap{display:inline-flex;align-items:center;gap:7px;margin-left:12px;vertical-align:middle}
+.bub{position:relative;width:15px;height:15px;border-radius:50%;cursor:pointer;display:inline-block;flex:none;
+  background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.95) 0 9%,rgba(246,224,166,.5) 26%,rgba(63,208,192,.20) 55%,rgba(232,199,126,.14) 74%,transparent 78%),radial-gradient(circle at 50% 50%,transparent 58%,rgba(232,199,126,.4) 72%,transparent 78%);
+  box-shadow:inset 0 0 6px rgba(246,224,166,.4),0 0 9px rgba(63,208,192,.28);
+  animation:bubBob 3.236s ease-in-out infinite}
+.bub:hover{filter:brightness(1.35)}
+.bub:focus-visible{outline:2px solid var(--gold-br);outline-offset:3px}
+.bub.popped{animation:bubPop .42s cubic-bezier(.22,.9,.3,1) forwards}
+.bub.spawn{animation:bubSpawn .5s cubic-bezier(.34,1.56,.64,1),bubBob 3.236s ease-in-out .5s infinite}
+@keyframes bubBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes bubPop{0%{transform:scale(1);opacity:1}45%{transform:scale(1.6);opacity:.85}100%{transform:scale(2.2);opacity:0}}
+@keyframes bubSpawn{0%{transform:scale(.2)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.bub-cnt{font-family:'Space Mono',monospace;font-size:9px;color:var(--gold-deep);letter-spacing:.08em;opacity:0;transition:opacity .3s ease}
+.bub-cnt.show{opacity:1}
+.bub-cnt b{color:var(--gold-br);font-weight:700}
+.bub-cnt.flash{animation:bubFlash .6s ease}
+@keyframes bubFlash{30%{text-shadow:0 0 12px var(--gold-br)}}
+.bub-float{position:fixed;z-index:60;pointer-events:none;font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:var(--gold-br);text-shadow:0 0 10px rgba(246,224,166,.85);animation:bubFloat .8s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes bubFloat{0%{opacity:0;transform:translateY(2px) scale(.8)}25%{opacity:1}100%{opacity:0;transform:translateY(-22px) scale(1.05)}}
+
+/* ===== THE THEATER — real stream embeds on the watch stage ===== */
+.bc-embed{position:absolute;inset:0;z-index:1;display:none;background:#000}
+.bc-embed iframe{width:100%;height:100%;border:0;display:block}
+.broadcast.bc-embedded .bc-embed{display:block}
+.broadcast.bc-embedded .bc-play,.broadcast.bc-embedded .bc-wm{display:none}
+.broadcast.bc-embedded .bc-top,.broadcast.bc-embedded .bc-bottom{pointer-events:none}
+.broadcast.bc-embedded .bc-scan{opacity:.025}
+.bc-tabs{display:inline-flex;gap:6px;pointer-events:auto}
+.bc-tab{--c:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 35%,transparent);background:rgba(0,0,0,.45);color:var(--c);font-family:'Space Mono',monospace;font-size:9.5px;transition:all .16s ease}
+.bc-tab i{width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 5px var(--c);flex:none}
+.bc-tab[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 16%,rgba(0,0,0,.5));box-shadow:0 0 10px color-mix(in srgb,var(--c) 25%,transparent)}
+.bc-tab:hover{transform:translateY(-1px)}
+.bc-tab:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px}
+.bc-tab.t-twitch{--c:#BD9CFF}.bc-tab.t-kick{--c:#74FB45}
+@media(prefers-reduced-motion:reduce){ .bub,.bub.spawn{animation:none} .bub.popped{animation:none;opacity:0} .bub-float{animation:none;opacity:0} .bub-cnt.flash{animation:none} .bc-tab{transition:none} }
 </style>
 </head>
 <body class="mode-dashboard">
@@ -1523,14 +1560,32 @@ function loop(now){
       });
     }
 
-    // ---- live fetch (fail-safe; never throws, never breaks chat) ----
+    // ---- live fetch: CoinGecko first, Binance public ticker as the second
+    //      rail (CORS *, huge rate budget), believable sim as the last net ----
     var firstLoad=true;
+    var BIN={bitcoin:'BTCUSDT',ethereum:'ETHUSDT',solana:'SOLUSDT',dogecoin:'DOGEUSDT',dogwifcoin:'WIFUSDT',bonk:'BONKUSDT',pepe:'PEPEUSDT'};
+    function binanceFallback(){
+      try{
+        var syms=Object.keys(BIN).map(function(id){return '%22'+BIN[id]+'%22';}).join(',');
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B'+syms+'%5D',{cache:'no-store'})
+          .then(function(r){ if(!r||!r.ok) throw 0; return r.json(); })
+          .then(function(arr){
+            if(!Array.isArray(arr)) throw 0;
+            var byId={}; Object.keys(BIN).forEach(function(id){ byId[BIN[id]]=id; });
+            var json={};
+            arr.forEach(function(t){ var id=byId[t.symbol]; if(!id) return;
+              json[id]={usd:parseFloat(t.lastPrice), usd_24h_change:parseFloat(t.priceChangePercent)}; });
+            ingest(json,!firstLoad); firstLoad=false;
+          })
+          .catch(function(){ simulateDrift(); });
+      }catch(e){ simulateDrift(); }
+    }
     function fetchLive(){
       if(typeof fetch!=='function'){ simulateDrift(); return; }
       var ids=COINS.map(function(c){return c.id;}).join(',');
       var url='https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true';
       var done=false;
-      var to=setTimeout(function(){ if(!done){ done=true; simulateDrift(); } },8000);
+      var to=setTimeout(function(){ if(!done){ done=true; binanceFallback(); } },8000);
       try{
         fetch(url,{cache:'no-store'})
           .then(function(res){ if(!res||!res.ok) throw new Error('bad status'); return res.json(); })
@@ -1538,8 +1593,8 @@ function loop(now){
             if(done) return; done=true; clearTimeout(to);
             ingest(json,!firstLoad); firstLoad=false;
           })
-          .catch(function(){ if(done) return; done=true; clearTimeout(to); simulateDrift(); });
-      }catch(e){ if(!done){ done=true; clearTimeout(to); simulateDrift(); } }
+          .catch(function(){ if(done) return; done=true; clearTimeout(to); binanceFallback(); });
+      }catch(e){ if(!done){ done=true; clearTimeout(to); binanceFallback(); } }
     }
 
     // ---- simulated fallback: drift each price so it's alive, not frozen ----
@@ -1558,7 +1613,7 @@ function loop(now){
 
     paintAll();        // seed render immediately (no blank band)
     fetchLive();       // try live straight away
-    setInterval(fetchLive,45000);                         // refresh ~45s
+    setInterval(fetchLive,75000);                         // refresh ~75s (gentle on the free tier)
     /* (reduced-motion: no drift loop; live fetch refreshes the band) */
   }catch(e){ /* a broken tape must NEVER break the app */ }
 })();
@@ -2283,17 +2338,8 @@ function loop(now){
       var min=Math.min.apply(null,arr),max=Math.max.apply(null,arr);var span=(max-min)||1;
       var d='';for(var i=0;i<arr.length;i++){var x=(i/(arr.length-1))*w;var y=h-2-((arr[i]-min)/span)*(h-4);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';}
       return d;}
-
-    var FG_DASH=170; // arc length of the 108px-wide semicircle
     host.innerHTML=
       '<div class="mk-head"><span class="mk-lbl">Markets · Bullpen mix</span><span class="mk-live"><i></i><span id="mkSrc">live</span></span></div>'+
-      '<div class="mk-fg"><div class="sp-section-lbl" style="margin-bottom:0">Fear &amp; Greed</div>'+
-        '<div class="mk-fg-dial"><svg class="mk-fg-svg" viewBox="0 0 128 72" aria-hidden="true">'+
-          '<path class="mk-fg-track" d="M10 66 A54 54 0 0 1 118 66"/>'+
-          '<path class="mk-fg-fill" id="mkFgFill" d="M10 66 A54 54 0 0 1 118 66"/>'+
-        '</svg><span class="mk-fg-num" id="mkFgNum">··</span></div>'+
-        '<div class="mk-fg-cls" id="mkFgCls">—</div>'+
-        '<div class="mk-fg-scale"><span>Extreme fear</span><span>Extreme greed</span></div></div>'+
       '<div class="mk-list" id="mkList"></div>'+
       '<div class="mk-foot" id="mkFoot" style="display:none"></div>';
 
@@ -2319,23 +2365,12 @@ function loop(now){
         el.path.setAttribute('class',up?'up':'dn');
         if(tick){el.root.classList.remove('tick');void el.root.offsetWidth;el.root.classList.add('tick');}
       });
+      // bullpen-style board: sorted by 24h move — winners stack the top, bleeders sink
+      try{ COINS.slice().sort(function(a,b){return ((data[b.id]||{}).chg||0)-((data[a.id]||{}).chg||0);})
+        .forEach(function(c){var el=rows[c.id];if(el&&el.root&&list)list.appendChild(el.root);}); }catch(e){}
     }
 
-    // the dial mirrors the tape's F&G badge (single source of truth: its DOM)
-    function syncFG(){
-      try{
-        var n=document.getElementById('fngNum'),c=document.getElementById('fngCls'),src=document.getElementById('fng');
-        var fNum=document.getElementById('mkFgNum'),fCls=document.getElementById('mkFgCls'),fill=document.getElementById('mkFgFill');
-        if(!n||!fNum||!fill)return;
-        var v=parseInt(n.textContent,10); if(isNaN(v))return;
-        fNum.textContent=v; if(fCls&&c)fCls.textContent=c.textContent;
-        var col=src?getComputedStyle(src).getPropertyValue('--fng-c').trim():'';
-        if(col){var card=fill.closest('.mk-fg'); if(card)card.style.setProperty('--fng-c',col);}
-        fill.style.strokeDasharray=FG_DASH+' '+FG_DASH;
-        fill.style.strokeDashoffset=(FG_DASH*(1-v/100)).toFixed(1);
-      }catch(e){}
-    }
-
+    /* F&G lives on the tape badge only — the board is pure markets */
     function ingest(json){
       if(!Array.isArray(json))return false;
       var hit=0;
@@ -2355,17 +2390,36 @@ function loop(now){
       if(!haveLive){var s=document.getElementById('mkSrc');if(s)s.textContent='sim';}
       paint(false);
     }
+    // Binance public ticker = second rail (11/16 listed; the rest keep CG/sim)
+    var BIN={bitcoin:'BTCUSDT',ethereum:'ETHUSDT',solana:'SOLUSDT',dogecoin:'DOGEUSDT',dogwifcoin:'WIFUSDT',bonk:'BONKUSDT',pepe:'PEPEUSDT','peanut-the-squirrel':'PNUTUSDT','official-trump':'TRUMPUSDT','jupiter-exchange-solana':'JUPUSDT',raydium:'RAYUSDT'};
+    function binanceFloor(){
+      try{
+        var syms=Object.keys(BIN).map(function(id){return '%22'+BIN[id]+'%22';}).join(',');
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B'+syms+'%5D',{cache:'no-store'})
+          .then(function(r){if(!r||!r.ok)throw 0;return r.json();})
+          .then(function(arr){
+            if(!Array.isArray(arr))throw 0;
+            var byId={};Object.keys(BIN).forEach(function(id){byId[BIN[id]]=id;});
+            var hit=0;
+            arr.forEach(function(t){var id=byId[t.symbol];if(!id||!data[id])return;
+              var d=data[id];d.price=parseFloat(t.lastPrice)||d.price;d.chg=parseFloat(t.priceChangePercent)||d.chg;
+              d.spark.push(d.price);if(d.spark.length>40)d.spark.shift();hit++;});
+            if(hit){haveLive=true;var s=document.getElementById('mkSrc');if(s)s.textContent='live';paint(true);}else drift();
+          })
+          .catch(function(){drift();});
+      }catch(e){drift();}
+    }
     function fetchFloor(){
       if(typeof fetch!=='function'){drift();return;}
       var ids=COINS.map(function(c){return c.id;}).join(',');
       var url='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&sparkline=true&price_change_percentage=24h';
-      var done=false,to=setTimeout(function(){if(!done){done=true;drift();}},9000);
+      var done=false,to=setTimeout(function(){if(!done){done=true;binanceFloor();}},9000);
       try{
         fetch(url,{cache:'no-store'}).then(function(r){if(!r||!r.ok)throw 0;return r.json();})
           .then(function(j){if(done)return;done=true;clearTimeout(to);
-            if(ingest(j)){haveLive=true;var s=document.getElementById('mkSrc');if(s)s.textContent='live';paint(true);}else drift();})
-          .catch(function(){if(done)return;done=true;clearTimeout(to);drift();});
-      }catch(e){if(!done){done=true;clearTimeout(to);drift();}}
+            if(ingest(j)){haveLive=true;var s=document.getElementById('mkSrc');if(s)s.textContent='live';paint(true);}else binanceFloor();})
+          .catch(function(){if(done)return;done=true;clearTimeout(to);binanceFloor();});
+      }catch(e){if(!done){done=true;clearTimeout(to);binanceFloor();}}
     }
     function fetchGlobal(){
       if(typeof fetch!=='function')return;
@@ -2382,11 +2436,10 @@ function loop(now){
       }catch(e){}
     }
 
-    paint(false); syncFG();
+    paint(false);
     fetchFloor(); fetchGlobal();
-    setInterval(fetchFloor,90000);
+    setInterval(fetchFloor,150000);
     setInterval(fetchGlobal,300000);
-    setInterval(syncFG,10000);
   }catch(e){}
 })();
 
@@ -2461,6 +2514,109 @@ function loop(now){
     wrap.insertBefore(sg, feedEl);
     function tick(){ sg.classList.toggle('on', feedEl.children.length===0); }
     tick(); setInterval(tick,800);
+  }catch(e){}
+})();
+
+
+/* ============================================================
+   THE BUBBLE — pop the Market Bubble (footer secret).
+   Every pop: +1 (persisted), a coin-pickup floater, a golden
+   burst into the river. Every 10th: a full confluence pulse.
+   ============================================================ */
+(function(){
+  try{
+    var foot=document.querySelector('footer'); if(!foot) return;
+    var wrap=document.createElement('span'); wrap.className='bub-wrap';
+    wrap.innerHTML='<span class="bub" id="bub" role="button" aria-label="Pop the market bubble" title="pop me" tabindex="0"></span><span class="bub-cnt" id="bubCnt"></span>';
+    foot.appendChild(wrap);
+    var bub=wrap.querySelector('#bub'), cnt=wrap.querySelector('#bubCnt');
+    var pops=0; try{ pops=parseInt(localStorage.getItem('conflux_pops'),10)||0; }catch(e){}
+    function paintCnt(flash){
+      if(pops>0&&cnt){ cnt.innerHTML='<b>'+pops+'</b> popped'; cnt.classList.add('show');
+        if(flash){ cnt.classList.remove('flash'); void cnt.offsetWidth; cnt.classList.add('flash'); } }
+    }
+    var busy=false;
+    function pop(){
+      if(busy) return; busy=true;
+      pops++; try{ localStorage.setItem('conflux_pops',String(pops)); }catch(e){}
+      paintCnt(true);
+      try{
+        var plats=['kick','x','twitch']; var P=plats[(Math.random()*3)|0];
+        if(typeof emitParticle==='function') emitParticle(P,4,true);
+        if(typeof bloomNow==='function') bloomNow(320);
+        if(typeof playNote==='function') playNote(P,true);
+        if(pops%10===0 && typeof confluencePulse==='function') confluencePulse();
+        if(navigator.vibrate) navigator.vibrate(8);
+      }catch(e){}
+      try{
+        var r=bub.getBoundingClientRect(); var f=document.createElement('span');
+        f.className='bub-float'; f.textContent='+1';
+        f.style.left=(r.left+r.width/2-6)+'px'; f.style.top=(r.top-14)+'px';
+        document.body.appendChild(f); setTimeout(function(){ try{f.remove();}catch(e){} },850);
+      }catch(e){}
+      bub.classList.remove('spawn'); bub.classList.add('popped');
+      setTimeout(function(){ bub.classList.remove('popped'); bub.classList.add('spawn'); busy=false; },1100);
+    }
+    bub.addEventListener('click',pop);
+    bub.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pop(); } });
+    paintCnt(false);
+  }catch(e){}
+})();
+
+/* ============================================================
+   THE THEATER — Banks's vision: watch the stream + the combined
+   chat from the native dashboard. Twitch/Kick embed on the watch
+   stage with platform-colored channel tabs; X lives stay on the
+   river (no public embed — the river IS the X broadcast).
+   Iframes only mount in Watch mode and tear down on exit.
+   ============================================================ */
+(function(){
+  try{
+    var bc=document.querySelector('.broadcast'); if(!bc) return;
+    var holder=document.createElement('div'); holder.className='bc-embed';
+    bc.insertBefore(holder, bc.firstChild);
+    var activeId=null, builtFor='';
+    function embeddable(s){ return s && s.status==='live' && (s.platform==='twitch'||s.platform==='kick'); }
+    function srcFor(s){
+      if(s.platform==='twitch') return 'https://player.twitch.tv/?channel='+encodeURIComponent(s.channel)+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted=true&autoplay=true';
+      return 'https://player.kick.com/'+encodeURIComponent(s.channel)+'?muted=true&autoplay=true';
+    }
+    function nameOf(s){ try{ return (typeof streamName==='function')?streamName(s):String(s.channel||''); }catch(e){ return String(s.channel||''); } }
+    function apply(){
+      var streams=(typeof latestStreams!=='undefined'&&latestStreams)||[];
+      var live=streams.filter(embeddable);
+      var watch=document.body.classList.contains('mode-watch');
+      var cur=null;
+      for(var i=0;i<live.length;i++){ if(live[i].id===activeId){ cur=live[i]; break; } }
+      if(!cur) cur=live[0]||null;
+      activeId=cur?cur.id:null;
+      var bs=document.getElementById('bcStreamers');
+      if(bs&&live.length){
+        bs.innerHTML='<span class="bc-tabs">'+live.map(function(s){
+          return '<button type="button" class="bc-tab t-'+s.platform+'" data-id="'+esc(String(s.id))+'" aria-pressed="'+(s.id===activeId)+'"><i></i>'+esc(nameOf(s))+'</button>';
+        }).join('')+'</span>';
+      }
+      if(watch && cur){
+        var src=srcFor(cur), want=cur.id+'|'+src;
+        if(builtFor!==want){
+          holder.innerHTML='<iframe src="'+src.replace(/"/g,'&quot;')+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="'+esc(nameOf(cur))+' live stream"></iframe>';
+          builtFor=want;
+        }
+        bc.classList.add('bc-embedded');
+      }else{
+        bc.classList.remove('bc-embedded');
+        holder.innerHTML=''; builtFor='';
+      }
+    }
+    var bsEl=document.getElementById('bcStreamers');
+    if(bsEl) bsEl.addEventListener('click',function(e){
+      var t=e.target.closest('.bc-tab'); if(!t)return;
+      activeId=t.dataset.id; apply();
+    });
+    try{ if(typeof onStreams!=='undefined') onStreams.push(function(){ try{apply();}catch(e){} }); }catch(e){}
+    try{ if(typeof onSnapshot!=='undefined') onSnapshot.push(function(){ try{apply();}catch(e){} }); }catch(e){}
+    document.querySelectorAll('.viewseg button').forEach(function(b){ b.addEventListener('click',function(){ setTimeout(apply,30); }); });
+    setInterval(function(){ try{apply();}catch(e){} },5000);
   }catch(e){}
 })();
 
