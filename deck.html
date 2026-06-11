@@ -2515,6 +2515,7 @@
   var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near',LINK:'chainlink',SUI:'sui',AVAX:'avalanche-2',TIA:'celestia',RENDER:'render-token',ONDO:'ondo-finance'};
   function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
   var LOGOS={};                                  // sym -> CoinGecko logo URL (the mission piece)
+  try{ var _lc=JSON.parse(localStorage.getItem('mb_logos')||'{}'); if(_lc&&typeof _lc==='object') LOGOS=_lc; }catch(e){}   // persist across refreshes — logos never vanish on a rate-limit
   /* ── the time machine: 1H / 1D / 1W / 1M — one state, every surface obeys ── */
   var TF='24h', TFL={'1h':'1H','24h':'1D','7d':'1W','30d':'1M'};
   var PCT={};                                    // sym -> {1h,24h,7d,30d}
@@ -2542,6 +2543,7 @@
         tape.forEach(function(t){ var d=byId[CG[t[0]]]; if(d) t[1]=fmtPx(d.current_price); });
         mix.forEach(function(mm){ var d=byId[CG[mm[0]]]; if(d) mm[2]=fmtPx(d.current_price); });
         applyTF();
+        try{ localStorage.setItem('mb_logos',JSON.stringify(LOGOS)); }catch(e){}
       }).catch(function(){});
   }
   function fetchFG(){
