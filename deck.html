@@ -2191,6 +2191,7 @@
   /* ── v2: shared show / operator / hints ── */
   .onair .player{margin-bottom:12px}
   .mixbar .m-x{background:#8E8E96}                /* silver, not white — a full X bar must read as data, not a blank bar */
+  .wmsg .txt img.emote{height:21px;width:auto;vertical-align:-6px;margin:0 1px}
   .tb-split .mb i{background:#5B8CFF}
   body:not(.op) .oa-switch{display:none !important}
   .opbar{display:none}
@@ -2566,6 +2567,16 @@
   function sendBackend(o){ if(backendReady) try{ backendWS.send(JSON.stringify(o)); }catch(_){} }
   function setConn(ok){ document.body.classList.toggle('disconnected',!ok); }
   function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g,':$1:'); }
+  /* POGGERS layer: 7TV + BTTV global emotes — pure render-time swap; text stays the source of truth */
+  var EMOTES={};
+  (function(){ if(typeof fetch!=='function')return;
+    fetch('https://7tv.io/v3/emote-sets/global').then(function(r){return r.json();}).then(function(d){
+      ((d&&d.emotes)||[]).forEach(function(e){ if(e&&e.name&&e.id) EMOTES[e.name]='https://cdn.7tv.app/emote/'+e.id+'/1x.webp'; });
+    }).catch(function(){});
+    fetch('https://api.betterttv.net/3/cached/emotes/global').then(function(r){return r.json();}).then(function(a){
+      (a||[]).forEach(function(e){ if(e&&e.code&&e.id&&!EMOTES[e.code]) EMOTES[e.code]='https://cdn.betterttv.net/emote/'+e.id+'/2x'; });
+    }).catch(function(){});
+  })();
   function controlToken(){ try{ var k=new URLSearchParams(location.search).get('key'); if(k){localStorage.setItem('mb_ctl',k);return k;} return localStorage.getItem('mb_ctl')||''; }catch(_){ return ''; } }
   var _cmT=null;
   function showConnectMsg(msg,isErr){ var el=$('offlineNote'); if(!el)return;
@@ -2848,6 +2859,8 @@
     return v;
   }
   function highlightText(t){
+    t=t.replace(/(^|\s)(:?)([A-Za-z0-9_]{2,30})(:?)(?=$|\s)/g,function(full,sp,c1,w,c2){
+      var u=EMOTES[w]; return u?(sp+'<img class="emote" src="'+u+'" alt="'+w+'" title="'+w+'" loading="lazy"/>'):full; });
     return t.replace(/@(\w+)/g,'<span class="mention">@$1</span>')
             .replace(/(🔥|📈|🚀)/g,'<span class="em">$1</span>')
             .replace(/(OMEGALUL|PagMan|KEKW|FeelsBadMan|fbcrac\w*)/g,'<span class="em">$1</span>');
