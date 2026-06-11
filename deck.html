@@ -92,7 +92,7 @@
   .fng .v{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--down)}
   .fng .s{font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--down)}
   .tape-track{flex:1;overflow:hidden;position:relative}
-  .tape-row{display:flex;align-items:center;gap:26px;padding:0 20px;height:34px;animation:marq 50s linear infinite;width:max-content}
+  .tape-row{display:flex;align-items:center;gap:22px;padding:0 16px;height:34px;animation:marq 50s linear infinite;width:max-content}
   .tape:hover .tape-row{animation-play-state:paused}
   @keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   .tt{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
@@ -281,8 +281,8 @@
   .oa-meta .ti{font-family:var(--serif);font-size:14px;font-weight:700;line-height:1.25}
   .oa-meta .who{font-family:var(--gk);font-size:11px;color:var(--dim);margin-top:3px}
   .oa-meta .who b{color:var(--blue)}
-  .oa-act{display:flex;gap:7px;margin-top:11px}
-  .obtn{flex:1;font-family:var(--gk);font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:8px;padding:9px 0;cursor:pointer;border:1px solid var(--line);background:var(--panel-2);color:var(--white);transition:.2s;text-align:center}
+  .oa-act{display:flex;gap:6px;margin-top:9px}
+  .obtn{flex:1;font-family:var(--gk);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:7px;padding:6px 0;cursor:pointer;border:1px solid var(--line);background:var(--panel-2);color:var(--white);transition:.2s;text-align:center}
   .obtn:hover{border-color:var(--dim-3)}
   .obtn.primary{background:var(--blue);border-color:var(--blue)}.obtn.primary:hover{background:var(--blue-hi)}
 
@@ -1983,9 +1983,7 @@
     background:linear-gradient(180deg,#26262c,#0b0b0e 52%,#17171c);
     clip-path:polygon(0 0,100% 0,calc(100% - 13px) 100%,0 100%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.30)}
-  .mw-plate b{font-family:'Oswald',var(--gk);font-weight:600;font-size:13px;letter-spacing:.075em;text-transform:uppercase;
-    background:linear-gradient(180deg,#ffffff,#d6d6dc 48%,#9a9aa3 58%,#f0f0f4);
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .mw-plate b{font-family:'Oswald',var(--gk);font-weight:600;font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:#E8E8EC;-webkit-text-fill-color:#E8E8EC}
   .tt{display:inline-flex;align-items:center;gap:7px;padding-right:16px;margin-right:16px;border-right:1px solid #26262d}
   .tt .mwc{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
     font-family:var(--gk);font-weight:800;font-size:9px;color:#fff;flex:0 0 auto;box-shadow:inset 0 -1px 2px rgba(0,0,0,.4)}
@@ -2786,9 +2784,8 @@
   function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
   function tankData(){
     var out=[];
-    var FOCUS={BTC:1,ETH:1,SOL:1,HYPE:1};         // the show's blue-chips — few + big = readable
-    mix.forEach(function(m){ if(FOCUS[m[0]]) out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });
-    preds.forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
+    mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });   // all good coins (no stablecoins in the set)
+    preds.slice(0,4).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
     return out;
   }
   function tankRadius(d){
@@ -2798,7 +2795,7 @@
   /* coinquarium fill: scale every bubble so the school occupies ~58% of the water */
   function tankFit(){ var sum=0; TANK.bubs.forEach(function(b){ sum+=Math.PI*b.base*b.base; });
     if(!sum||!TANK.w||!TANK.h)return;
-    var k=Math.sqrt(0.58*TANK.w*TANK.h/sum), maxR=Math.min(TANK.w,TANK.h)*0.30;
+    var k=Math.sqrt(0.62*TANK.w*TANK.h/sum), maxR=Math.min(TANK.w,TANK.h)*0.26;
     TANK.bubs.forEach(function(b){ b.br=Math.max(13,Math.min(maxR,b.base*k)); }); }
   var TANKIMG={};
   function tankLogo(sym){ var u=LOGOS[sym]; if(!u)return null; var o=TANKIMG[sym];
@@ -2842,7 +2839,7 @@
       : '<div class="name">'+d.q+'</div><div class="ml">'+d.vol+' Vol · '+d.cat+' · <b style="color:'+(d.side==='yes'?'var(--up)':'var(--down)')+'">'+d.odds+'% '+String(d.side).toUpperCase()+'</b></div><div class="sl">Polymarket prediction</div>';
     moveTip(e);
   }
-  function tankClick(e){ var b=tankAt(e); if(!b)return; b.pop=1; b.vx+=(Math.random()-.5)*1.6; b.vy-=1.2; try{spawnReact();}catch(_){} }
+  function tankClick(e){ var b=tankAt(e); if(!b)return; if(b.state==='gone'||b.state==='born')return; b.state='pop'; b.t0=TANK.ts||0; try{spawnReact();}catch(_){} }
   function tankFrame(ts){
     TANK.raf=requestAnimationFrame(tankFrame);
     var cv=TANK.cv; if(!cv||!cv.offsetParent) return;                      // hidden pane -> zero work
@@ -2853,10 +2850,10 @@
       else { var sx=TANK.w/ow, sy=TANK.h/oh;
         TANK.bubs.forEach(function(bb){ bb.x*=sx; bb.y*=sy; }); }
     }
-    var cx=TANK.cx, w=TANK.w, h=TANK.h, bs=TANK.bubs, t=ts*0.001, i, j;
+    var cx=TANK.cx, w=TANK.w, h=TANK.h, bs=TANK.bubs, t=ts*0.001, i, j; TANK.ts=ts;
     for(i=0;i<bs.length;i++){ var a=bs[i];
+      if(a.state==='gone') continue;                                       // popped — sits out of physics
       a.r += (a.br-a.r)*0.06;                                              // ease to live size
-      if(a.pop>0)a.pop*=0.86;
       if(!reduce){ a.vx+=(w/2-a.x)*0.0000316; a.vy+=(h/2-a.y)*0.0000316;   // whisper of gravity
         a.x+=a.vx; a.y+=a.vy; a.vx*=0.995; a.vy*=0.995; }
       var rr=a.r*1.04;
@@ -2864,6 +2861,7 @@
       if(a.y<rr){a.y=rr;a.vy=Math.abs(a.vy)*0.7;} if(a.y>h-rr){a.y=h-rr;a.vy=-Math.abs(a.vy)*0.7;}
     }
     for(i=0;i<bs.length;i++)for(j=i+1;j<bs.length;j++){ var A=bs[i],B=bs[j];
+      if(A.state==='gone'||B.state==='gone') continue;
       var dx=B.x-A.x,dy=B.y-A.y,dist=Math.sqrt(dx*dx+dy*dy)||1,min=(A.r+B.r)*1.05;
       if(dist<min){ var f=(min-dist)/min*0.5, nx=dx/dist, ny=dy/dist;
         A.x-=nx*f*B.r*0.10; A.y-=ny*f*B.r*0.10; B.x+=nx*f*A.r*0.10; B.y+=ny*f*A.r*0.10;
@@ -2871,8 +2869,14 @@
     }
     cx.setTransform(TANK.dpr,0,0,TANK.dpr,0,0); cx.clearRect(0,0,w,h);
     for(i=0;i<bs.length;i++){ var b=bs[i], d=b.d;
-      var breath=(reduce?1:1+Math.sin(t*0.618+b.ph)*0.022)+b.pop*0.22;     // PHI breathing + click squash
-      var R=Math.max(6,b.r*breath);
+      var sc=1, now=ts;                                                    // POP -> gone -> born(bounce) -> alive
+      if(b.state==='pop'){ var pe=(now-b.t0)/210; sc= pe<0.32 ? 1+pe*0.50 : Math.max(0,1.16-(pe-0.32)*1.85); if(pe>=1){ b.state='gone'; b.t0=now; } }
+      else if(b.state==='gone'){ sc=0; if(now-b.t0>=2400){ b.state='born'; b.t0=now;
+        b.x=b.r+Math.random()*Math.max(10,w-2*b.r); b.y=b.r+Math.random()*Math.max(10,h-2*b.r); b.vx=(Math.random()-.5)*.3; b.vy=(Math.random()-.5)*.3; } }
+      else if(b.state==='born'){ var be=(now-b.t0)/540; if(be>=1){ b.state='alive'; sc=1; } else { var bp=be-1; sc=Math.max(0,1+(2.70158*bp*bp*bp+1.70158*bp*bp)); } }
+      if(sc<=0.02) continue;                                               // invisible mid-pop
+      var breath=(reduce?1:1+Math.sin(t*0.618+b.ph)*0.022);
+      var R=Math.max(5,b.r*breath*sc);
       var mag = d.kind==='pred' ? Math.min(1,Math.abs((d.odds||50)-50)/40) : Math.min(1,Math.abs(d.val)/8);
       var hue = d.kind==='pred' ? 221 : (d.val>=0?145:353);
       var sat = Math.round((d.kind==='pred'?68:55)+mag*32);
@@ -2888,6 +2892,12 @@
       cx.fillStyle=g; cx.fill();
       cx.lineWidth=(hov?2.6:1.5)+mag*0.9; cx.strokeStyle=hsla(hov?1:(0.60+mag*0.40));
       cx.shadowColor=col; cx.shadowBlur=(hov?22:7)+mag*13; cx.stroke(); cx.shadowBlur=0;
+      var hx=b.x-R*0.30, hy=b.y-R*0.36;
+      var sg=cx.createRadialGradient(hx,hy,R*0.04,hx,hy,R*0.95);
+      sg.addColorStop(0,'rgba(255,255,255,'+(0.24+mag*0.12)+')'); sg.addColorStop(0.45,'rgba(255,255,255,0.04)'); sg.addColorStop(1,'rgba(255,255,255,0)');
+      cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832); cx.fillStyle=sg; cx.fill();
+      cx.beginPath(); cx.arc(b.x-R*0.33,b.y-R*0.40,Math.max(1.2,R*0.12),0,6.2832); cx.fillStyle='rgba(255,255,255,0.6)'; cx.fill();
+      cx.beginPath(); cx.arc(b.x,b.y,R*0.92,-2.25,-0.95); cx.lineWidth=1.25; cx.strokeStyle='rgba(255,255,255,0.32)'; cx.stroke();
       cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#F2F1ED';
       if(d.kind==='coin'){
         var img=tankLogo(d.sym);
