@@ -1,0 +1,6 @@
+server/
+worker/
+docs/
+CLAUDE.md
+.playwright-mcp/
+*.png
