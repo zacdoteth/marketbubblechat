@@ -3561,7 +3561,27 @@
     }catch(e){}
     cineFinish();
   }
+  async function runCaptions(){
+    if(CINE.on)return; CINE.on=true; CINE.kill=false;
+    var root=$('cine'); if(!root){ CINE.on=false; return; }
+    root.classList.add('on'); root.setAttribute('aria-hidden','false');
+    try{
+      await cineWait(600);
+      cineCap('01 \u2014 the feed','twitch + kick + x \u2014 merged into one feed',3600); await cineWait(7200);
+      var hot=$('vTotal'); hot=hot&&hot.closest('.tb-stat'); if(hot)hot.classList.add('cine-hot');
+      cineCap('02 \u2014 the audience','one combined audience. one real number.',3600); await cineWait(7200);
+      if(hot)hot.classList.remove('cine-hot');
+      cineCap('03 \u2014 the show','watch together. chat as one room.',3600); await cineWait(7200);
+      cineCap('04 \u2014 the game','pop the market',3600); await cineWait(7200);
+      cineCap('05 \u2014 the theater','lean back. lights down.',3600); await cineWait(5200);
+    }catch(e){}
+    cineFinish();
+  }
   document.addEventListener('keydown',function(e){
+    if((e.key==='C'||e.key==='c') && e.shiftKey && !e.metaKey && !e.ctrlKey){
+      var tc=document.activeElement; if(tc && /^(input|textarea)$/i.test(tc.tagName)){ if((tc.value||'').length) return; tc.blur(); }
+      e.preventDefault(); runCaptions(); return;
+    }
     if((e.key==='D'||e.key==='d') && e.shiftKey){
       var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)){ if((t.value||'').length) return; t.blur(); }
       e.preventDefault(); runCinema();
