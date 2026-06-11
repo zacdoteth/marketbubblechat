@@ -2022,6 +2022,30 @@
   .pop-score.bump{animation:popbump .4s var(--ease)}
   @keyframes popbump{0%{transform:scale(1)}35%{transform:scale(1.22);color:var(--blue-hi)}100%{transform:scale(1)}}
   @media(prefers-reduced-motion:reduce){ .pop-score.bump{animation:none} }
+  /* ── bubble view: expand to fullscreen ── */
+  .tank-expand{position:absolute;right:8px;top:8px;z-index:6;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:7px;background:rgba(8,8,12,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    color:var(--dim);cursor:pointer;opacity:.55;transition:opacity .2s var(--ease),color .2s var(--ease),background .2s var(--ease)}
+  .tank:hover .tank-expand{opacity:1}
+  .tank-expand:hover{color:var(--white);background:rgba(91,140,255,.16)}
+  .tank-expand svg{width:13px;height:13px}
+  body.tankfull{overflow:hidden}
+  body.tankfull .tank{position:fixed!important;inset:0!important;z-index:9999!important;aspect-ratio:auto!important;max-height:none!important;min-height:0!important;padding:0!important;border:none!important;
+    background:radial-gradient(130% 100% at 50% -10%,#0e111b,#070709 70%)!important}
+  body.tankfull .tank-expand{right:18px;top:16px;width:30px;height:30px}
+  body.tankfull .pop-score{left:18px;bottom:18px}
+  /* ── stream URL bar ── */
+  .urlbar{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:0 6px 0 11px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+  .urlbar:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(91,140,255,.12)}
+  .urlbar-ic{width:14px;height:14px;flex:0 0 auto;color:var(--dim-2)}
+  .urlbar input{flex:1;min-width:0;background:none;border:0;outline:none;padding:9px 0;color:var(--white);font-family:var(--gk);font-size:12px;letter-spacing:.01em}
+  .urlbar input::placeholder{color:var(--dim-2)}
+  .urlbar button{flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:0;border-radius:7px;background:var(--blue);color:#fff;cursor:pointer;transition:background .2s var(--ease),transform .08s var(--ease)}
+  .urlbar button:hover{background:var(--blue-hi)} .urlbar button:active{transform:scale(.92)}
+  .urlbar button svg{width:16px;height:16px}
+  /* ── + add coin ── */
+  .mk-add{margin-left:6px;width:20px;height:20px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--dim);font-family:var(--gk);font-size:15px;font-weight:400;line-height:0;cursor:pointer;transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+  .mk-add:hover{color:var(--blue-hi);border-color:rgba(91,140,255,.4);background:rgba(91,140,255,.1)}
 </style>
 
 <div class="app">
@@ -2139,17 +2163,13 @@
       </div>
 
       <div class="streammgmt">
-        <div class="mh"><span class="lab">Your Streams</span></div>
-        <div class="addrow">
-          <input id="addInput" type="text" placeholder="Paste twitch / kick / x link…" aria-label="Add stream" />
-          <button id="addBtn">+ Add stream</button>
+        <div class="urlbar">
+          <svg class="urlbar-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+          <input id="addInput" type="text" placeholder="Paste the Market Bubble stream — twitch · kick · x" aria-label="Stream link" />
+          <button id="addBtn" aria-label="Connect stream"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13m-6-6 6 6-6 6"/></svg></button>
         </div>
         <div class="offline" id="offlineNote">kick·trainwreckstv is <b>offline</b> — no chat until it goes live</div>
         <div class="chips" id="streamChips"></div>
-        <div class="quickadd">
-          <span class="lab">Quick add — tap to go live</span>
-          <div class="qchips" id="quickChips"></div>
-        </div>
       </div>
 
       <div class="wtabs" id="wtabs">
@@ -2195,8 +2215,8 @@
       </section>
 
       <section class="markets">
-        <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><span class="live"><span class="d"></span>Live</span></div>
-        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div></div>
+        <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><button class="mk-add" id="mkAdd" type="button" title="Add a trending coin" aria-label="Add coin">+</button><span class="live"><span class="d"></span>Live</span></div>
+        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
@@ -2394,7 +2414,7 @@
     if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; });
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
-  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',TRUMP:'official-trump',MOODENG:'moo-deng',FARTCOIN:'fartcoin'};
+  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near'};
   function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
   var LOGOS={};                                  // sym -> CoinGecko logo URL (the mission piece)
   /* ── the time machine: 1H / 1D / 1W / 1M — one state, every surface obeys ── */
@@ -2550,7 +2570,7 @@
     });
   }
   function renderQuick(){
-    var c=$('quickChips'); c.innerHTML='';
+    var c=$('quickChips'); if(!c)return; c.innerHTML='';
     quickAdds.forEach(function(q,i){
       var el=document.createElement('button');
       el.className='qchip '+q.plat;
@@ -2760,7 +2780,7 @@
   var COINC={BTC:'#F7931A',ETH:'#627EEA',SOL:'#9945FF',DOGE:'#C2A633',WIF:'#A9805B',POPCAT:'#B8A9F0',BONK:'#FF6B1A',PEPE:'#3D8130',HYPE:'#50D2C1',JUP:'#3FB6A8',TRUMP:'#E8B04B',MOODENG:'#C97A4A',FARTCOIN:'#8F9467'};
   function tapeTick(t){var pc=Number(t[2])||0, d=pc>=0, px=parseFloat(String(t[1]).replace(/,/g,''))||0;
     var ab=px*Math.abs(pc)/100;
-    var abs= ab>=1000?ab.toLocaleString(undefined,{maximumFractionDigits:0}): ab>=1?ab.toFixed(2): ab>=0.01?ab.toFixed(3): ab>0?ab.toPrecision(2):'0.00';
+    var abs= ab>0?fmtPx(ab):'0.00';
     var ic = LOGOS[t[0]] ? '<i class="mwc mwci"><img src="'+LOGOS[t[0]]+'" alt="" loading="lazy"/></i>'
                           : '<i class="mwc" style="background:'+(COINC[t[0]]||'#4A4A52')+'">'+t[0].charAt(0)+'</i>';
     return '<span class="tt '+(d?'up':'dn')+'">'+ic+'<b class="mws">'+t[0]+'</b><span class="mwp">'+t[1]+'</span><span class="mwch">'+(d?'+':'−')+abs+' ('+(d?'+':'−')+Math.abs(pc).toFixed(2)+'%)</span></span>';}
@@ -2771,7 +2791,7 @@
     var pts=[],y=11; for(var i=0;i<22;i++){ y+=(Math.random()-(down?0.62:0.38))*3; y=Math.max(2,Math.min(20,y)); pts.push(i*3+','+y.toFixed(1)); }
     return '<svg class="spk" viewBox="0 0 66 22" preserveAspectRatio="none"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>';
   }
-  var mix=[['TRUMP','Trump','1.64',-1.14],['MOODENG','Moo Deng','0.0376',-1.18],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['BTC','Bitcoin','61,330',-2.15],['POPCAT','Popcat','0.0404',-2.29],['ETH','Ethereum','1,626',-2.67],['WIF','Dogwifhat','0.1514',-3.13],['SOL','Solana','63.52',-3.90],['FARTCOIN','Fartcoin','0.1130',-3.87],['HYPE','Hyperliquid','55.91',-9.70]];
+  var mix=[['BTC','Bitcoin','61,330',-2.15],['ETH','Ethereum','1,626',-2.67],['SOL','Solana','63.52',-3.90],['HYPE','Hyperliquid','55.91',-9.70],['ZEC','Zcash','58.40',4.20],['NEAR','Near','2.85',2.10],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['WIF','Dogwifhat','0.1514',-3.13],['FARTCOIN','Fartcoin','0.1130',-3.87]];
   var preds=[
     ['BTC above $150K by Q3?',61,'yes','$2.4M','Crypto'],
     ['ETH staking ETF approved 2026?',56,'yes','$890K','Crypto'],
@@ -2800,7 +2820,7 @@
   function tankData(){
     var out=[];
     mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });   // all good coins (no stablecoins in the set)
-    preds.slice(0,4).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
+    preds.slice(0, TANK.full?preds.length:4).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
     return out;
   }
   function tankRadius(d){
@@ -2891,14 +2911,25 @@
       var hsla=function(a){ return 'hsla('+hue+','+sat+'%,'+lig+'%,'+a+')'; };
       var col=hsla(1);
       var hov = TANK.hover===b;
+      var hsl2=function(l,a){ return 'hsla('+hue+','+sat+'%,'+l+'%,'+a+')'; };
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      var g=cx.createRadialGradient(b.x,b.y,R*0.15,b.x,b.y,R);
-      g.addColorStop(0,'rgba(10,10,14,.92)');
-      g.addColorStop(0.78,hsla(0.08+mag*0.10));
-      g.addColorStop(1,hsla(0.16+mag*0.22));
+      // lit glass orb — light enters top-left, colour washes through, deep belly, bright Fresnel rim
+      var g=cx.createRadialGradient(b.x-R*0.34,b.y-R*0.40,R*0.04, b.x,b.y,R);
+      g.addColorStop(0,   hsl2(Math.min(86,lig+30), 0.55));
+      g.addColorStop(0.50,hsl2(lig,                 0.20));
+      g.addColorStop(0.86,hsl2(Math.max(15,lig-16), 0.42));
+      g.addColorStop(1,   hsl2(Math.min(80,lig+18), 0.78));
       cx.fillStyle=g; cx.fill();
-      cx.lineWidth=(hov?2.6:1.5)+mag*0.9; cx.strokeStyle=hsla(hov?1:(0.60+mag*0.40));
-      cx.shadowColor=col; cx.shadowBlur=(hov?22:7)+mag*13; cx.stroke(); cx.shadowBlur=0;
+      // gentle shade behind the label only — readability without a donut
+      var tg=cx.createRadialGradient(b.x,b.y+R*0.06,0, b.x,b.y,R*0.72);
+      tg.addColorStop(0,'rgba(6,8,14,0.40)'); tg.addColorStop(1,'rgba(6,8,14,0)');
+      cx.fillStyle=tg; cx.fill();
+      // bottom bounce-light — the colour reflecting up off the water
+      cx.beginPath(); cx.arc(b.x,b.y,R*0.80,0.85,2.25); cx.lineWidth=Math.max(1,R*0.05); cx.lineCap='round'; cx.strokeStyle=hsl2(Math.min(80,lig+22),0.5); cx.stroke(); cx.lineCap='butt';
+      // Fresnel rim
+      cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
+      cx.lineWidth=(hov?2.6:1.5)+mag*0.9; cx.strokeStyle=hsl2(Math.min(82,lig+20),hov?1:(0.70+mag*0.30));
+      cx.shadowColor=col; cx.shadowBlur=(hov?22:8)+mag*13; cx.stroke(); cx.shadowBlur=0;
       var lg=cx.createLinearGradient(b.x-R*0.45,b.y-R*0.62,b.x+R*0.25,b.y+R*0.55);
       lg.addColorStop(0,'rgba(255,255,255,'+(0.13+mag*0.07)+')'); lg.addColorStop(0.36,'rgba(255,255,255,0.015)'); lg.addColorStop(1,'rgba(255,255,255,0)');
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832); cx.fillStyle=lg; cx.fill();
@@ -2919,7 +2950,8 @@
           cx.fillStyle='#F2F1ED'; cx.font='700 '+Math.max(9,R*0.30).toFixed(1)+'px "Space Grotesk",sans-serif';
           cx.fillText(d.sym, b.x, b.y+R*0.20);
           cx.font='600 '+Math.max(8,R*0.26).toFixed(1)+'px "JetBrains Mono",monospace';
-          cx.fillText((d.val>=0?'+':'')+d.val.toFixed(1)+'%', b.x, b.y+R*0.54);
+          cx.fillText((d.val>=0?'+':'')+d.val.toFixed(1)+'%', b.x, b.y+R*0.52);
+          if(R>=34){ cx.fillStyle='rgba(242,241,237,.78)'; cx.font='600 '+Math.max(8,R*0.17).toFixed(1)+'px "JetBrains Mono",monospace'; cx.fillText('$'+d.px, b.x, b.y+R*0.74); }
         } else {
           cx.font='700 '+Math.max(9,R*0.40).toFixed(1)+'px "Space Grotesk",sans-serif';
           cx.fillText(d.sym, b.x, b.y-R*0.16);
@@ -2993,6 +3025,31 @@
         cx.fillStyle='rgba(255,255,255,'+(0.5*f.life).toFixed(2)+')'; cx.fill(); }
     }
   }
+  var tankHome=null, tankAnchor=null;
+  function tankRebuild(){
+    TANK.bubs=tankData().map(function(d){ var r=tankRadius(d);
+      return {d:d,base:r,r:r,br:r,x:0,y:0,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,ph:Math.random()*6.283,pop:0}; });
+    tankFit(); tankScatter();
+  }
+  function tankToggleFull(){ var tk=$('tank'); if(!tk)return;
+    if(!document.body.classList.contains('tankfull')){
+      tankHome=tk.parentNode; tankAnchor=tk.nextSibling;
+      document.body.appendChild(tk); document.body.classList.add('tankfull'); TANK.full=true;
+    } else {
+      document.body.classList.remove('tankfull'); TANK.full=false;
+      if(tankHome) tankHome.insertBefore(tk, tankAnchor);
+    }
+    tankRebuild(); tankSize(); tankScatter();
+  }
+  var BENCH=[{sym:'LINK',name:'Chainlink',id:'chainlink',px:'14.2',val:3.1},{sym:'SUI',name:'Sui',id:'sui',px:'1.85',val:5.4},{sym:'AVAX',name:'Avalanche',id:'avalanche-2',px:'22.1',val:1.8},{sym:'TIA',name:'Celestia',id:'celestia',px:'3.40',val:6.2},{sym:'ENA',name:'Ethena',id:'ethena',px:'0.42',val:-2.1},{sym:'RENDER',name:'Render',id:'render-token',px:'4.10',val:2.7},{sym:'ONDO',name:'Ondo',id:'ondo-finance',px:'0.88',val:4.0},{sym:'APT',name:'Aptos',id:'aptos',px:'6.30',val:-1.2}];
+  function tankAddCoin(){ if(!BENCH.length)return; var c=BENCH.shift();
+    CG[c.sym]=c.id; mix.push([c.sym,c.name,c.px,c.val]);
+    var r=tankRadius({kind:'coin',val:c.val});
+    TANK.bubs.push({d:{kind:'coin',sym:c.sym,name:c.name,px:c.px,val:c.val},base:r,r:1,br:r,
+      x:TANK.w*(0.3+Math.random()*0.4),y:TANK.h*(0.3+Math.random()*0.4),vx:0,vy:0,ph:Math.random()*6.283,pop:0,state:'born',t0:TANK.ts||0});
+    tankFit(); try{renderMarkets();fetchMarketsLive();}catch(e){}
+    if(!BENCH.length){ var ad=$('mkAdd'); if(ad){ ad.disabled=true; ad.style.opacity='.3'; } }
+  }
   function tankInit(){
     var cv=$('bubbleTank'); if(!cv)return; TANK.cv=cv; TANK.cx=cv.getContext('2d');
     TANK.bubs=tankData().map(function(d){ var r=tankRadius(d);
@@ -3008,6 +3065,9 @@
       var sec=document.querySelector('.markets'); if(sec)sec.classList.toggle('view-list', btn.dataset.v==='list');
       if(btn.dataset.v!=='list'){ tankSize(); tankScatter(); } });
     var pn=$('popN'); if(pn) pn.textContent=popCount;
+    var ex=$('tankExpand'); if(ex) ex.addEventListener('click',tankToggleFull);
+    var ad=$('mkAdd'); if(ad) ad.addEventListener('click',tankAddCoin);
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('tankfull')) tankToggleFull(); });
     if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
   }
   function renderMarkets(){
