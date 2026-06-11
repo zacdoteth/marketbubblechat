@@ -3072,17 +3072,14 @@
     var cv=TANK.cv; if(!cv||!cv.offsetParent) return;                      // hidden pane -> zero work
     var pb=cv.parentNode?cv.parentNode.getBoundingClientRect():null;
     if(pb && (Math.abs(pb.width-TANK.w)>4 || Math.abs(pb.height-TANK.h)>4)){
-      var ow=TANK.w, oh=TANK.h; tankSize();
-      if(ow<80||oh<80){ tankScatter(); }
-      else { var sx=TANK.w/ow, sy=TANK.h/oh;
-        TANK.bubs.forEach(function(bb){ bb.x*=sx; bb.y*=sy; }); }
+      tankSize(); tankScatter();                                         // pane changed → spread across the whole new pane
     }
     var cx=TANK.cx, w=TANK.w, h=TANK.h, bs=TANK.bubs, t=ts*0.001, i, j; TANK.ts=ts;
     for(i=0;i<bs.length;i++){ var a=bs[i];
       if(a.state==='gone') continue;                                       // popped — sits out of physics
       a.r += (a.br-a.r)*0.06;                                              // ease to live size
-      if(!reduce){ a.vx+=(w/2-a.x)*0.0000316; a.vy+=(h/2-a.y)*0.0000316;   // whisper of gravity
-        a.x+=a.vx; a.y+=a.vy; a.vx*=0.995; a.vy*=0.995; }
+      if(!reduce){ a.x+=a.vx; a.y+=a.vy; a.vx*=0.95; a.vy*=0.95;            // gentle brownian drift — fills the whole pane, no centre clump
+        a.vx+=(Math.random()-0.5)*0.03; a.vy+=(Math.random()-0.5)*0.03; }
       var rr=a.r*1.04;
       if(a.x<rr){a.x=rr;a.vx=Math.abs(a.vx)*0.7;} if(a.x>w-rr){a.x=w-rr;a.vx=-Math.abs(a.vx)*0.7;}
       if(a.y<rr){a.y=rr;a.vy=Math.abs(a.vy)*0.7;} if(a.y>h-rr){a.y=h-rr;a.vy=-Math.abs(a.vy)*0.7;}
