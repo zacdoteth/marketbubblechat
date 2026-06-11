@@ -3552,7 +3552,7 @@
       cineCam('.stats',1.4,1600); await cineWait(1800);                                  // 02 push: live intel
       cineCap('02 \u2014 live intel','every platform, live',2600); await cineWait(3100);
       cineCam(null,1,1300); await cineWait(1450);                                        // release
-      cineCam('#feed',1.55,1800); await cineWait(2000);                                  // 03 push: the thesis \u2014 deepest, longest
+      cineCam('#feed .wmsg:nth-last-child(5)',1.55,1800); await cineWait(2000);           // 03 push: the newest messages (bottom \u2014 where the feed lives)
       cineCap('03 \u2014 the feed','twitch + kick + x \u2014 one feed',3200); await cineWait(3700);
       cineCam(null,1,1300); await cineWait(1450);                                        // release
       var tx=$('tankExpand'); if(tx)tx.click(); await cineWait(900);                     // 04 climax: the coinquarium, full-bleed
