@@ -2135,14 +2135,14 @@
   .cine-title.show{opacity:1;transform:none}
   .cine-title img{height:74px;width:auto;filter:drop-shadow(0 6px 44px rgba(255,255,255,.16))}
   .cine-title .cine-tag{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
-  .cine-cap{position:absolute;left:50%;bottom:10vh;transform:translate(-50%,16px);text-align:center;opacity:0;transition:opacity .5s var(--ease),transform .65s var(--ease);width:max-content;max-width:80vw}
+  .cine-cap{position:absolute;left:50%;top:55%;transform:translate(-50%,calc(-50% + 18px));text-align:center;opacity:0;transition:opacity .5s var(--ease),transform .65s var(--ease);width:max-content;max-width:86vw}
   .cine-cap::before{content:"";position:absolute;inset:-34px -90px;z-index:-1;border-radius:50%;
     background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.62), transparent 72%)}      /* local scrim — reads on any footage */
-  .cine-cap.show{opacity:1;transform:translate(-50%,0)}
-  .cine-cap .ey{display:block;font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.7)}
-  .cine-cap .ln{font-family:var(--gk);font-weight:800;font-size:clamp(27px,3vw,40px);letter-spacing:-.012em;color:#fff;
-    -webkit-text-stroke:6px rgba(0,0,0,.88);paint-order:stroke fill;                       /* a real stroke, behind the fill */
-    text-shadow:0 3px 20px rgba(0,0,0,.9),0 0 80px rgba(0,0,0,.55)}
+  .cine-cap.show{opacity:1;transform:translate(-50%,-50%)}
+  .cine-cap .ey{display:block;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.88);margin-bottom:12px;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.7)}
+  .cine-cap .ln{font-family:'Oswald',var(--gk);font-weight:600;font-size:clamp(40px,4.6vw,64px);line-height:1.06;letter-spacing:.05em;text-transform:uppercase;color:#fff;
+    -webkit-text-stroke:8px rgba(0,0,0,.9);paint-order:stroke fill;                        /* real stroke, behind the fill */
+    text-shadow:0 4px 26px rgba(0,0,0,.92),0 0 90px rgba(0,0,0,.55)}
   .cine-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;opacity:0;transition:opacity .9s var(--ease)}
   .cine-end.show{opacity:1}
   .cine-end img{height:64px;width:auto;margin-bottom:8px}
@@ -3521,6 +3521,8 @@
     var r=$('cine'); if(r){ r.classList.remove('on'); r.setAttribute('aria-hidden','true'); }
     ['cineFade','cineTitle','cineEnd','cineCap'].forEach(function(id){ var el=$(id); if(el){ el.classList.remove('black'); el.classList.remove('show'); } });
     document.body.classList.remove('cinema');
+    try{ if(typeof TANK!=='undefined'&&TANK.full){ var txx=$('tankExpand'); if(txx)txx.click(); } }catch(e){}
+    try{ closeFlex(); }catch(e){}
     if(document.body.classList.contains('chat-collapsed')){ var b=$('oaFull'); if(b)b.click(); }
     try{ setLayout('deck'); }catch(e){}
     CINE.on=false; }
@@ -3539,23 +3541,28 @@
       try{ runReel(); }catch(e){}
       await cineWait(3000);
       $('cineTitle').classList.remove('show'); await cineWait(450);
-      $('cineFade').classList.remove('black'); await cineWait(1000);
-      cineCam('#feed',1.5,2000); await cineWait(1500);                                   // dolly: the merged feed, pills readable
-      cineCap('01 \u2014 the feed','twitch + kick + x \u2014 merged into one feed',3000); await cineWait(3700);
-      cineCam(null,1,1500); await cineWait(1650);                                        // pull wide
+      $('cineFade').classList.remove('black'); await cineWait(900);
+      cineCam('#vTotal',1.7,1900);                                                       // 01 dolly: top-right audience cluster
       var hot=$('vTotal'); hot=hot&&hot.closest('.tb-stat'); if(hot)hot.classList.add('cine-hot');
-      cineCap('02 \u2014 the audience','one combined audience. one real number.',3000); await cineWait(4000);
+      await cineWait(1500);
+      cineCap('01 \u2014 the audience','one combined audience',3000); await cineWait(3600);
       if(hot)hot.classList.remove('cine-hot');
-      setLayout('spotlight'); await cineWait(900);
-      cineCap('03 \u2014 the show','watch together. chat as one room.',2800); await cineWait(3600);
-      cineCam('#tank',1.45,1800); await cineWait(1400);                                  // dolly: the coinquarium
-      cinePops(3); cineCap('04 \u2014 the game','pop the market',2400); await cineWait(3000);
-      cineCam(null,1,1500); await cineWait(1650);
-      try{ openFlex(); }catch(e){} await cineWait(3000);
-      try{ closeFlex(); }catch(e){} await cineWait(600);
-      setLayout('theater'); await cineWait(700);
+      cineCam('.stats',1.35,1700); await cineWait(1400);                                 // 02 dolly: live-intel sidebar
+      cineCap('02 \u2014 live intel','every platform, live',2800); await cineWait(3400);
+      cineCam('#feed',1.5,1700); await cineWait(1400);                                   // 03 dolly: the merged feed
+      cineCap('03 \u2014 the feed','twitch + kick + x \u2014 one feed',3000); await cineWait(3600);
+      cineCam(null,1,1400); await cineWait(1550);                                        // pull wide
+      var tx=$('tankExpand'); if(tx)tx.click(); await cineWait(950);                     // 04 the coinquarium, maximized
+      cinePops(3); cineCap('04 \u2014 the market','pop the market',2800); await cineWait(3500);
+      if(tx)tx.click(); await cineWait(650);
+      cineCap('05 \u2014 the flex','share your pops on x',2200); await cineWait(2500);  // 05 the social card
+      try{ openFlex(); }catch(e){} await cineWait(2900);
+      try{ closeFlex(); }catch(e){} await cineWait(500);
+      setLayout('spotlight'); await cineWait(900);                                       // 06 spotlight
+      cineCap('06 \u2014 the show','watch together, one room',2800); await cineWait(3400);
+      setLayout('theater'); await cineWait(700);                                         // 07 theater
       var mx=$('oaFull'); if(mx&&!document.body.classList.contains('chat-collapsed')) mx.click();
-      cineCap('05 \u2014 the theater','lean back. lights down.',2600); await cineWait(3800);
+      cineCap('07 \u2014 the theater','lean back. lights down.',2600); await cineWait(3700);
       $('cineFade').classList.add('black'); await cineWait(950);
       $('cineEnd').classList.add('show'); await cineWait(5200);
     }catch(e){}
@@ -3567,13 +3574,15 @@
     root.classList.add('on'); root.setAttribute('aria-hidden','false');
     try{
       await cineWait(600);
-      cineCap('01 \u2014 the feed','twitch + kick + x \u2014 merged into one feed',3600); await cineWait(7200);
       var hot=$('vTotal'); hot=hot&&hot.closest('.tb-stat'); if(hot)hot.classList.add('cine-hot');
-      cineCap('02 \u2014 the audience','one combined audience. one real number.',3600); await cineWait(7200);
+      cineCap('01 \u2014 the audience','one combined audience',3400); await cineWait(6400);
       if(hot)hot.classList.remove('cine-hot');
-      cineCap('03 \u2014 the show','watch together. chat as one room.',3600); await cineWait(7200);
-      cineCap('04 \u2014 the game','pop the market',3600); await cineWait(7200);
-      cineCap('05 \u2014 the theater','lean back. lights down.',3600); await cineWait(5200);
+      cineCap('02 \u2014 live intel','every platform, live',3400); await cineWait(6400);
+      cineCap('03 \u2014 the feed','twitch + kick + x \u2014 one feed',3400); await cineWait(6400);
+      cineCap('04 \u2014 the market','pop the market',3400); await cineWait(6400);
+      cineCap('05 \u2014 the flex','share your pops on x',3400); await cineWait(6400);
+      cineCap('06 \u2014 the show','watch together, one room',3400); await cineWait(6400);
+      cineCap('07 \u2014 the theater','lean back. lights down.',3400); await cineWait(5000);
     }catch(e){}
     cineFinish();
   }
