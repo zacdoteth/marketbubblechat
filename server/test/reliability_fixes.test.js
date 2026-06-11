@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createStats } from '../src/stats.js';
-import { createRoom } from '../src/room.js';
+import { createShowRoom } from '../src/showRoom.js';
 import { createIngesterPool } from '../src/ingesterPool.js';
 
 // Shared fakes for the ported room/pool tests
@@ -42,12 +42,13 @@ test('FIX stats.setViewers: clamps Infinity, NaN, null, negative to 0; floors fl
 test('FIX room.connect: same platform+channel returns existing stream (dedupe)', async () => {
   const { ingesters, instances } = _fakeIngesters();
   const pool = createIngesterPool({ ingesters, ..._noopSched });
-  const room = createRoom({ pool, send: () => {}, now: () => 0 });
+  const room = createShowRoom({ pool, now: () => 0 });
+  room.attach(() => {});
   const a = await room.connect('https://x.com/elonmusk');
   const b = await room.connect('https://x.com/elonmusk');
   assert.ok(a.stream, 'first connect creates a stream');
   assert.equal(b.stream.id, a.stream.id, 'second connect reuses the same stream id');
-  assert.equal(room.snapshot().streams.length, 1, 'only one stream registered');
+  assert.equal(room.snapshotFor({ guestId: 'g' }).streams.length, 1, 'only one stream registered');
   assert.equal(instances.length, 1, 'only one ingester started');
 });
 
@@ -56,7 +57,8 @@ test('FIX pool.routeKickChat: routes to mapped room, drops unknown broadcaster',
   const { ingesters } = _fakeIngesters();
   const pool = createIngesterPool({ ingesters, ..._noopSched });
   const got = [];
-  const room = createRoom({ pool, send: (o) => { if (o.type === 'message') got.push(o.message); }, now: () => 0 });
+  const room = createShowRoom({ pool, now: () => 0 });
+  room.attach((o) => { if (o.type === 'message') got.push(o.message); });
   await room.connect('https://kick.com/somebody'); // resolves 'bid-somebody'
   pool.routeKickChat('999999', { username: 'u', text: 'dropped', ts: 1 }); // unknown -> drop
   assert.equal(got.length, 0, 'unknown broadcaster -> no emit (no crash)');
@@ -69,7 +71,8 @@ test('FIX pool.routeKickChat: routes to mapped room, drops unknown broadcaster',
 test('FIX room.disconnect: removes stats and late Kick chat is a no-op', async () => {
   const { ingesters } = _fakeIngesters();
   const pool = createIngesterPool({ ingesters, ..._noopSched });
-  const room = createRoom({ pool, send: () => {}, now: () => 1000 });
+  const room = createShowRoom({ pool, now: () => 1000 });
+  room.attach(() => {});
   const s = await room.connect('https://kick.com/somebody');
   const id = s.stream.id;
   room.disconnect(id);
@@ -77,5 +80,5 @@ test('FIX room.disconnect: removes stats and late Kick chat is a no-op', async (
   assert.equal(room.statsSnapshot().perStream[id], undefined);
   // a late webhook for the now-removed channel must not throw and must not re-add anything
   assert.doesNotThrow(() => pool.routeKickChat('bid-somebody', { username: 'x', text: 'y', ts: 0 }));
-  assert.equal(room.snapshot().streams.length, 0);
+  assert.equal(room.snapshotFor({ guestId: 'g' }).streams.length, 0);
 });
