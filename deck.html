@@ -2090,6 +2090,12 @@
   .flexshare:hover{background:var(--blue-hi)} .flexshare:active{transform:scale(.98)}
   .flexshare svg{width:15px;height:15px}
   .flexcard-tag{margin-top:11px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim-2)}
+  .flexacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
+  .flexbtn{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:11px;
+    background:rgba(255,255,255,.04);color:var(--dim);cursor:pointer;font-family:var(--gk);font-weight:600;font-size:12.5px;
+    transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+  .flexbtn:hover{color:var(--white);border-color:rgba(91,140,255,.4);background:rgba(91,140,255,.1)}
+  .flexbtn:active{transform:scale(.98)} .flexbtn svg{width:14px;height:14px}
   .pop-score:hover{border-color:rgba(91,140,255,.45);color:var(--white)}
   @media(prefers-reduced-motion:reduce){ .flexcard{transition:none} }
 </style>
@@ -2104,8 +2110,12 @@
       <div class="flexcard-logo"><img id="flexLogo" src="" alt="Market Bubble"/></div>
       <div class="flexcard-n"><b id="flexN">0</b><span>bubbles popped</span></div>
       <div class="flexcard-board" id="flexBoard"></div>
+      <div class="flexacts">
+        <button class="flexbtn" id="flexCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copy image</button>
+        <button class="flexbtn" id="flexSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Save</button>
+      </div>
       <button class="flexshare" id="flexShare"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg> Share on X</button>
-      <div class="flexcard-tag">marketbubble &middot; every chat, one feed</div>
+      <div class="flexcard-tag" id="flexTag">marketbubble &middot; every chat, one feed</div>
     </div>
   </div>
 
@@ -2888,6 +2898,75 @@
     if(youRank>6){ rows.push('<div class="flexrow me"><span class="fk">'+youRank+'</span><span class="fn">YOU</span><span class="fs">'+popCount.toLocaleString()+'</span></div>'); }
     return rows.join('');
   }
+  /* ── data once, used by both the HTML board and the PNG card ── */
+  function flexData(){
+    var board=[['satoshi',9001],['ansem',4200],['cobie',2888],['banks',1777],['hsaka',1240]];
+    board.push(['__you__',popCount]); board.sort(function(a,b){ return b[1]-a[1]; });
+    var youRank=board.findIndex(function(r){ return r[0]==='__you__'; })+1;
+    var rows=board.slice(0,6).map(function(r,i){ var me=r[0]==='__you__';
+      return {rank:i+1,name:me?'YOU':r[0],score:r[1].toLocaleString(),me:me}; });
+    if(youRank>6) rows.push({rank:youRank,name:'YOU',score:popCount.toLocaleString(),me:true});
+    return {rows:rows,n:popCount.toLocaleString(),rank:youRank};
+  }
+  function flexSpaced(x,txt,X,Y,ls,font,fill){ x.font=font; x.fillStyle=fill; x.textAlign='center';
+    var had=('letterSpacing' in x); if(had)x.letterSpacing=ls+'px'; x.fillText(txt,X,Y); if(had)x.letterSpacing='0px'; }
+  /* ── render the shareable P&L-style card to a canvas (logo + glowing number + board + bubbles) ── */
+  function flexRender(){
+    var data=flexData(), W=620, s=2, padX=42, topH=288, rowH=54, gap=6, botH=92;
+    var H=topH + data.rows.length*(rowH+gap) + botH;
+    var c=document.createElement('canvas'); c.width=W*s; c.height=H*s;
+    var x=c.getContext('2d'); x.scale(s,s);
+    x.beginPath(); if(x.roundRect)x.roundRect(0,0,W,H,30); else x.rect(0,0,W,H); x.clip();
+    var bg=x.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#10131e'); bg.addColorStop(1,'#0a0b12'); x.fillStyle=bg; x.fillRect(0,0,W,H);
+    var rg=x.createRadialGradient(W/2,-50,30,W/2,-50,W); rg.addColorStop(0,'rgba(91,140,255,.30)'); rg.addColorStop(1,'rgba(91,140,255,0)'); x.fillStyle=rg; x.fillRect(0,0,W,H);
+    /* floating signature bubbles in the margins — red/green/blue, glowing */
+    var deco=[[64,150,42,'#FF5765'],[556,124,34,'#4ADE80'],[52,H-126,46,'#5B8CFF'],[566,H-96,30,'#4ADE80'],[300,H-150,24,'#FF5765']];
+    deco.forEach(function(d){ var bx=d[0],by=d[1],br=d[2],col=d[3];
+      x.save(); x.globalAlpha=.42; x.shadowColor=col; x.shadowBlur=26;
+      x.beginPath(); x.arc(bx,by,br,0,6.2832); x.fillStyle=col; x.fill(); x.shadowBlur=0;
+      var g=x.createRadialGradient(bx-br*.3,by-br*.34,br*.05,bx,by,br);
+      g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(.5,'rgba(255,255,255,.08)'); g.addColorStop(1,'rgba(255,255,255,0)');
+      x.fillStyle=g; x.fill(); x.restore(); });
+    /* logo (cloned from the masthead — already loaded, never 404s) */
+    var bl=document.querySelector('.brandlogo');
+    if(bl&&bl.complete&&bl.naturalWidth){ var lh=44, lw=lh*bl.naturalWidth/bl.naturalHeight; x.drawImage(bl,(W-lw)/2,50,lw,lh); }
+    /* the hero number — gradient fill, glowing */
+    x.save(); x.shadowColor='rgba(131,166,255,.55)'; x.shadowBlur=34; x.textAlign='center';
+    var ng=x.createLinearGradient(0,118,0,224); ng.addColorStop(0,'#ffffff'); ng.addColorStop(1,'#83A6FF');
+    x.fillStyle=ng; x.font='700 112px "Space Grotesk",system-ui,sans-serif'; x.fillText(data.n, W/2, 218); x.restore();
+    flexSpaced(x,'BUBBLES POPPED',W/2,254,7,'600 15px "JetBrains Mono",monospace','rgba(150,160,180,.92)');
+    /* leaderboard rows */
+    var ry=topH;
+    data.rows.forEach(function(r){
+      x.beginPath(); if(x.roundRect)x.roundRect(padX,ry,W-padX*2,rowH,12); else x.rect(padX,ry,W-padX*2,rowH);
+      x.fillStyle=r.me?'rgba(91,140,255,.16)':'rgba(255,255,255,.035)'; x.fill();
+      if(r.me){ x.lineWidth=1.4; x.strokeStyle='rgba(91,140,255,.42)'; x.stroke(); }
+      x.textAlign='center'; x.fillStyle=r.rank===1?'#F6C96B':r.rank===2?'#CBD2DC':r.rank===3?'#D69B6B':'rgba(150,160,180,.85)';
+      x.font='700 17px "JetBrains Mono",monospace'; x.fillText(String(r.rank), padX+30, ry+rowH/2+6);
+      x.textAlign='left'; x.fillStyle=r.me?'#ffffff':'rgba(176,186,205,.94)'; x.font=(r.me?'700 ':'500 ')+'18px "JetBrains Mono",monospace';
+      x.fillText(r.name, padX+62, ry+rowH/2+6);
+      x.textAlign='right'; x.fillStyle='#ffffff'; x.font='700 18px "JetBrains Mono",monospace';
+      x.fillText(r.score, W-padX-20, ry+rowH/2+6);
+      ry+=rowH+gap;
+    });
+    /* footer — brand + the link (the "referral code" slot) */
+    flexSpaced(x,'EVERY CHAT · TWITCH · KICK · X · ONE FEED',W/2,H-50,2.5,'600 11px "JetBrains Mono",monospace','rgba(120,130,150,.8)');
+    flexSpaced(x,'marketbubblechat-fawn.vercel.app',W/2,H-28,1,'700 13px "JetBrains Mono",monospace','rgba(131,166,255,.95)');
+    return c;
+  }
+  function flexTagFlash(msg){ var t=$('flexTag'); if(!t)return; t.textContent=msg;
+    clearTimeout(flexTagFlash._t); flexTagFlash._t=setTimeout(function(){ t.innerHTML='marketbubble &middot; every chat, one feed'; },2800); }
+  function flexSaveBlob(bl){ try{ var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='market-bubble-popped.png';
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); }catch(e){} }
+  function flexCopy(fromShare){ var c; try{ c=flexRender(); }catch(e){ return; }
+    try{ c.toBlob(function(bl){ if(!bl)return;
+      if(navigator.clipboard && window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':bl})]).then(
+        function(){ flexTagFlash(fromShare?'image copied — paste it into the tweet':'image copied — paste it anywhere'); },
+        function(){ flexSaveBlob(bl); flexTagFlash('saved to downloads — attach it'); }); }
+      else { flexSaveBlob(bl); flexTagFlash('saved to downloads — attach it'); }
+    },'image/png'); }catch(e){ flexSaveBlob; } }
+  function flexDownload(){ var c; try{ c=flexRender(); }catch(e){ return; }
+    c.toBlob(function(bl){ if(bl){ flexSaveBlob(bl); flexTagFlash('saved to downloads'); } },'image/png'); }
   function openFlex(){ var w=$('flexWrap'); if(!w)return;
     var n=$('flexN'); if(n) n.textContent=popCount.toLocaleString();
     var lg=$('flexLogo'), bl=document.querySelector('.brandlogo'); if(lg&&bl) lg.src=bl.src;
@@ -2896,7 +2975,7 @@
   function closeFlex(){ var w=$('flexWrap'); if(w){ w.classList.remove('show'); w.setAttribute('aria-hidden','true'); } }
   function flexShare(){ var t='I popped '+popCount.toLocaleString()+' bubbles on the Market Bubble command deck 🫧\nevery chat — twitch · kick · x — in one feed.\npop the market 👇';
     var url='https://twitter.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent('https://marketbubblechat-fawn.vercel.app/deck.html');
-    try{ window.open(url,'_blank','noopener'); }catch(e){} }
+    flexCopy(true); try{ window.open(url,'_blank','noopener'); }catch(e){} }
   function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
   function tankData(){
     var out=[];
@@ -3148,6 +3227,8 @@
     var ps=$('popScore'); if(ps) ps.addEventListener('click',openFlex);
     var fcl=$('flexClose'); if(fcl) fcl.addEventListener('click',closeFlex);
     var fsh=$('flexShare'); if(fsh) fsh.addEventListener('click',flexShare);
+    var fcp=$('flexCopy'); if(fcp) fcp.addEventListener('click',function(){ flexCopy(false); });
+    var fsv=$('flexSave'); if(fsv) fsv.addEventListener('click',flexDownload);
     var fw=$('flexWrap'); if(fw) fw.addEventListener('click',function(e){ if(e.target===fw) closeFlex(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('tankfull')) tankToggleFull(); });
     if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
