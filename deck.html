@@ -2147,7 +2147,7 @@
   .cine-end.show{opacity:1}
   .cine-end img{height:64px;width:auto;margin-bottom:8px}
   .cine-end .t1{font-family:var(--serif);font-style:italic;font-size:clamp(17px,1.8vw,22px);color:rgba(255,255,255,.92)}
-  .cine-end .t2{font-family:var(--gk);font-weight:800;font-size:clamp(22px,2.4vw,30px);color:#fff}
+  .cine-end .t2{font-family:var(--gk);font-weight:800;font-size:clamp(27px,3vw,40px);letter-spacing:.01em;color:#fff}
   .cine-end .t3{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
   @media(prefers-reduced-motion:reduce){.cine-bar,.cine-cap,.cine-title,.cine-end,.cine-fade{transition:none}}
   /* ── masthead per-platform split (visible in every mode) + terminal tick ── */
@@ -3539,32 +3539,35 @@
       $('cineFade').classList.add('black');
       $('cineTitle').classList.add('show');
       try{ runReel(); }catch(e){}
-      await cineWait(3000);
+      await cineWait(2600);
       $('cineTitle').classList.remove('show'); await cineWait(450);
       $('cineFade').classList.remove('black'); await cineWait(900);
-      cineCam('#vTotal',1.7,1900);                                                       // 01 dolly: top-right audience cluster
+      /* grammar: push \u2192 settle \u2192 speak \u2192 release. origin only re-aims at scale 1 (no jump-pans). */
+      cineCam('#vTotal',1.7,1800);                                                       // 01 push: the audience cluster
       var hot=$('vTotal'); hot=hot&&hot.closest('.tb-stat'); if(hot)hot.classList.add('cine-hot');
-      await cineWait(1500);
-      cineCap('01 \u2014 the audience','one combined audience',3000); await cineWait(3600);
+      await cineWait(2000);
+      cineCap('01 \u2014 the audience','one combined audience',2800); await cineWait(3300);
       if(hot)hot.classList.remove('cine-hot');
-      cineCam('.stats',1.35,1700); await cineWait(1400);                                 // 02 dolly: live-intel sidebar
-      cineCap('02 \u2014 live intel','every platform, live',2800); await cineWait(3400);
-      cineCam('#feed',1.5,1700); await cineWait(1400);                                   // 03 dolly: the merged feed
-      cineCap('03 \u2014 the feed','twitch + kick + x \u2014 one feed',3000); await cineWait(3600);
-      cineCam(null,1,1400); await cineWait(1550);                                        // pull wide
-      var tx=$('tankExpand'); if(tx)tx.click(); await cineWait(950);                     // 04 the coinquarium, maximized
-      cinePops(3); cineCap('04 \u2014 the market','pop the market',2800); await cineWait(3500);
-      if(tx)tx.click(); await cineWait(650);
-      cineCap('05 \u2014 the flex','share your pops on x',2200); await cineWait(2500);  // 05 the social card
-      try{ openFlex(); }catch(e){} await cineWait(2900);
-      try{ closeFlex(); }catch(e){} await cineWait(500);
-      setLayout('spotlight'); await cineWait(900);                                       // 06 spotlight
-      cineCap('06 \u2014 the show','watch together, one room',2800); await cineWait(3400);
-      setLayout('theater'); await cineWait(700);                                         // 07 theater
+      cineCam(null,1,1300); await cineWait(1450);                                        // release
+      cineCam('.stats',1.4,1600); await cineWait(1800);                                  // 02 push: live intel
+      cineCap('02 \u2014 live intel','every platform, live',2600); await cineWait(3100);
+      cineCam(null,1,1300); await cineWait(1450);                                        // release
+      cineCam('#feed',1.55,1800); await cineWait(2000);                                  // 03 push: the thesis \u2014 deepest, longest
+      cineCap('03 \u2014 the feed','twitch + kick + x \u2014 one feed',3200); await cineWait(3700);
+      cineCam(null,1,1300); await cineWait(1450);                                        // release
+      var tx=$('tankExpand'); if(tx)tx.click(); await cineWait(900);                     // 04 climax: the coinquarium, full-bleed
+      cinePops(3); cineCap('04 \u2014 the market','pop the market',2600); await cineWait(3300);
+      if(tx)tx.click(); await cineWait(600);
+      cineCap('05 \u2014 the flex','share your pops on x',2000); await cineWait(2300);  // 05 speak first \u2014 card enters clean
+      try{ openFlex(); }catch(e){} await cineWait(3200);
+      try{ closeFlex(); }catch(e){} await cineWait(400);
+      setLayout('spotlight'); await cineWait(800);                                       // 06 the show
+      cineCap('06 \u2014 the show','watch together, one room',2600); await cineWait(3200);
+      setLayout('theater'); await cineWait(700);                                         // 07 exhale \u2014 the longest hold
       var mx=$('oaFull'); if(mx&&!document.body.classList.contains('chat-collapsed')) mx.click();
-      cineCap('07 \u2014 the theater','lean back. lights down.',2600); await cineWait(3700);
+      cineCap('07 \u2014 the theater','lean back. lights down.',2600); await cineWait(4200);
       $('cineFade').classList.add('black'); await cineWait(950);
-      $('cineEnd').classList.add('show'); await cineWait(5200);
+      $('cineEnd').classList.add('show'); await cineWait(5600);
     }catch(e){}
     cineFinish();
   }
