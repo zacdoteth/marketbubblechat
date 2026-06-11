@@ -1,6 +1,6 @@
 // server/src/index.js — http server (health + Kick webhook) + WS fan-out.
 import { createServer } from 'node:http';
-import { PORT, X_BEARER_TOKEN, KICK_CLIENT_ID, KICK_CLIENT_SECRET, X_INGEST_TOKEN } from './config.js';
+import { PORT, X_BEARER_TOKEN, KICK_CLIENT_ID, KICK_CLIENT_SECRET, X_INGEST_TOKEN, CONTROL_TOKEN } from './config.js';
 import { startFanout } from './fanout.js';
 import { getKickPublicKey, verifyKickSignature, parseChatWebhook } from './ingesters/kickWebhook.js';
 
@@ -123,8 +123,10 @@ const server = createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200); res.end('ok'); return; }
   res.writeHead(200, { 'content-type': 'text/plain' }); res.end('CONFLUX backend live');
 });
-const { hub } = startFanout(server);
+const { hub, showRoom } = startFanout(server);
 hubRef = hub;
+// Load the persisted show (stream URLs + featured) and re-connect on boot.
+showRoom.restore().catch((e) => console.warn('[startup] show restore failed:', e.message));
 
 // process-level guards: an unhandled error in a callback/timer must not silently kill the process.
 process.on('unhandledRejection', (reason) => { console.error('[fatal] unhandledRejection:', reason); });
@@ -134,6 +136,7 @@ process.on('uncaughtException', (err) => { console.error('[fatal] uncaughtExcept
 if (!X_BEARER_TOKEN) console.warn('[startup] X ingestion disabled: X_BEARER_TOKEN not set');
 if (!KICK_CLIENT_ID || !KICK_CLIENT_SECRET) console.warn('[startup] Kick ingestion disabled: KICK_CLIENT_ID or KICK_CLIENT_SECRET not set');
 if (!X_INGEST_TOKEN) console.warn('[startup] X-broadcast ingest disabled: X_INGEST_TOKEN not set (POST /ingest/x → 503)');
+if (!CONTROL_TOKEN) console.warn('[startup] CONTROL_TOKEN not set — operator controls are LOCKED (read-only show). Set it to enable /add.');
 
 server.listen(PORT, () => console.log('CONFLUX backend on :' + PORT));
 
