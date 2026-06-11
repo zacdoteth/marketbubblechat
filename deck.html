@@ -3230,7 +3230,7 @@
     var r=tankRadius({kind:'coin',val:c.val});
     TANK.bubs.push({d:{kind:'coin',sym:c.sym,name:c.name,px:c.px,val:c.val},base:r,r:1,br:r,
       x:TANK.w*(0.3+Math.random()*0.4),y:TANK.h*(0.3+Math.random()*0.4),vx:0,vy:0,ph:Math.random()*6.283,pop:0,state:'born',t0:TANK.ts||0});
-    tankFit(); try{renderMarkets();fetchMarketsLive();}catch(e){}
+    tankFit(); try{renderMarkets();}catch(e){}
     if(!BENCH.length){ var ad=$('mkAdd'); if(ad){ ad.disabled=true; ad.style.opacity='.3'; } }
   }
   function tankInit(){
@@ -3400,24 +3400,15 @@
   }catch(e){} }
   async function runReel(){
     if(reelRunning)return; reelRunning=true;
-    for(var _w=0;_w<10;_w++) reelSeedMsg();                 // prime the feed instantly so the merge is on-screen from frame 1
-    var seedT=setInterval(reelSeedMsg, 430);                // FLOOD: Twitch + Kick + X + MB in one feed
-    try{
-      setLayout('deck'); await reelWait(500);
-      REEL_STREAMS.forEach(function(s,i){ setTimeout(function(){ reelConnect(s); }, i*1300); });
-      await reelWait(900);
+    for(var _w=0;_w<14;_w++) reelSeedMsg();                 // comments on-screen from frame 1 (the merge is visible immediately)
+    var seedT=setInterval(reelSeedMsg, 470);                // FLOOD: Twitch + Kick + X + MB in one feed
+    try{                                                    // COMMENTS ONLY — operator drives the modes by mouse; the show VOD stays on the stage
+      await reelWait(1000);
       reelSay('gm Market Bubble 🫧 every chat, every platform — one feed');
-      await reelWait(4800);
-      reelHover(); await reelWait(2700); hideTip();
-      await reelWait(700);
+      await reelWait(5400);
       reelSay('combined chat is unreal 📈 presented by Polymarket');
-      await reelWait(3600);
-      setLayout('spotlight'); await reelWait(3000);
-      setLayout('theater');   await reelWait(3600);
-      setLayout('deck');      await reelWait(1400);
-      reelGolden();           await reelWait(3600);
     }catch(e){}
-    clearInterval(seedT); reelRunning=false;
+    setTimeout(function(){ clearInterval(seedT); reelRunning=false; }, 75000);  // keep the feed alive through the take, then ease off
   }
   document.addEventListener('keydown',function(e){
     if((e.key==='R'||e.key==='r') && e.shiftKey){
