@@ -2986,11 +2986,12 @@
       if(d.kind==='coin'){ lines=[d.sym+'   $'+d.px+'   '+(d.val>=0?'+':'')+d.val.toFixed(2)+'%']; }
       else { lines=tankWrap(cx,d.q,180,2); accent=d.odds+'% '+String(d.side).toUpperCase()+'   ·   '+d.vol; lines.push(accent); }
       var lw=0; lines.forEach(function(L){ var ww=cx.measureText(L).width; if(ww>lw)lw=ww; }); lw+=18;
-      var lh=lines.length*15+8, bx=hb.x, byTop=hb.y-hr-4;
-      var cyTop=Math.max(3, byTop-16-lh);
+      var lh=lines.length*15+8, bx=hb.x;
+      var below=(hb.y-hr-20-lh)<4;                          // no room up top -> drop the chip below
+      var root=below?(hb.y+hr+4):(hb.y-hr-4), cyTop=below?(root+16):(root-16-lh);
       var lx=Math.max(lw/2+4, Math.min(w-lw/2-4, bx));
-      cx.beginPath(); cx.moveTo(bx,byTop); cx.lineTo(lx,cyTop+lh); cx.lineWidth=1.4; cx.strokeStyle='rgba(255,255,255,.72)'; cx.stroke();
-      cx.beginPath(); cx.arc(bx,byTop,2.4,0,6.2832); cx.fillStyle='#fff'; cx.fill();
+      cx.beginPath(); cx.moveTo(bx,root); cx.lineTo(lx, below?cyTop:cyTop+lh); cx.lineWidth=1.4; cx.strokeStyle='rgba(255,255,255,.72)'; cx.stroke();
+      cx.beginPath(); cx.arc(bx,root,2.4,0,6.2832); cx.fillStyle='#fff'; cx.fill();
       cx.beginPath(); if(cx.roundRect)cx.roundRect(lx-lw/2,cyTop,lw,lh,6); else cx.rect(lx-lw/2,cyTop,lw,lh);
       cx.fillStyle='rgba(8,8,12,.95)'; cx.fill(); cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.22)'; cx.stroke();
       for(var L2=0;L2<lines.length;L2++){ var isAcc=(accent&&L2===lines.length-1);
