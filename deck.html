@@ -2898,7 +2898,11 @@
     topTally[v.h]=(topTally[v.h]||0)+1;
     chMsgCount[v.src]=(chMsgCount[v.src]||0)+1;
 
-    if(autoscroll && !paused && !hoverHold){ feedEl.scrollTop=feedEl.scrollHeight; }
+    // Auto-scroll whenever the viewer is pinned to the bottom (autoscroll) and not paused.
+    // Hover must NOT freeze it — like Twitch/YT live chat, only scrolling UP pauses (that's
+    // what flips `autoscroll` false via the scroll handler). Gating on hover broke auto-scroll
+    // any time the cursor sat over the feed (i.e. during a demo).
+    if(autoscroll && !paused){ feedEl.scrollTop=feedEl.scrollHeight; }
     else { newCount++; $('newCount').textContent=newCount; $('newPill').classList.add('show'); }
   }
   function matchFilter(el){
