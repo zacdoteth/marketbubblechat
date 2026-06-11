@@ -2511,7 +2511,7 @@
     if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; });
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
-  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near'};
+  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near',LINK:'chainlink',SUI:'sui',AVAX:'avalanche-2',TIA:'celestia',RENDER:'render-token',ONDO:'ondo-finance'};
   function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
   var LOGOS={};                                  // sym -> CoinGecko logo URL (the mission piece)
   /* ── the time machine: 1H / 1D / 1W / 1M — one state, every surface obeys ── */
@@ -2890,7 +2890,7 @@
     var pts=[],y=11; for(var i=0;i<22;i++){ y+=(Math.random()-(down?0.62:0.38))*3; y=Math.max(2,Math.min(20,y)); pts.push(i*3+','+y.toFixed(1)); }
     return '<svg class="spk" viewBox="0 0 66 22" preserveAspectRatio="none"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>';
   }
-  var mix=[['BTC','Bitcoin','61,330',-2.15],['ETH','Ethereum','1,626',-2.67],['SOL','Solana','63.52',-3.90],['HYPE','Hyperliquid','55.91',-9.70],['ZEC','Zcash','58.40',4.20],['NEAR','Near','2.85',2.10],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['WIF','Dogwifhat','0.1514',-3.13],['FARTCOIN','Fartcoin','0.1130',-3.87]];
+  var mix=[['BTC','Bitcoin','61,330',-2.15],['ETH','Ethereum','1,626',-2.67],['SOL','Solana','63.52',-3.90],['HYPE','Hyperliquid','55.91',-9.70],['ZEC','Zcash','58.40',4.20],['NEAR','Near','2.85',2.10],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['WIF','Dogwifhat','0.1514',-3.13],['FARTCOIN','Fartcoin','0.1130',-3.87],['LINK','Chainlink','14.2',3.1],['SUI','Sui','1.85',5.4],['AVAX','Avalanche','22.1',1.8],['TIA','Celestia','3.40',6.2],['RENDER','Render','4.10',2.7],['ONDO','Ondo','0.88',4.0]];
   var preds=[
     ['BTC above $150K by Q3?',61,'yes','$2.4M','Crypto'],
     ['ETH staking ETF approved 2026?',56,'yes','$890K','Crypto'],
@@ -3019,7 +3019,7 @@
   function tankData(){
     var out=[];
     mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });   // all good coins (no stablecoins in the set)
-    preds.slice(0, TANK.full?preds.length:4).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
+    preds.slice(0, TANK.full?preds.length:9).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
     return out;
   }
   function tankRadius(d){
@@ -3235,7 +3235,7 @@
     }
     tankRebuild(); tankSize(); tankScatter();
   }
-  var BENCH=[{sym:'LINK',name:'Chainlink',id:'chainlink',px:'14.2',val:3.1},{sym:'SUI',name:'Sui',id:'sui',px:'1.85',val:5.4},{sym:'AVAX',name:'Avalanche',id:'avalanche-2',px:'22.1',val:1.8},{sym:'TIA',name:'Celestia',id:'celestia',px:'3.40',val:6.2},{sym:'ENA',name:'Ethena',id:'ethena',px:'0.42',val:-2.1},{sym:'RENDER',name:'Render',id:'render-token',px:'4.10',val:2.7},{sym:'ONDO',name:'Ondo',id:'ondo-finance',px:'0.88',val:4.0},{sym:'APT',name:'Aptos',id:'aptos',px:'6.30',val:-1.2}];
+  var BENCH=[{sym:'ENA',name:'Ethena',id:'ethena',px:'0.42',val:-2.1},{sym:'APT',name:'Aptos',id:'aptos',px:'6.30',val:-1.2},{sym:'JTO',name:'Jito',id:'jito-governance-token',px:'2.10',val:3.4},{sym:'SEI',name:'Sei',id:'sei-network',px:'0.30',val:2.2}];
   function tankAddCoin(){ if(!BENCH.length)return; var c=BENCH.shift();
     CG[c.sym]=c.id; mix.push([c.sym,c.name,c.px,c.val]);
     var r=tankRadius({kind:'coin',val:c.val});
