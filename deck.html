@@ -2641,7 +2641,9 @@
     // apply current filter
     if(!matchFilter(el)) el.style.display='none';
     feedEl.appendChild(el);
-    while(feedEl.children.length>120) feedEl.removeChild(feedEl.firstChild);
+    while(feedEl.children.length>120){ var _f=feedEl.firstChild;
+      if(!autoscroll){ var _fh=_f.offsetHeight||0; feedEl.removeChild(_f); feedEl.scrollTop-=_fh; }  // reading history -> hold the view steady
+      else feedEl.removeChild(_f); }
 
     // bookkeeping
     msgPerMin++; allTotal++; recent.push({p:v.plat,t:Date.now()});
@@ -2913,30 +2915,24 @@
       var hov = TANK.hover===b;
       var hsl2=function(l,a){ return 'hsla('+hue+','+sat+'%,'+l+'%,'+a+')'; };
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      // lit glass orb — light enters top-left, colour washes through, deep belly, bright Fresnel rim
-      var g=cx.createRadialGradient(b.x-R*0.34,b.y-R*0.40,R*0.04, b.x,b.y,R);
-      g.addColorStop(0,   hsl2(Math.min(86,lig+30), 0.55));
-      g.addColorStop(0.50,hsl2(lig,                 0.20));
-      g.addColorStop(0.86,hsl2(Math.max(15,lig-16), 0.42));
-      g.addColorStop(1,   hsl2(Math.min(80,lig+18), 0.78));
+      // clean luminous orb — the colour IS the signal (green up / red down), vivid + saturated
+      var g=cx.createRadialGradient(b.x-R*0.26,b.y-R*0.30,R*0.05, b.x,b.y,R);
+      g.addColorStop(0,   hsl2(Math.min(70,lig+20), 0.95));
+      g.addColorStop(0.58,hsl2(lig,                 0.66));
+      g.addColorStop(1,   hsl2(Math.max(24,lig-8),  0.82));
       cx.fillStyle=g; cx.fill();
-      // gentle shade behind the label only — readability without a donut
-      var tg=cx.createRadialGradient(b.x,b.y+R*0.06,0, b.x,b.y,R*0.72);
-      tg.addColorStop(0,'rgba(6,8,14,0.40)'); tg.addColorStop(1,'rgba(6,8,14,0)');
+      // soft shade behind the label for crisp white type (gentle, centered)
+      var tg=cx.createRadialGradient(b.x,b.y+R*0.05,0, b.x,b.y,R*0.78);
+      tg.addColorStop(0,'rgba(7,9,14,0.30)'); tg.addColorStop(1,'rgba(7,9,14,0)');
       cx.fillStyle=tg; cx.fill();
-      // bottom bounce-light — the colour reflecting up off the water
-      cx.beginPath(); cx.arc(b.x,b.y,R*0.80,0.85,2.25); cx.lineWidth=Math.max(1,R*0.05); cx.lineCap='round'; cx.strokeStyle=hsl2(Math.min(80,lig+22),0.5); cx.stroke(); cx.lineCap='butt';
-      // Fresnel rim
+      // bright Fresnel rim
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      cx.lineWidth=(hov?2.6:1.5)+mag*0.9; cx.strokeStyle=hsl2(Math.min(82,lig+20),hov?1:(0.70+mag*0.30));
-      cx.shadowColor=col; cx.shadowBlur=(hov?22:8)+mag*13; cx.stroke(); cx.shadowBlur=0;
-      var lg=cx.createLinearGradient(b.x-R*0.45,b.y-R*0.62,b.x+R*0.25,b.y+R*0.55);
-      lg.addColorStop(0,'rgba(255,255,255,'+(0.13+mag*0.07)+')'); lg.addColorStop(0.36,'rgba(255,255,255,0.015)'); lg.addColorStop(1,'rgba(255,255,255,0)');
-      cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832); cx.fillStyle=lg; cx.fill();
-      cx.beginPath(); cx.arc(b.x,b.y,R*0.83,-2.55,-1.15); cx.lineWidth=Math.max(1,R*0.06); cx.lineCap='round'; cx.strokeStyle='rgba(255,255,255,0.40)'; cx.stroke(); cx.lineCap='butt';
-      var sx=b.x-R*0.34, sy=b.y-R*0.42, sr=Math.max(2,R*0.24);
+      cx.lineWidth=(hov?2.4:1.4)+mag*0.8; cx.strokeStyle=hsl2(Math.min(82,lig+26),hov?1:0.88);
+      cx.shadowColor=col; cx.shadowBlur=(hov?20:8)+mag*12; cx.stroke(); cx.shadowBlur=0;
+      // ONE soft round glint, top-left — a window reflection, not a strip
+      var sx=b.x-R*0.30, sy=b.y-R*0.34, sr=Math.max(2,R*0.26);
       var spg=cx.createRadialGradient(sx,sy,0,sx,sy,sr);
-      spg.addColorStop(0,'rgba(255,255,255,0.62)'); spg.addColorStop(0.55,'rgba(255,255,255,0.10)'); spg.addColorStop(1,'rgba(255,255,255,0)');
+      spg.addColorStop(0,'rgba(255,255,255,0.50)'); spg.addColorStop(0.5,'rgba(255,255,255,0.08)'); spg.addColorStop(1,'rgba(255,255,255,0)');
       cx.beginPath(); cx.arc(sx,sy,sr,0,6.2832); cx.fillStyle=spg; cx.fill();
       cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#F2F1ED';
       if(d.kind==='coin'){
@@ -2948,10 +2944,10 @@
           try{ cx.drawImage(img, b.x-lr, b.y-R*0.34-lr, lr*2, lr*2); }catch(_){}
           cx.restore();
           cx.fillStyle='#F2F1ED'; cx.font='700 '+Math.max(9,R*0.30).toFixed(1)+'px "Space Grotesk",sans-serif';
-          cx.fillText(d.sym, b.x, b.y+R*0.20);
-          cx.font='600 '+Math.max(8,R*0.26).toFixed(1)+'px "JetBrains Mono",monospace';
-          cx.fillText((d.val>=0?'+':'')+d.val.toFixed(1)+'%', b.x, b.y+R*0.52);
-          if(R>=34){ cx.fillStyle='rgba(242,241,237,.78)'; cx.font='600 '+Math.max(8,R*0.17).toFixed(1)+'px "JetBrains Mono",monospace'; cx.fillText('$'+d.px, b.x, b.y+R*0.74); }
+          cx.fillText(d.sym, b.x, b.y+(R>=34?R*0.10:R*0.20));
+          if(R>=34){ cx.fillStyle='rgba(242,241,237,.85)'; cx.font='600 '+Math.max(8,R*0.185).toFixed(1)+'px "JetBrains Mono",monospace'; cx.fillText('$'+d.px, b.x, b.y+R*0.40); }
+          cx.fillStyle='#F2F1ED'; cx.font='600 '+Math.max(8,R*0.26).toFixed(1)+'px "JetBrains Mono",monospace';
+          cx.fillText((d.val>=0?'+':'')+d.val.toFixed(1)+'%', b.x, b.y+(R>=34?R*0.64:R*0.52));
         } else {
           cx.font='700 '+Math.max(9,R*0.40).toFixed(1)+'px "Space Grotesk",sans-serif';
           cx.fillText(d.sym, b.x, b.y-R*0.16);
