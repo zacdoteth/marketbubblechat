@@ -3412,14 +3412,20 @@
   async function runReel(){
     if(reelRunning)return; reelRunning=true;
     for(var _w=0;_w<14;_w++) reelSeedMsg();                 // comments on-screen from frame 1 (the merge is visible immediately)
-    var seedT=setInterval(reelSeedMsg, 470);                // FLOOD: Twitch + Kick + X + MB in one feed
+    var reelStop=false;                                     // VARIED cadence — bursts + lulls, never a metronome
+    (function tick(){ if(reelStop)return;
+      var burst=Math.random()<0.30 ? (2+Math.floor(Math.random()*3)) : 1;          // ~30% of ticks: a 2–4 message burst
+      for(var bi=0;bi<burst;bi++) setTimeout(reelSeedMsg, bi*(80+Math.random()*130));
+      var gap=burst>1 ? (760+Math.random()*1100) : (170+Math.random()*900);        // breathe after a burst; jitter otherwise
+      setTimeout(tick, gap);
+    })();
     try{                                                    // COMMENTS ONLY — operator drives the modes by mouse; the show VOD stays on the stage
       await reelWait(1000);
       reelSay('gm Market Bubble 🫧 every chat, every platform — one feed');
       await reelWait(5400);
       reelSay('combined chat is unreal 📈 presented by Polymarket');
     }catch(e){}
-    setTimeout(function(){ clearInterval(seedT); reelRunning=false; }, 75000);  // keep the feed alive through the take, then ease off
+    setTimeout(function(){ reelStop=true; reelRunning=false; }, 90000);  // keep the feed alive through the take, then ease off
   }
   document.addEventListener('keydown',function(e){
     if((e.key==='R'||e.key==='r') && e.shiftKey){
