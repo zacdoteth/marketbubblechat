@@ -2406,10 +2406,8 @@
           <button class="pip-x" id="pipX" type="button" aria-label="Hide video">&times;</button>
           <button class="oa-full" id="oaFull" type="button" title="Maximize — hide chat" aria-label="Maximize the stage / hide chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
         </div>
-        <div class="oa-meta">
-          <div class="ti">Liquidity, Rate Cuts &amp; the Next Cycle</div>
-          <div class="who"><b>Market Bubble</b> · simulcast to Twitch · X · Kick</div>
-          <div class="oa-act"><button class="obtn">Follow</button><button class="obtn">Gift a sub</button><button class="obtn primary">Subscribe</button></div>
+        <div class="oa-meta" style="display:none">
+          <div class="who" id="oaWho"></div>
         </div>
       </section>
 
@@ -2738,6 +2736,8 @@
     var theater=(l==='theater');
     document.body.classList.toggle('dash',!theater);
     document.body.classList.toggle('watch',theater);
+    document.body.classList.toggle('chat-collapsed',theater);             // theater = curtains drawn; the button brings chat back
+    var _mx=$('oaFull'); if(_mx){ _mx.classList.toggle('on',theater); _mx.title=theater?'Show chat':'Maximize — hide chat'; }
     document.body.classList.toggle('lay-spotlight',l==='spotlight');
     $('mDeck').classList.toggle('on',l==='deck');
     $('mSpot').classList.toggle('on',l==='spotlight');
@@ -3138,7 +3138,8 @@
   /* coinquarium fill: scale every bubble so the school occupies ~58% of the water */
   function tankFit(){ var sum=0; TANK.bubs.forEach(function(b){ sum+=Math.PI*b.base*b.base; });
     if(!sum||!TANK.w||!TANK.h)return;
-    var k=Math.sqrt(0.62*TANK.w*TANK.h/sum), maxR=Math.min(TANK.w,TANK.h)*0.26;
+    var wide=TANK.w/Math.max(1,TANK.h)>3;                                  // the spotlight ribbon
+    var k=Math.sqrt((wide?0.84:0.62)*TANK.w*TANK.h/sum), maxR=Math.min(TANK.w,TANK.h)*(wide?0.36:0.26);
     TANK.bubs.forEach(function(b){ b.br=Math.max(15,Math.min(maxR,b.base*k)); }); }
   var TANKIMG={};
   function tankLogo(sym){ var u=LOGOS[sym]; if(!u)return null; var o=TANKIMG[sym];
@@ -3458,10 +3459,13 @@
         hero.classList.remove('isLive'); hero.removeAttribute('data-ch');
         var sub=document.querySelector('.oa-idle-sub');
         if(sub) sub.textContent=feat?'X broadcast featured \u2014 chat-only (video embed unavailable)':'Connect a stream \u2014 the stage goes live';
+        var ow0=$('oaWho'); if(ow0){ ow0.innerHTML=''; ow0.parentNode.style.display='none'; }
         renderSwitch(live); return;
       }
       feeds.classList.add('has-live'); if(pl)pl.classList.add('liveon');
       setEmbed(hero,feat); hero.classList.add('isLive');
+      var ow=$('oaWho'); if(ow){ var plats=[]; live.forEach(function(s){ var L=PLABEL[s.plat]||s.plat; if(plats.indexOf(L)<0)plats.push(L); });
+        ow.innerHTML='<b>'+feat.ch+'</b> \u00b7 live on '+plats.join(' \u00b7 '); ow.parentNode.style.display=''; }
       renderSwitch(live);
     }catch(e){}
   }
