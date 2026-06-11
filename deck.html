@@ -2793,7 +2793,13 @@
   function tankFrame(ts){
     TANK.raf=requestAnimationFrame(tankFrame);
     var cv=TANK.cv; if(!cv||!cv.offsetParent) return;                      // hidden pane -> zero work
-    if(cv.parentNode && Math.abs(cv.parentNode.getBoundingClientRect().width-TANK.w)>4) tankSize();
+    var pb=cv.parentNode?cv.parentNode.getBoundingClientRect():null;
+    if(pb && (Math.abs(pb.width-TANK.w)>4 || Math.abs(pb.height-TANK.h)>4)){
+      var ow=TANK.w, oh=TANK.h; tankSize();
+      if(ow<80||oh<80){ tankScatter(); }
+      else { var sx=TANK.w/ow, sy=TANK.h/oh;
+        TANK.bubs.forEach(function(bb){ bb.x*=sx; bb.y*=sy; }); }
+    }
     var cx=TANK.cx, w=TANK.w, h=TANK.h, bs=TANK.bubs, t=ts*0.001, i, j;
     for(i=0;i<bs.length;i++){ var a=bs[i];
       a.r += (a.br-a.r)*0.06;                                              // ease to live size
