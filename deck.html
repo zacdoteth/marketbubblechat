@@ -30,7 +30,7 @@
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Market%20Bubble%20Command%20Deck%22%2C%22short_name%22%3A%22Market%20Bubble%22%2C%22description%22%3A%22Every%20chat.%20Every%20platform.%20One%20feed.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230A0A0C%22%2C%22theme_color%22%3A%22%230A0A0C%22%2C%22start_url%22%3A%22.%22%2C%22scope%22%3A%22.%22%7D" />
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,500&family=Oswald:wght@500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
   :root{
     --ink:#070709; --bg:#0A0A0C; --panel:#101015; --panel-2:#15151B;
@@ -1977,6 +1977,30 @@
   .brandlogo{height:40px;width:auto;display:block;flex:0 0 auto}
   .brandtag{font-family:var(--gk);font-size:8.5px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--dim-2);line-height:1.35;max-width:118px}
   @media(max-width:860px){ .brandtag{display:none} .brandlogo{height:32px} }
+  /* ── MARKET WATCH — the show's ticker plate, cloned (white hairlines, condensed type) ── */
+  .tape{border-top:1px solid rgba(255,255,255,.22)}
+  .mw-plate{display:flex;align-items:center;flex:0 0 auto;padding:0 22px 0 14px;margin-right:10px;
+    background:linear-gradient(180deg,#26262c,#0b0b0e 52%,#17171c);
+    clip-path:polygon(0 0,100% 0,calc(100% - 13px) 100%,0 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.30)}
+  .mw-plate b{font-family:'Oswald',var(--gk);font-weight:600;font-size:13px;letter-spacing:.075em;text-transform:uppercase;
+    background:linear-gradient(180deg,#ffffff,#d6d6dc 48%,#9a9aa3 58%,#f0f0f4);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .tt{display:inline-flex;align-items:center;gap:7px;padding-right:16px;margin-right:16px;border-right:1px solid #26262d}
+  .tt .mwc{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-family:var(--gk);font-weight:800;font-size:9px;color:#fff;flex:0 0 auto;box-shadow:inset 0 -1px 2px rgba(0,0,0,.4)}
+  .tt .mws{font-family:var(--gk);font-weight:700;font-size:11px;color:var(--white);letter-spacing:.02em}
+  .tt .mwp{font-family:var(--mono);font-size:11px;color:var(--white);font-variant-numeric:tabular-nums}
+  .tt .mwch{font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums}
+  .tt.up .mwch{color:var(--up)} .tt.dn .mwch{color:var(--down)}
+  /* ── THE BUBBLE TANK ── */
+  .mk-view{display:inline-flex;gap:2px;margin-left:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:2px}
+  .mk-view button{border:0;background:none;color:var(--dim);font-family:var(--gk);font-weight:700;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:5px;cursor:pointer;transition:color .2s var(--ease),background .2s var(--ease)}
+  .mk-view button.on{background:rgba(91,140,255,.16);color:var(--blue-hi)}
+  .tank{flex:1;min-height:0;position:relative;overflow:hidden}
+  .tank canvas{position:absolute;inset:0;display:block}
+  .markets.view-list .tank{display:none}
+  .markets:not(.view-list) .mk-split{display:none}
 </style>
 
 <div class="app">
@@ -2007,6 +2031,7 @@
   <!-- TAPE -->
   <div class="tape">
     <div class="tape-l">
+      <div class="mw-plate"><b>Market Watch</b></div>
       <div class="fng"><span class="k">Fear &amp; Greed</span><span class="v" id="fngVal">9</span><span class="s" id="fngLbl">Extreme Fear</span></div>
     </div>
     <div class="tape-track"><div class="tape-row" id="tapeRow"></div></div>
@@ -2150,7 +2175,8 @@
       </section>
 
       <section class="markets">
-        <div class="mk-head"><span class="lab">Markets</span><span class="live"><span class="d"></span>Live</span></div>
+        <div class="mk-head"><span class="lab">Markets</span><span class="mk-view" id="mkView"><button class="on" data-v="bubbles" type="button">Bubbles</button><button data-v="list" type="button">List</button></span><span class="live"><span class="d"></span>Live</span></div>
+        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note">Spot · 24h</span></div>
@@ -2359,7 +2385,7 @@
         tape.forEach(function(t){ var id=CG[t[0]],d=id&&j[id]; if(d){ t[1]=fmtPx(d.usd); if(typeof d.usd_24h_change==='number')t[2]=d.usd_24h_change; } });
         var tr=$('tapeRow'); if(tr) tr.innerHTML=tape.map(tapeTick).join('')+tape.map(tapeTick).join('');
         mix.forEach(function(mm){ var id=CG[mm[0]],d=id&&j[id]; if(d){ mm[2]=fmtPx(d.usd); if(typeof d.usd_24h_change==='number')mm[3]=d.usd_24h_change; } });
-        renderMarkets();
+        renderMarkets(); tankSync();
       }).catch(function(){});
   }
   function fetchFG(){
@@ -2692,7 +2718,12 @@
 
   /* ===== TAPE ===== */
   var tape=[['BTC','61,274',-2.24],['ETH','1,625',-2.75],['SOL','63.46',-4.02],['DOGE','0.0836',-2.84],['WIF','0.1513',-3.12],['POPCAT','0.0404',-2.33],['BONK','0.0000043',-2.11],['PEPE','0.0000027',-2.15],['HYPE','55.91',-9.70],['JUP','1.14',-3.66]];
-  function tapeTick(t){var d=t[2]>=0; return '<span class="tt '+(d?'up':'dn')+'"><span class="s">'+t[0]+'</span><span class="p">$'+t[1]+'</span><span class="c">'+(d?'▲':'▼')+' '+Math.abs(t[2]).toFixed(2)+'%</span></span>';}
+  /* show-exact ticker: coin-colored monogram circle · TICKER · price · −abs (−pct%) */
+  var COINC={BTC:'#F7931A',ETH:'#627EEA',SOL:'#9945FF',DOGE:'#C2A633',WIF:'#A9805B',POPCAT:'#B8A9F0',BONK:'#FF6B1A',PEPE:'#3D8130',HYPE:'#50D2C1',JUP:'#3FB6A8',TRUMP:'#E8B04B',MOODENG:'#C97A4A',FARTCOIN:'#8F9467'};
+  function tapeTick(t){var pc=Number(t[2])||0, d=pc>=0, px=parseFloat(String(t[1]).replace(/,/g,''))||0;
+    var ab=px*Math.abs(pc)/100;
+    var abs= ab>=1000?ab.toLocaleString(undefined,{maximumFractionDigits:0}): ab>=1?ab.toFixed(2): ab>=0.01?ab.toFixed(3): ab>0?ab.toPrecision(2):'0.00';
+    return '<span class="tt '+(d?'up':'dn')+'"><i class="mwc" style="background:'+(COINC[t[0]]||'#4A4A52')+'">'+t[0].charAt(0)+'</i><b class="mws">'+t[0]+'</b><span class="mwp">'+t[1]+'</span><span class="mwch">'+(d?'+':'−')+abs+' ('+(d?'+':'−')+Math.abs(pc).toFixed(2)+'%)</span></span>';}
   $('tapeRow').innerHTML=tape.map(tapeTick).join('')+tape.map(tapeTick).join('');
 
   /* ===== MARKETS ===== */
@@ -2719,6 +2750,110 @@
   var PMLOGO='<svg class="pm-lockup" role="img" aria-label="Polymarket"><use href="#pmLogo"/></svg>';
   function predHeader(){ var el=document.createElement('div'); el.className='mk-group pm-head';
     el.innerHTML='<span class="lab">Predictions</span><span class="pm-by">powered by '+PMLOGO+'</span>'; return el; }
+  /* ════ THE BUBBLE TANK — Market Bubble, literally. Coins float green/red,
+     Polymarket predictions float blue. Soft physics, PHI breathing, squash-pop. ════ */
+  var TANK={cv:null,cx:null,bubs:[],raf:0,w:0,h:0,dpr:1,hover:null};
+  function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
+  function tankData(){
+    var out=[];
+    mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });
+    preds.forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
+    return out;
+  }
+  function tankRadius(d){
+    if(d.kind==='coin'){ var m=Math.min(8,Math.abs(d.val)); return 17+(m/8)*16; }   // movers grow
+    var c=Math.min(45,Math.abs(d.odds-50)); return 15+(c/45)*14;                     // conviction grows
+  }
+  function tankSize(){ var cv=TANK.cv; if(!cv||!cv.parentNode)return; var b=cv.parentNode.getBoundingClientRect();
+    if(b.width<40||b.height<40)return;
+    TANK.dpr=Math.min(2,window.devicePixelRatio||1); TANK.w=b.width; TANK.h=b.height;
+    cv.width=Math.round(TANK.w*TANK.dpr); cv.height=Math.round(TANK.h*TANK.dpr);
+    cv.style.width=TANK.w+'px'; cv.style.height=TANK.h+'px'; }
+  function tankScatter(){ TANK.bubs.forEach(function(b){
+    b.x=b.r+Math.random()*Math.max(10,TANK.w-2*b.r); b.y=b.r+Math.random()*Math.max(10,TANK.h-2*b.r); }); }
+  function tankSync(){ var fresh=tankData();
+    TANK.bubs.forEach(function(b){ var f=null,i;
+      for(i=0;i<fresh.length;i++){ var d=fresh[i];
+        if(b.d.kind==='coin'&&d.kind==='coin'&&d.sym===b.d.sym){f=d;break;}
+        if(b.d.kind==='pred'&&d.kind==='pred'&&d.q===b.d.q){f=d;break;} }
+      if(f){ b.d=f; b.br=tankRadius(f); } });
+  }
+  function tankAt(e){ if(!TANK.cv)return null; var r=TANK.cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, bs=TANK.bubs,i;
+    for(i=bs.length-1;i>=0;i--){ var b=bs[i],dx=x-b.x,dy=y-b.y; if(dx*dx+dy*dy<=b.r*b.r) return b; } return null; }
+  function tankMove(e){ var b=tankAt(e); TANK.hover=b; TANK.cv.style.cursor=b?'pointer':'default';
+    if(!b){hideTip();return;}
+    var d=b.d;
+    tip.className='tooltip show';
+    tip.innerHTML = d.kind==='coin'
+      ? '<div class="name">'+d.sym+' · '+d.name+'</div><div class="ml">$'+d.px+' · <b style="color:'+(d.val>=0?'var(--up)':'var(--down)')+'">'+(d.val>=0?'+':'')+d.val.toFixed(2)+'% </b>24h</div>'
+      : '<div class="name">'+d.q+'</div><div class="ml">'+d.vol+' Vol · '+d.cat+' · <b style="color:'+(d.side==='yes'?'var(--up)':'var(--down)')+'">'+d.odds+'% '+String(d.side).toUpperCase()+'</b></div><div class="sl">Polymarket prediction</div>';
+    moveTip(e);
+  }
+  function tankClick(e){ var b=tankAt(e); if(!b)return; b.pop=1; b.vx+=(Math.random()-.5)*1.6; b.vy-=1.2; try{spawnReact();}catch(_){} }
+  function tankFrame(ts){
+    TANK.raf=requestAnimationFrame(tankFrame);
+    var cv=TANK.cv; if(!cv||!cv.offsetParent) return;                      // hidden pane -> zero work
+    if(cv.parentNode && Math.abs(cv.parentNode.getBoundingClientRect().width-TANK.w)>4) tankSize();
+    var cx=TANK.cx, w=TANK.w, h=TANK.h, bs=TANK.bubs, t=ts*0.001, i, j;
+    for(i=0;i<bs.length;i++){ var a=bs[i];
+      a.r += (a.br-a.r)*0.06;                                              // ease to live size
+      if(a.pop>0)a.pop*=0.86;
+      if(!reduce){ a.vx+=(w/2-a.x)*0.0000316; a.vy+=(h/2-a.y)*0.0000316;   // whisper of gravity
+        a.x+=a.vx; a.y+=a.vy; a.vx*=0.995; a.vy*=0.995; }
+      var rr=a.r*1.04;
+      if(a.x<rr){a.x=rr;a.vx=Math.abs(a.vx)*0.7;} if(a.x>w-rr){a.x=w-rr;a.vx=-Math.abs(a.vx)*0.7;}
+      if(a.y<rr){a.y=rr;a.vy=Math.abs(a.vy)*0.7;} if(a.y>h-rr){a.y=h-rr;a.vy=-Math.abs(a.vy)*0.7;}
+    }
+    for(i=0;i<bs.length;i++)for(j=i+1;j<bs.length;j++){ var A=bs[i],B=bs[j];
+      var dx=B.x-A.x,dy=B.y-A.y,dist=Math.sqrt(dx*dx+dy*dy)||1,min=(A.r+B.r)*1.02;
+      if(dist<min){ var f=(min-dist)/min*0.45, nx=dx/dist, ny=dy/dist;
+        A.x-=nx*f*B.r*0.08; A.y-=ny*f*B.r*0.08; B.x+=nx*f*A.r*0.08; B.y+=ny*f*A.r*0.08;
+        A.vx-=nx*f*.18; A.vy-=ny*f*.18; B.vx+=nx*f*.18; B.vy+=ny*f*.18; }
+    }
+    cx.setTransform(TANK.dpr,0,0,TANK.dpr,0,0); cx.clearRect(0,0,w,h);
+    for(i=0;i<bs.length;i++){ var b=bs[i], d=b.d;
+      var breath=(reduce?1:1+Math.sin(t*0.618+b.ph)*0.022)+b.pop*0.22;     // PHI breathing + click squash
+      var R=Math.max(6,b.r*breath);
+      var col = d.kind==='pred' ? '#2D6FF7' : (d.val>=0?'#4ADE80':'#FF5765');
+      var hov = TANK.hover===b;
+      cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
+      var g=cx.createRadialGradient(b.x,b.y,R*0.15,b.x,b.y,R);
+      g.addColorStop(0,'rgba(10,10,14,.92)');
+      g.addColorStop(0.78,hexA(col,0.10));
+      g.addColorStop(1,hexA(col,0.26));
+      cx.fillStyle=g; cx.fill();
+      cx.lineWidth=hov?2.6:1.8; cx.strokeStyle=hexA(col,hov?1:.85);
+      cx.shadowColor=col; cx.shadowBlur=hov?22:12; cx.stroke(); cx.shadowBlur=0;
+      cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#F2F1ED';
+      if(d.kind==='coin'){
+        cx.font='700 '+Math.max(9,R*0.40).toFixed(1)+'px "Space Grotesk",sans-serif';
+        cx.fillText(d.sym, b.x, b.y-R*0.16);
+        cx.fillStyle=col; cx.font='600 '+Math.max(8,R*0.30).toFixed(1)+'px "JetBrains Mono",monospace';
+        cx.fillText((d.val>=0?'+':'')+d.val.toFixed(1)+'%', b.x, b.y+R*0.30);
+      } else {
+        cx.font='700 '+Math.max(9,R*0.42).toFixed(1)+'px "JetBrains Mono",monospace';
+        cx.fillText(d.odds+'%', b.x, b.y-R*0.14);
+        cx.fillStyle=(d.side==='yes')?'#4ADE80':'#FF5765';
+        cx.font='800 '+Math.max(7,R*0.26).toFixed(1)+'px "Space Grotesk",sans-serif';
+        cx.fillText(String(d.side).toUpperCase(), b.x, b.y+R*0.34);
+      }
+    }
+  }
+  function tankInit(){
+    var cv=$('bubbleTank'); if(!cv)return; TANK.cv=cv; TANK.cx=cv.getContext('2d');
+    TANK.bubs=tankData().map(function(d){ var r=tankRadius(d);
+      return {d:d,r:r,br:r,x:0,y:0,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,ph:Math.random()*6.283,pop:0}; });
+    tankSize(); tankScatter();
+    cv.addEventListener('mousemove',tankMove);
+    cv.addEventListener('mouseleave',function(){TANK.hover=null;hideTip();});
+    cv.addEventListener('click',tankClick);
+    window.addEventListener('resize',tankSize);
+    var mv=$('mkView'); if(mv) mv.addEventListener('click',function(e){ var btn=e.target.closest('button'); if(!btn)return;
+      [].forEach.call(mv.children,function(x){x.classList.toggle('on',x===btn);});
+      var sec=document.querySelector('.markets'); if(sec)sec.classList.toggle('view-list', btn.dataset.v==='list');
+      if(btn.dataset.v!=='list'){ tankSize(); tankScatter(); } });
+    if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
+  }
   function renderMarkets(){
     var c=$('mkCoins');
     if(c){ c.innerHTML='';
@@ -2875,7 +3010,7 @@
     clocks(); setInterval(clocks,1000);
     paintViewers();
     renderChips(); renderQuick(); renderChannels();
-    renderMarkets(); renderPredTape();
+    renderMarkets(); renderPredTape(); tankInit();
     paintSentiment();
     showConnectMsg('',false);
 
