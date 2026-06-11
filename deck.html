@@ -2956,6 +2956,10 @@
       : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>';
   });
   $('clearBtn').addEventListener('click',function(){
+    // Operator (has the control token) → GLOBAL persistent clear: the backend wipes the
+    // shared buffer + tells everyone to clear, so it stays cleared on refresh. The local
+    // feed wipe runs too for instant feedback. Viewers (no token) only clear their own view.
+    if(controlToken()){ try{ sendBackend({type:'clearChat',token:controlToken()}); }catch(_){}}
     feedEl.innerHTML=''; newCount=0; $('newPill').classList.remove('show');
   });
 
