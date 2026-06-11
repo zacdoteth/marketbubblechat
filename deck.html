@@ -2021,6 +2021,8 @@
   .pop-score.bump{animation:popbump .4s var(--ease)}
   @keyframes popbump{0%{transform:scale(1)}35%{transform:scale(1.22);color:var(--blue-hi)}100%{transform:scale(1)}}
   @media(prefers-reduced-motion:reduce){ .pop-score.bump{animation:none} }
+  /* COINQUARIUM lives only on the Deck — calm the watch modes */
+  body.lay-spotlight .tank, body.watch .tank{display:none}
   /* ── bubble view: expand to fullscreen ── */
   .tank-expand{position:absolute;right:8px;top:8px;z-index:6;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
     border:1px solid var(--line);border-radius:7px;background:rgba(8,8,12,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
@@ -2059,9 +2061,9 @@
     opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
   .flexwrap.show{opacity:1;pointer-events:auto}
   .flexcard{position:relative;width:min(92vw,360px);border-radius:22px;padding:30px 26px 20px;
-    background:radial-gradient(120% 82% at 50% -12%, rgba(91,140,255,.32), transparent 60%), linear-gradient(180deg,#10131e,#0a0b12);
-    border:1px solid rgba(91,140,255,.32);
-    box-shadow:0 42px 120px -30px rgba(0,0,0,.9), 0 0 70px -22px rgba(91,140,255,.45);
+    background:radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.06), transparent 55%), linear-gradient(180deg,#0c0c0e,#060607);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 42px 120px -30px rgba(0,0,0,.92), inset 0 0 0 1px rgba(255,255,255,.02);
     transform:scale(.94) translateY(8px);transition:transform .35s var(--ease)}
   .flexwrap.show .flexcard{transform:none}
   .flexx{position:absolute;top:12px;right:12px;width:26px;height:26px;border:0;border-radius:50%;
@@ -2070,23 +2072,30 @@
   .flexcard-logo{display:flex;justify-content:center;margin-bottom:16px}
   .flexcard-logo img{height:30px;width:auto;filter:drop-shadow(0 3px 14px rgba(91,140,255,.55))}
   .flexcard-n{text-align:center;margin-bottom:18px}
-  .flexcard-n b{display:block;font-family:var(--gk);font-weight:700;font-size:62px;line-height:1;letter-spacing:-.03em;
-    background:linear-gradient(180deg,#fff,#83A6FF);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-    filter:drop-shadow(0 0 38px rgba(131,166,255,.5))}
+  .flexcard-n b{display:block;font-family:var(--gk);font-weight:700;font-size:66px;line-height:1;letter-spacing:-.03em;
+    background:linear-gradient(180deg,#fff,#C6C9D2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 34px rgba(255,255,255,.32))}
   .flexcard-n span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
   .flexcard-board{display:flex;flex-direction:column;gap:3px;margin-bottom:18px}
   .flexrow{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:10px;padding:7px 11px;border-radius:9px;
     background:rgba(255,255,255,.03);font-family:var(--mono);font-size:12px;color:var(--dim)}
-  .flexrow.me{background:rgba(91,140,255,.15);border:1px solid rgba(91,140,255,.32);color:var(--white)}
+  .flexrow.me{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.30);color:var(--white)}
   .flexrow .fk{font-weight:700;text-align:center;color:var(--dim-2)}
   .flexrow .fk.g1{color:#F6C96B} .flexrow .fk.g2{color:#CBD2DC} .flexrow .fk.g3{color:#D69B6B}
   .flexrow .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .flexrow.me .fn{font-weight:700}
   .flexrow .fs{font-variant-numeric:tabular-nums;color:var(--white);font-weight:700}
   .flexshare{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:0;border-radius:12px;
-    background:var(--blue);color:#fff;cursor:pointer;font-family:var(--gk);font-weight:600;font-size:13.5px;
+    background:#F2F1ED;color:#0a0a0c;cursor:pointer;font-family:var(--gk);font-weight:700;font-size:13.5px;
     transition:background .2s var(--ease),transform .08s var(--ease)}
-  .flexshare:hover{background:var(--blue-hi)} .flexshare:active{transform:scale(.98)}
+  .flexshare:hover{background:#fff} .flexshare:active{transform:scale(.98)}
+  .flextoast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.85);z-index:6;display:flex;align-items:center;gap:9px;
+    padding:13px 20px;border-radius:14px;background:rgba(10,10,12,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.16);box-shadow:0 22px 60px -16px rgba(0,0,0,.85);
+    color:#fff;font-family:var(--gk);font-weight:600;font-size:14px;opacity:0;pointer-events:none;
+    transition:opacity .26s var(--ease),transform .34s var(--ease)}
+  .flextoast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .flextoast svg{width:18px;height:18px;color:var(--up)}
   .flexshare svg{width:15px;height:15px}
   .flexcard-tag{margin-top:11px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim-2)}
   .flexacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
@@ -2097,6 +2106,15 @@
   .flexbtn:active{transform:scale(.98)} .flexbtn svg{width:14px;height:14px}
   .pop-score:hover{border-color:rgba(91,140,255,.45);color:var(--white)}
   @media(prefers-reduced-motion:reduce){ .flexcard{transition:none} }
+  /* ── stage fullscreen icon (Theater) ── */
+  .player{position:relative}
+  .oa-full{position:absolute;top:10px;right:10px;z-index:7;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(8,8,12,.58);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    color:#fff;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s var(--ease),background .2s var(--ease)}
+  .player:hover .oa-full{opacity:.9;pointer-events:auto}
+  body.watch .oa-full{opacity:.85;pointer-events:auto}
+  .oa-full:hover{background:rgba(22,22,28,.85);opacity:1}
+  .oa-full svg{width:16px;height:16px}
 </style>
 
 <div class="app">
@@ -2109,12 +2127,13 @@
       <div class="flexcard-logo"><img id="flexLogo" src="" alt="Market Bubble"/></div>
       <div class="flexcard-n"><b id="flexN">0</b><span>bubbles popped</span></div>
       <div class="flexcard-board" id="flexBoard"></div>
+      <div class="flextoast" id="flexToast" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>image copied</span></div>
       <div class="flexacts">
         <button class="flexbtn" id="flexCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copy image</button>
         <button class="flexbtn" id="flexSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> Save</button>
       </div>
-      <button class="flexshare" id="flexShare"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg> Share on X</button>
-      <div class="flexcard-tag" id="flexTag">marketbubble &middot; every chat, one feed</div>
+      <button class="flexshare" id="flexShare"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg> Copy + Share on X</button>
+      <div class="flexcard-tag" id="flexTag">pop the market &middot; MarketBubble.com</div>
     </div>
   </div>
 
@@ -2272,6 +2291,7 @@
             </div>
           </div>
           <div class="reacts" id="reacts"></div>
+          <button class="oa-full" id="oaFull" type="button" title="Fullscreen" aria-label="Fullscreen the stage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
         </div>
         <div class="oa-meta">
           <div class="ti">Liquidity, Rate Cuts &amp; the Next Cycle</div>
@@ -2916,30 +2936,33 @@
     var c=document.createElement('canvas'); c.width=W*s; c.height=H*s;
     var x=c.getContext('2d'); x.scale(s,s);
     x.beginPath(); if(x.roundRect)x.roundRect(0,0,W,H,30); else x.rect(0,0,W,H); x.clip();
-    var bg=x.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#10131e'); bg.addColorStop(1,'#0a0b12'); x.fillStyle=bg; x.fillRect(0,0,W,H);
-    var rg=x.createRadialGradient(W/2,-50,30,W/2,-50,W); rg.addColorStop(0,'rgba(91,140,255,.30)'); rg.addColorStop(1,'rgba(91,140,255,0)'); x.fillStyle=rg; x.fillRect(0,0,W,H);
+    var bg=x.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#0c0c0e'); bg.addColorStop(1,'#060607'); x.fillStyle=bg; x.fillRect(0,0,W,H);
+    var rg=x.createRadialGradient(W/2,-40,20,W/2,-40,W*0.86); rg.addColorStop(0,'rgba(255,255,255,.06)'); rg.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=rg; x.fillRect(0,0,W,H);
     /* floating signature bubbles in the margins — red/green/blue, glowing */
-    var deco=[[64,150,42,'#FF5765'],[556,124,34,'#4ADE80'],[52,H-126,46,'#5B8CFF'],[566,H-96,30,'#4ADE80'],[300,H-150,24,'#FF5765']];
-    deco.forEach(function(d){ var bx=d[0],by=d[1],br=d[2],col=d[3];
-      x.save(); x.globalAlpha=.42; x.shadowColor=col; x.shadowBlur=26;
-      x.beginPath(); x.arc(bx,by,br,0,6.2832); x.fillStyle=col; x.fill(); x.shadowBlur=0;
-      var g=x.createRadialGradient(bx-br*.3,by-br*.34,br*.05,bx,by,br);
-      g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(.5,'rgba(255,255,255,.08)'); g.addColorStop(1,'rgba(255,255,255,0)');
-      x.fillStyle=g; x.fill(); x.restore(); });
+    var deco=[[60,150,44],[558,122,34],[50,H-122,48],[566,H-92,30],[300,H-150,22]];
+    deco.forEach(function(d){ var bx=d[0],by=d[1],br=d[2];
+      x.save(); x.globalAlpha=.55; x.shadowColor='rgba(255,255,255,.45)'; x.shadowBlur=22;
+      var g=x.createRadialGradient(bx-br*.2,by-br*.22,br*.05,bx,by,br);
+      g.addColorStop(0,'rgba(255,255,255,.40)'); g.addColorStop(.55,'rgba(255,255,255,.11)'); g.addColorStop(1,'rgba(255,255,255,.02)');
+      x.beginPath(); x.arc(bx,by,br,0,6.2832); x.fillStyle=g; x.fill(); x.shadowBlur=0;
+      x.lineWidth=1; x.strokeStyle='rgba(255,255,255,.20)'; x.stroke();
+      var sg=x.createRadialGradient(bx-br*.3,by-br*.34,0,bx-br*.3,by-br*.34,br*.42);
+      sg.addColorStop(0,'rgba(255,255,255,.75)'); sg.addColorStop(1,'rgba(255,255,255,0)');
+      x.beginPath(); x.arc(bx-br*.3,by-br*.34,br*.42,0,6.2832); x.fillStyle=sg; x.fill(); x.restore(); });
     /* logo (cloned from the masthead — already loaded, never 404s) */
     var bl=document.querySelector('.brandlogo');
     if(bl&&bl.complete&&bl.naturalWidth){ var lh=44, lw=lh*bl.naturalWidth/bl.naturalHeight; x.drawImage(bl,(W-lw)/2,50,lw,lh); }
     /* the hero number — gradient fill, glowing */
-    x.save(); x.shadowColor='rgba(131,166,255,.55)'; x.shadowBlur=34; x.textAlign='center';
-    var ng=x.createLinearGradient(0,118,0,224); ng.addColorStop(0,'#ffffff'); ng.addColorStop(1,'#83A6FF');
-    x.fillStyle=ng; x.font='700 112px "Space Grotesk",system-ui,sans-serif'; x.fillText(data.n, W/2, 218); x.restore();
+    x.save(); x.shadowColor='rgba(255,255,255,.32)'; x.shadowBlur=30; x.textAlign='center';
+    var ng=x.createLinearGradient(0,116,0,228); ng.addColorStop(0,'#ffffff'); ng.addColorStop(1,'#C6C9D2');
+    x.fillStyle=ng; x.font='700 116px "Space Grotesk",system-ui,sans-serif'; x.fillText(data.n, W/2, 220); x.restore();
     flexSpaced(x,'BUBBLES POPPED',W/2,254,7,'600 15px "JetBrains Mono",monospace','rgba(150,160,180,.92)');
     /* leaderboard rows */
     var ry=topH;
     data.rows.forEach(function(r){
       x.beginPath(); if(x.roundRect)x.roundRect(padX,ry,W-padX*2,rowH,12); else x.rect(padX,ry,W-padX*2,rowH);
-      x.fillStyle=r.me?'rgba(91,140,255,.16)':'rgba(255,255,255,.035)'; x.fill();
-      if(r.me){ x.lineWidth=1.4; x.strokeStyle='rgba(91,140,255,.42)'; x.stroke(); }
+      x.fillStyle=r.me?'rgba(255,255,255,.10)':'rgba(255,255,255,.035)'; x.fill();
+      if(r.me){ x.lineWidth=1.4; x.strokeStyle='rgba(255,255,255,.34)'; x.stroke(); }
       x.textAlign='center'; x.fillStyle=r.rank===1?'#F6C96B':r.rank===2?'#CBD2DC':r.rank===3?'#D69B6B':'rgba(150,160,180,.85)';
       x.font='700 17px "JetBrains Mono",monospace'; x.fillText(String(r.rank), padX+30, ry+rowH/2+6);
       x.textAlign='left'; x.fillStyle=r.me?'#ffffff':'rgba(176,186,205,.94)'; x.font=(r.me?'700 ':'500 ')+'18px "JetBrains Mono",monospace';
@@ -2949,21 +2972,26 @@
       ry+=rowH+gap;
     });
     /* footer — brand + the link (the "referral code" slot) */
-    flexSpaced(x,'EVERY CHAT · TWITCH · KICK · X · ONE FEED',W/2,H-50,2.5,'600 11px "JetBrains Mono",monospace','rgba(120,130,150,.8)');
-    flexSpaced(x,'marketbubblechat-fawn.vercel.app',W/2,H-28,1,'700 13px "JetBrains Mono",monospace','rgba(131,166,255,.95)');
+    flexSpaced(x,'EVERY CHAT · TWITCH · KICK · X · ONE FEED',W/2,H-50,2.5,'600 11px "JetBrains Mono",monospace','rgba(150,150,156,.78)');
+    flexSpaced(x,'MarketBubble.com',W/2,H-26,1.5,'700 15px "Space Grotesk",sans-serif','rgba(255,255,255,.94)');
     return c;
   }
   function flexTagFlash(msg){ var t=$('flexTag'); if(!t)return; t.textContent=msg;
-    clearTimeout(flexTagFlash._t); flexTagFlash._t=setTimeout(function(){ t.innerHTML='marketbubble &middot; every chat, one feed'; },2800); }
+    clearTimeout(flexTagFlash._t); flexTagFlash._t=setTimeout(function(){ t.innerHTML='pop the market &middot; MarketBubble.com'; },2800); }
   function flexSaveBlob(bl){ try{ var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download='market-bubble-popped.png';
     document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); }catch(e){} }
-  function flexCopy(fromShare){ var c; try{ c=flexRender(); }catch(e){ return; }
-    try{ c.toBlob(function(bl){ if(!bl)return;
-      if(navigator.clipboard && window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':bl})]).then(
-        function(){ flexTagFlash(fromShare?'image copied — paste it into the tweet':'image copied — paste it anywhere'); },
-        function(){ flexSaveBlob(bl); flexTagFlash('saved to downloads — attach it'); }); }
-      else { flexSaveBlob(bl); flexTagFlash('saved to downloads — attach it'); }
-    },'image/png'); }catch(e){ flexSaveBlob; } }
+  function flexToastShow(msg){ var t=$('flexToast'); if(!t)return; var sp=t.querySelector('span'); if(sp)sp.textContent=msg||'image copied';
+    t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+    clearTimeout(flexToastShow._t); flexToastShow._t=setTimeout(function(){ t.classList.remove('show'); },1700); }
+  function flexBlobSync(){ var c=flexRender(); var d=c.toDataURL('image/png').split(',')[1];
+    var bin=atob(d), u8=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+    return new Blob([u8],{type:'image/png'}); }
+  function flexCopy(fromShare){ var bl; try{ bl=flexBlobSync(); }catch(e){ return; }
+    if(navigator.clipboard && window.ClipboardItem){
+      try{ navigator.clipboard.write([new ClipboardItem({'image/png':bl})]).catch(function(){ flexSaveBlob(bl); }); }catch(e){ flexSaveBlob(bl); }
+      flexToastShow('image copied'); flexTagFlash(fromShare?'paste it into the tweet':'paste it anywhere');
+    } else { flexSaveBlob(bl); flexToastShow('saved to downloads'); flexTagFlash('attach it from downloads'); }
+  }
   function flexDownload(){ var c; try{ c=flexRender(); }catch(e){ return; }
     c.toBlob(function(bl){ if(bl){ flexSaveBlob(bl); flexTagFlash('saved to downloads'); } },'image/png'); }
   function openFlex(){ var w=$('flexWrap'); if(!w)return;
@@ -2972,9 +3000,10 @@
     var bd=$('flexBoard'); if(bd) bd.innerHTML=flexBuild();
     w.classList.add('show'); w.setAttribute('aria-hidden','false'); }
   function closeFlex(){ var w=$('flexWrap'); if(w){ w.classList.remove('show'); w.setAttribute('aria-hidden','true'); } }
-  function flexShare(){ var t='I popped '+popCount.toLocaleString()+' bubbles on the Market Bubble command deck 🫧\nevery chat — twitch · kick · x — in one feed.\npop the market 👇';
-    var url='https://twitter.com/intent/tweet?text='+encodeURIComponent(t)+'&url='+encodeURIComponent('https://marketbubblechat-fawn.vercel.app/deck.html');
-    flexCopy(true); try{ window.open(url,'_blank','noopener'); }catch(e){} }
+  function flexShare(){ var t='i popped '+popCount.toLocaleString()+' bubbles on @MarketBubble 🫧\n\npop the market 👇 MarketBubble.com';
+    var url='https://twitter.com/intent/tweet?text='+encodeURIComponent(t);
+    try{ var bl=flexBlobSync(); if(bl&&navigator.clipboard&&window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':bl})]).catch(function(){}); } flexToastShow('image copied — opening X'); }catch(e){}
+    try{ window.open(url,'_blank','noopener'); }catch(e){} }
   function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
   function tankData(){
     var out=[];
@@ -3065,35 +3094,31 @@
       var R=Math.max(5,b.r*breath*sc);
       var mag = d.kind==='pred' ? Math.min(1,Math.abs((d.odds||50)-50)/40) : Math.min(1,Math.abs(d.val)/8);
       var hue = d.kind==='pred' ? 221 : (d.val>=0?142:356);
-      var sat = Math.round((d.kind==='pred'?72:66)+mag*28);
+      var sat = Math.round((d.kind==='pred'?64:50)+mag*24);
       var lig = Math.round(46+mag*15);
       var hsla=function(a){ return 'hsla('+hue+','+sat+'%,'+lig+'%,'+a+')'; };
       var col=hsla(1);
       var hov = TANK.hover===b;
       var hsl2=function(l,a){ return 'hsla('+hue+','+sat+'%,'+l+'%,'+a+')'; };
-      // soft aura — the colour breathes into the water
+      // soft aura — a quiet halo of the bubble's colour
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      cx.shadowColor=col; cx.shadowBlur=(hov?24:12)+mag*14;
-      // lit glass sphere — luminous core, deep saturated edge (dark rides the OUTSIDE, like a real orb)
-      var g=cx.createRadialGradient(b.x-R*0.20,b.y-R*0.22,R*0.05, b.x,b.y,R*1.02);
-      g.addColorStop(0,    hsl2(Math.min(92,lig+36), 1));
-      g.addColorStop(0.48, hsl2(lig+10,              1));
-      g.addColorStop(0.82, hsl2(Math.max(22,lig-6),  1));
-      g.addColorStop(1,    hsl2(Math.max(14,lig-24), 1));
+      cx.shadowColor=col; cx.shadowBlur=(hov?16:8)+mag*9;
+      // translucent glass — dark colour-tinted body, the SIGNAL lives in the rim (subtle, not neon)
+      var g=cx.createRadialGradient(b.x-R*0.22,b.y-R*0.26,R*0.04, b.x,b.y,R);
+      g.addColorStop(0,   hsl2(lig+16, 0.30));
+      g.addColorStop(0.58,hsl2(lig,    0.13));
+      g.addColorStop(1,   hsl2(lig+4,  0.46));
       cx.fillStyle=g; cx.fill(); cx.shadowBlur=0;
-      // glossy top rim-light — the glass catches the sky
-      cx.beginPath(); cx.arc(b.x,b.y,R*0.93,-2.45,-0.75); cx.lineWidth=Math.max(1,R*0.05);
-      cx.lineCap='round'; cx.strokeStyle='rgba(255,255,255,'+(0.30+mag*0.10)+')'; cx.stroke(); cx.lineCap='butt';
-      // deep edge ring — seals the sphere, darkest on the outside
+      // bright thin rim — the colour signal (green up / red down / blue prediction)
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      cx.lineWidth=(hov?2:1.2); cx.strokeStyle=hsl2(Math.max(16,lig-18),hov?0.95:0.8); cx.stroke();
-      // single specular glint, top-left
-      var sx=b.x-R*0.30, sy=b.y-R*0.34, sr=Math.max(2,R*0.27);
+      cx.lineWidth=(hov?2:1.1)+mag*0.6; cx.strokeStyle=hsl2(Math.min(76,lig+20),hov?0.95:0.62); cx.stroke();
+      // soft window glint, top-left
+      var sx=b.x-R*0.30, sy=b.y-R*0.34, sr=Math.max(2,R*0.26);
       var spg=cx.createRadialGradient(sx,sy,0,sx,sy,sr);
-      spg.addColorStop(0,'rgba(255,255,255,0.92)'); spg.addColorStop(0.4,'rgba(255,255,255,0.20)'); spg.addColorStop(1,'rgba(255,255,255,0)');
+      spg.addColorStop(0,'rgba(255,255,255,0.5)'); spg.addColorStop(0.5,'rgba(255,255,255,0.08)'); spg.addColorStop(1,'rgba(255,255,255,0)');
       cx.beginPath(); cx.arc(sx,sy,sr,0,6.2832); cx.fillStyle=spg; cx.fill();
-      // text shadow keeps white type crisp on the luminous body (no dark centre disk)
-      cx.shadowColor='rgba(4,6,12,0.6)'; cx.shadowBlur=Math.max(2,R*0.07); cx.shadowOffsetY=0.6;
+      // faint text shadow keeps white type crisp on the glass
+      cx.shadowColor='rgba(0,0,0,0.45)'; cx.shadowBlur=Math.max(1.5,R*0.05); cx.shadowOffsetY=0.4;
       cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#F2F1ED';
       if(d.kind==='coin'){
         var img=tankLogo(d.sym);
@@ -3230,6 +3255,8 @@
     var fsh=$('flexShare'); if(fsh) fsh.addEventListener('click',flexShare);
     var fcp=$('flexCopy'); if(fcp) fcp.addEventListener('click',function(){ flexCopy(false); });
     var fsv=$('flexSave'); if(fsv) fsv.addEventListener('click',flexDownload);
+    var oaF=$('oaFull'); if(oaF) oaF.addEventListener('click',function(){ var el=document.querySelector('.player');
+      try{ if(document.fullscreenElement){ document.exitFullscreen(); } else if(el&&el.requestFullscreen){ el.requestFullscreen(); } }catch(e){} });
     var fw=$('flexWrap'); if(fw) fw.addEventListener('click',function(e){ if(e.target===fw) closeFlex(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('tankfull')) tankToggleFull(); });
     if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
@@ -3269,7 +3296,7 @@
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
   function playerSrc(s){
-    if(s.plat==='twitch') return 'https://player.twitch.tv/?channel='+encodeURIComponent(s.ch)+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted=true&autoplay=true';
+    if(s.plat==='twitch') return 'https://player.twitch.tv/?'+(s.video?('video='+encodeURIComponent(s.video)+'&time='+encodeURIComponent(s.time||'0h0m0s')):('channel='+encodeURIComponent(s.ch)))+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted=true&autoplay=true';
     if(s.plat==='kick')   return 'https://player.kick.com/'+encodeURIComponent(s.ch)+'?muted=true&autoplay=true';
     return '';
   }
@@ -3303,11 +3330,10 @@
       var keys=live.map(camKey), fresh=keys.filter(function(k){return !prevKeys[k];});
       if(fresh.length) featuredKey=fresh[fresh.length-1];
       prevKeys={}; keys.forEach(function(k){ prevKeys[k]=1; });
-      if(live.length===0){      // idle: the dope ambient stage
-        feeds.classList.remove('has-live'); if(pl)pl.classList.remove('liveon');
-        var he=hero.querySelector('.vf-embed'); if(he)he.remove();
-        hero.classList.remove('isLive'); hero.removeAttribute('data-ch');
-        featuredKey=null; renderSwitch(live); return;
+      if(live.length===0){      // no live channel connected → default to the latest Market Bubble show (feels live)
+        setEmbed(hero,{plat:'twitch',ch:'marketbubble',video:'2788673017',time:'2h23m0s'});
+        hero.classList.add('isLive'); feeds.classList.add('has-live'); if(pl)pl.classList.add('liveon');
+        featuredKey=null; renderSwitch([]); return;
       }
       /* live: JUST the stream — full-bleed, no overlay. The switcher reveals on hover. */
       var feat=null,i; for(i=0;i<live.length;i++){ if(camKey(live[i])===featuredKey){ feat=live[i]; break; } }
