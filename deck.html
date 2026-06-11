@@ -3488,6 +3488,8 @@
     try{
       setLayout('deck'); document.body.classList.add('cinema');
       root.classList.add('on'); root.setAttribute('aria-hidden','false');
+      try{ var kf=document.querySelector('.feeds .vf.hero .vf-embed iframe');      // kick the player awake — tab-sleep pauses the VOD;
+        if(kf){ var ks=kf.src; kf.src=ks; } }catch(e){}                             // a fresh load under the title card always autoplays
       $('cineFade').classList.add('black');
       $('cineTitle').classList.add('show');
       try{ runReel(); }catch(e){}
