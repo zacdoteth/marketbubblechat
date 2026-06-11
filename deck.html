@@ -2056,7 +2056,7 @@
   body.watch .dimlights{opacity:1}
   body.watch .onair{position:relative;z-index:60}
   body.watch .player{box-shadow:0 0 90px -12px rgba(91,140,255,.28), 0 34px 90px -24px rgba(0,0,0,.85); transition:box-shadow .6s var(--ease)}
-  body.watch .oa-meta{position:relative;z-index:60}
+  body.watch .oa-meta{display:none}
   @media(prefers-reduced-motion:reduce){ .dimlights{transition:none} }
   /* ── viral flex / share card ── */
   .flexwrap{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
@@ -3449,8 +3449,8 @@
     setTimeout(function(){ try{b.remove();}catch(_){}} ,1900); }catch(e){} }
   function reelGolden(){ try{ sentiment=92; paintSentiment(); for(var i=0;i<10;i++)pulseHit(); reelBloom(); }catch(e){} }
   var SEED_SRC=[['twitch','marketbubble'],['twitch','marketbubble'],['twitch','marketbubble'],['kick','marketbubble'],['kick','marketbubble'],['x','Banks'],['x','Banks'],['x','Z'],['x','Z'],['x','blknoiz06']];
-  var SEED_HOSTS=[['Banks','x','Banks'],['Z','x','Z'],['Banks','twitch','marketbubble'],['Z','kick','marketbubble']];
-  var HOST_LINES=['combined chat going CRAZY rn','we are LIVE on all three 🔴','one feed looking clean','yall seeing every platform in here??','welcome to the bubble 🫧','Z u seeing kick chat lol','shoutout the X side'];
+  var SEED_HOSTS=[['Banks','x','Banks'],['Z','x','Z'],['Ansem','x','blknoiz06'],['Banks','twitch','marketbubble'],['Z','kick','marketbubble'],['Ansem','twitch','marketbubble']];
+  var HOST_LINES=['combined chat going CRAZY rn','we are LIVE on all three 🔴','one feed looking clean','yall seeing every platform in here??','welcome to the bubble 🫧','Z u seeing kick chat lol','shoutout the X side','chat we outside 🫧','one room. every platform. lfg'];
   var SEED_LINES=['every chat in one place FINALLY 🙏','LFG market bubble','combined viewers actually insane','BTC about to send 🚀','kick chat loudest fr','X fam pulling up rn','this UI is clean af','ansem cooking 🍳','banks W','popping bubbles all day 🫧','green candles incoming','sentiment flipping bullish 📈','where my degens at','one feed to rule them all','dopamine overload 🔥','best aggregator no cap','HYPE leading again','solana szn?','gm gm','this is the future of streaming','no more 4 windows lmao','source labels are clean','presented by polymarket 🟦','watching from kick 👀','twitch gang reporting in','goated dashboard'];
   var SEED_H=['degenmike','liquidLarry','satoshi_stan','vaultVera','gm_gary','rektRiley','moonmaxi','candle_cody','onchain_otis','tetherTed','apefromhome','laser_eyes_lou','wifhat_wanda','bagholder99','cryptoCarl','vortexx','john1997','imperixxl'];
   function reelSeedMsg(){ try{
