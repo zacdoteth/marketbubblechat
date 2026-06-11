@@ -394,7 +394,7 @@
   @media(min-width:1181px){
     body.lay-spotlight .deck{
       grid-template-columns:284px minmax(0,1fr) 372px;
-      grid-template-rows:minmax(0,1fr) 168px;
+      grid-template-rows:auto minmax(0,1fr);
       grid-template-areas:"stats onair wire" "stats markets wire";
     }
     body.lay-spotlight .rightcol{display:contents}
@@ -402,10 +402,10 @@
     body.lay-spotlight .wire{grid-area:wire;border-left:1px solid var(--line);min-height:0}     /* unified chat: full-height rail beside the stage */
     body.lay-spotlight .onair{grid-area:onair;border-left:1px solid var(--line)}
     body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);border-top:1px solid var(--line);min-height:0;display:flex;flex-direction:column;padding:0}
-    body.lay-spotlight .markets .mk-head, body.lay-spotlight .markets .mk-split, body.lay-spotlight .markets .mk-foot{display:none}  /* a clean bubble ribbon — nothing else */
+    body.lay-spotlight .markets .mk-split, body.lay-spotlight .markets .mk-foot{display:none}  /* ribbon = MARKETS header + bubbles (charts/preds stay on the Deck) */
     body.lay-spotlight .markets .tank{display:block;flex:1;min-height:0;margin:0;border-radius:0}
     body.lay-spotlight .oa-meta, body.lay-spotlight .onair .oa-head{display:none}              /* drop title/sub buttons — more room for the show */
-    body.lay-spotlight .player{margin:12px;height:100%}
+    body.lay-spotlight .player{margin:12px}
   }
   body.disconnected .tb-live{opacity:.45}
   body.disconnected .tb-live .d{animation:none;background:var(--dim)}
