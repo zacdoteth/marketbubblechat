@@ -1818,6 +1818,8 @@
   .tb-sound.on .eqi i:nth-child(3){animation-delay:0s}
   @keyframes eq{0%,100%{height:4px}50%{height:13px}}
   @media(prefers-reduced-motion:reduce){ .tb-sound.on .eqi i{animation:none;height:9px} }
+  /* ── admin door — quiet sliders icon; blue (operator colour) when you're inside ── */
+  .tb-adm svg{width:15px;height:15px;flex:0 0 auto}
   /* ── NATIVE MB chat identity (brand blue) ── */
   .wmsg.mb .usr{color:var(--blue-hi)}
   .wmsg.mb .plat{background:rgba(91,140,255,.16);color:var(--blue-hi)}
@@ -2264,6 +2266,7 @@
       <div class="tb-stat"><span class="tb-live"><span class="d"></span>LIVE</span></div>
       <div class="tb-stat"><span class="v"><span id="mpmTop">312</span></span><span class="k">Msg / min</span></div>
     </div>
+    <button class="tb-sound tb-adm" id="admBtn" type="button" title="Admin — manage streams" aria-label="Admin panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h8m6 0h2M4 12h2m6 0h8M4 18h8m6 0h2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button>
     <button class="tb-sound" id="soundBtn" type="button" title="Play theme music" aria-pressed="false" aria-label="Theme music"><svg class="snd-note" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg><span class="eqi" aria-hidden="true"><i></i><i></i><i></i></span></button>
   </header>
 
@@ -3396,6 +3399,18 @@
     var fsh=$('flexShare'); if(fsh) fsh.addEventListener('click',flexShare);
     var fcp=$('flexCopy'); if(fcp) fcp.addEventListener('click',function(){ flexCopy(false); });
     var fsv=$('flexSave'); if(fsv) fsv.addEventListener('click',flexDownload);
+    /* admin door — /add is the panel route; the key never lives in this file (controlToken
+       already saved ?key= to localStorage on the operator's first keyed visit) */
+    var adm=$('admBtn');
+    if(adm){
+      if(IS_OP){ adm.classList.add('on'); adm.title='Exit admin — back to the show'; adm.setAttribute('aria-label','Exit admin'); }
+      adm.addEventListener('click',function(){
+        try{
+          if(location.protocol==='file:'){ var u=new URL(location.href); if(IS_OP) u.searchParams.delete('add'); else u.searchParams.set('add','1'); u.searchParams.delete('key'); location.href=u.href; }
+          else location.href = IS_OP ? '/' : '/add';
+        }catch(_){ location.href = IS_OP ? '/' : '/add'; }
+      });
+    }
     var oc=$('opClear'); if(oc) oc.addEventListener('click',function(){ sendBackend({type:'clearChat',token:controlToken()}); });
     var os=$('opSlow'); if(os) os.addEventListener('change',function(){ sendBackend({type:'slowMode',seconds:(parseInt(os.value,10)||0),token:controlToken()}); });
     var px=$('pipX'); if(px) px.addEventListener('click',function(ev){ ev.stopPropagation(); document.body.classList.add('pip-off'); });
