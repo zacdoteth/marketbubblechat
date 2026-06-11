@@ -2135,10 +2135,14 @@
   .cine-title.show{opacity:1;transform:none}
   .cine-title img{height:74px;width:auto;filter:drop-shadow(0 6px 44px rgba(255,255,255,.16))}
   .cine-title .cine-tag{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
-  .cine-cap{position:absolute;left:50%;bottom:11vh;transform:translate(-50%,14px);text-align:center;opacity:0;transition:opacity .5s var(--ease),transform .65s var(--ease)}
+  .cine-cap{position:absolute;left:50%;bottom:10vh;transform:translate(-50%,16px);text-align:center;opacity:0;transition:opacity .5s var(--ease),transform .65s var(--ease);width:max-content;max-width:80vw}
+  .cine-cap::before{content:"";position:absolute;inset:-34px -90px;z-index:-1;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.62), transparent 72%)}      /* local scrim — reads on any footage */
   .cine-cap.show{opacity:1;transform:translate(-50%,0)}
-  .cine-cap .ey{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:8px}
-  .cine-cap .ln{font-family:var(--gk);font-weight:700;font-size:clamp(19px,2.1vw,27px);letter-spacing:-.01em;color:#fff;text-shadow:0 2px 26px rgba(0,0,0,.85),0 0 60px rgba(0,0,0,.5)}
+  .cine-cap .ey{display:block;font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.7)}
+  .cine-cap .ln{font-family:var(--gk);font-weight:800;font-size:clamp(27px,3vw,40px);letter-spacing:-.012em;color:#fff;
+    -webkit-text-stroke:6px rgba(0,0,0,.88);paint-order:stroke fill;                       /* a real stroke, behind the fill */
+    text-shadow:0 3px 20px rgba(0,0,0,.9),0 0 80px rgba(0,0,0,.55)}
   .cine-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;opacity:0;transition:opacity .9s var(--ease)}
   .cine-end.show{opacity:1}
   .cine-end img{height:64px;width:auto;margin-bottom:8px}
