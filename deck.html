@@ -2779,7 +2779,9 @@
     TANK.bubs.forEach(function(b){ b.br=Math.max(13,Math.min(maxR,b.base*k)); }); }
   var TANKIMG={};
   function tankLogo(sym){ var u=LOGOS[sym]; if(!u)return null; var o=TANKIMG[sym];
-    if(!o){ o=new Image(); o.crossOrigin='anonymous'; o.src=u; TANKIMG[sym]=o; }
+    if(!o){ o=new Image(); o.crossOrigin='anonymous';
+      o.onerror=function(){ var p=new Image(); p.src=u; TANKIMG[sym]=p; };   // CORS refused -> plain load
+      o.src=u; TANKIMG[sym]=o; }
     return (o.complete&&o.naturalWidth>0)?o:null; }
   function tankWrap(c2,txt,maxW,maxLines){
     var words=String(txt).replace(/\?$/,'').split(/\s+/), lines=[], cur='', i;
