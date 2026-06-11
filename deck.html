@@ -2155,6 +2155,9 @@
   #vTotal.tick-up{animation:tkup .8s var(--ease)} #vTotal.tick-dn{animation:tkdn .8s var(--ease)}
   @keyframes tkup{0%{color:var(--up)}100%{color:inherit}} @keyframes tkdn{0%{color:var(--down)}100%{color:inherit}}
   @media(prefers-reduced-motion:reduce){#vTotal.tick-up,#vTotal.tick-dn{animation:none}}
+  .tb-stat.cine-hot{animation:cinehot 1.4s var(--ease) 2}
+  @keyframes cinehot{0%,100%{transform:scale(1)}38%{transform:scale(1.16);filter:drop-shadow(0 0 18px rgba(131,166,255,.65))}}
+  @media(prefers-reduced-motion:reduce){.tb-stat.cine-hot{animation:none}}
 </style>
 
 <div class="app">
@@ -2451,7 +2454,10 @@
   var ROSTER = [];
   var R_TICK = 1;
 
-  var feedEl=$('feed'), filter='all', autoscroll=true, paused=false;
+  var feedEl=$('feed'), filter='all', autoscroll=true, paused=false, hoverHold=false;
+  feedEl.addEventListener('mouseenter',function(){ hoverHold=true; });
+  feedEl.addEventListener('mouseleave',function(){ hoverHold=false;
+    if(autoscroll && !paused){ feedEl.scrollTop=feedEl.scrollHeight; } });
   var msgPerMin=0, velPeak=680, newCount=0, mentionTotal=0, allTotal=0;
   var recent=[]; // for rivalry/hype
   var topTally={};
@@ -2792,7 +2798,7 @@
     topTally[v.h]=(topTally[v.h]||0)+1;
     chMsgCount[v.src]=(chMsgCount[v.src]||0)+1;
 
-    if(autoscroll && !paused){ feedEl.scrollTop=feedEl.scrollHeight; }
+    if(autoscroll && !paused && !hoverHold){ feedEl.scrollTop=feedEl.scrollHeight; }
     else { newCount++; $('newCount').textContent=newCount; $('newPill').classList.add('show'); }
   }
   function matchFilter(el){
@@ -3432,7 +3438,7 @@
   function reelConnect(spec){ try{ var pp=String(spec).split('/'); var plat=pp[0], ch=pp[1]||pp[0];
     var url=(plat==='kick'?'https://kick.com/':plat==='x'?'https://x.com/':'https://twitch.tv/')+ch;
     if(backendReady){ sendBackend({type:'connectStream',url:url,token:controlToken()}); showConnectMsg('Connecting '+plat+'·'+ch+' …',false); } }catch(e){} }
-  function reelSay(t){ try{ var i=$('mbsay'); if(i){ i.value=t; sendNative(); } }catch(e){} }
+  function reelSay(t){ try{ var i=$('mbsay'); if(i){ i.value=t; sendNative(); i.blur(); } }catch(e){} }
   function reelHover(){ try{ var chip=document.querySelector('#streamChips .chip'); var s=sources[0];
     if(chip&&s){ var r=chip.getBoundingClientRect(); showStreamTip({clientX:r.left+r.width/2,clientY:r.bottom+8}, s); } }catch(e){} }
   function reelBloom(){ try{ var b=document.createElement('div'); b.className='reel-bloom'; document.body.appendChild(b);
@@ -3478,7 +3484,7 @@
   }
   document.addEventListener('keydown',function(e){
     if((e.key==='R'||e.key==='r') && e.shiftKey){
-      var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)) return;
+      var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)){ if((t.value||'').length) return; t.blur(); }
       e.preventDefault(); runReel();
     }
   });
@@ -3489,12 +3495,26 @@
     $('cineEy').textContent=ey; $('cineLn').textContent=ln;
     c.classList.remove('show'); void c.offsetWidth; c.classList.add('show');
     clearTimeout(CINE.capT); CINE.capT=setTimeout(function(){ c.classList.remove('show'); },hold||2800); }
+  function cineCam(sel,scale,ms){ try{ if(reduce)return;
+    var de=document.documentElement, ov=$('cine');
+    var x=innerWidth/2, y=innerHeight/2;
+    if(sel){ var t=document.querySelector(sel); if(t){ var r=t.getBoundingClientRect(); x=r.x+r.width/2; y=r.y+r.height/2; } }
+    ms=ms||1900; var E='cubic-bezier(.16,1,.3,1)';
+    de.style.transition='transform '+ms+'ms '+E; de.style.transformOrigin=x+'px '+y+'px';
+    de.style.transform=(scale&&scale!==1)?('scale('+scale+')'):'none';
+    if(ov){ ov.style.transition='transform '+ms+'ms '+E; ov.style.transformOrigin=x+'px '+y+'px';
+      ov.style.transform=(scale&&scale!==1)?('scale('+(1/scale)+')'):'none'; }
+  }catch(e){} }
+  function cineCamReset(){ try{ var de=document.documentElement, ov=$('cine');
+    de.style.transition=''; de.style.transform=''; de.style.transformOrigin='';
+    if(ov){ ov.style.transition=''; ov.style.transform=''; ov.style.transformOrigin=''; } }catch(e){} }
   function cinePops(n){ try{
     var alive=TANK.bubs.filter(function(b){ return b.state!=='gone'&&b.state!=='pop'&&b.state!=='born'&&b.d.kind==='coin'; })
       .sort(function(a,b){ return b.r-a.r; }).slice(0,n);
     alive.forEach(function(b,i){ setTimeout(function(){ if(CINE.kill)return; b.state='pop'; b.t0=TANK.ts||0; bumpPop(); },i*520); });
   }catch(e){} }
-  function cineFinish(){ var r=$('cine'); if(r){ r.classList.remove('on'); r.setAttribute('aria-hidden','true'); }
+  function cineFinish(){ cineCamReset(); var hot=document.querySelector('.cine-hot'); if(hot)hot.classList.remove('cine-hot');
+    var r=$('cine'); if(r){ r.classList.remove('on'); r.setAttribute('aria-hidden','true'); }
     ['cineFade','cineTitle','cineEnd','cineCap'].forEach(function(id){ var el=$(id); if(el){ el.classList.remove('black'); el.classList.remove('show'); } });
     document.body.classList.remove('cinema');
     if(document.body.classList.contains('chat-collapsed')){ var b=$('oaFull'); if(b)b.click(); }
@@ -3515,12 +3535,18 @@
       try{ runReel(); }catch(e){}
       await cineWait(3000);
       $('cineTitle').classList.remove('show'); await cineWait(450);
-      $('cineFade').classList.remove('black'); await cineWait(1100);
-      cineCap('01 \u2014 the feed','twitch + kick + x \u2014 merged into one feed',3200); await cineWait(4300);
-      cineCap('02 \u2014 the audience','one combined audience. one real number.',3000); await cineWait(4200);
-      setLayout('spotlight'); await cineWait(800);
-      cineCap('03 \u2014 the show','watch together. chat as one room.',3000); await cineWait(4000);
-      cinePops(3); cineCap('04 \u2014 the game','pop the market',2600); await cineWait(3400);
+      $('cineFade').classList.remove('black'); await cineWait(1000);
+      cineCam('#feed',1.5,2000); await cineWait(1500);                                   // dolly: the merged feed, pills readable
+      cineCap('01 \u2014 the feed','twitch + kick + x \u2014 merged into one feed',3000); await cineWait(3700);
+      cineCam(null,1,1500); await cineWait(1650);                                        // pull wide
+      var hot=$('vTotal'); hot=hot&&hot.closest('.tb-stat'); if(hot)hot.classList.add('cine-hot');
+      cineCap('02 \u2014 the audience','one combined audience. one real number.',3000); await cineWait(4000);
+      if(hot)hot.classList.remove('cine-hot');
+      setLayout('spotlight'); await cineWait(900);
+      cineCap('03 \u2014 the show','watch together. chat as one room.',2800); await cineWait(3600);
+      cineCam('#tank',1.45,1800); await cineWait(1400);                                  // dolly: the coinquarium
+      cinePops(3); cineCap('04 \u2014 the game','pop the market',2400); await cineWait(3000);
+      cineCam(null,1,1500); await cineWait(1650);
       try{ openFlex(); }catch(e){} await cineWait(3000);
       try{ closeFlex(); }catch(e){} await cineWait(600);
       setLayout('theater'); await cineWait(700);
@@ -3533,7 +3559,7 @@
   }
   document.addEventListener('keydown',function(e){
     if((e.key==='D'||e.key==='d') && e.shiftKey){
-      var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)) return;
+      var t=document.activeElement; if(t && /^(input|textarea)$/i.test(t.tagName)){ if((t.value||'').length) return; t.blur(); }
       e.preventDefault(); runCinema();
     } else if(e.key==='Escape' && CINE.on){ CINE.kill=true; cineFinish(); }
   });
