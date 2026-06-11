@@ -1848,7 +1848,7 @@
     background:rgba(91,140,255,.12);border-radius:15px;box-shadow:0 0 38px -6px rgba(91,140,255,.55),inset 0 0 0 1px rgba(91,140,255,.26);animation:oabreath 3.4s var(--ease) infinite}
   .oa-idle-mark svg{width:27px;height:27px}
   .oa-idle-eyebrow{position:relative;font-family:var(--gk);font-size:9px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
-  .oa-idle-sub{position:relative;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--white);opacity:.85}
+  .oa-idle-sub{position:relative;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--white);opacity:.85;text-align:center;max-width:80%}
   @keyframes oabreath{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
   @keyframes oaspin{to{transform:rotate(360deg)}}
   .player.liveon .oa-idle{display:none}
@@ -2189,6 +2189,8 @@
     .pip-back svg{width:20px;height:20px}
   }
   /* ── v2: shared show / operator / hints ── */
+  .onair .player{margin-bottom:12px}
+  .mixbar .m-x{background:#8E8E96}                /* silver, not white — a full X bar must read as data, not a blank bar */
   .tb-split .mb i{background:#5B8CFF}
   body:not(.op) .oa-switch{display:none !important}
   .opbar{display:none}
@@ -2391,7 +2393,7 @@
     <!-- RIGHT: ON AIR + MARKETS -->
     <aside class="rightcol" aria-label="On air and markets">
       <section class="onair">
-        <div class="oa-head"><span class="lab"><span class="d"></span>On Air</span><span class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8l-9 10h6l-3 9 11-12h-7l2-7z"/></svg>Market Bubble</span></div>
+        <div class="oa-head"><span class="lab"><span class="d"></span>On Air</span></div>
         <div class="player">
           <div class="feeds">
             <div class="vf hero">
@@ -3458,7 +3460,7 @@
         var he=hero.querySelector('.vf-embed'); if(he)he.remove();
         hero.classList.remove('isLive'); hero.removeAttribute('data-ch');
         var sub=document.querySelector('.oa-idle-sub');
-        if(sub) sub.textContent=feat?'X broadcast featured \u2014 chat-only (video embed unavailable)':'Connect a stream \u2014 the stage goes live';
+        if(sub) sub.textContent=feat?'':'Connect a stream \u2014 the stage goes live';
         var ow0=$('oaWho'); if(ow0){ ow0.innerHTML=''; ow0.parentNode.style.display='none'; }
         renderSwitch(live); return;
       }
