@@ -1999,11 +1999,19 @@
   .mk-view button.on{background:rgba(91,140,255,.16);color:var(--blue-hi)}
   .tank{flex:1;min-height:0;position:relative;overflow:hidden}
   .tank canvas{position:absolute;inset:0;display:block}
-  .markets.view-list .tank{display:none}
-  .markets:not(.view-list) .mk-split{display:none}
+  /* (toggle retired — tank + list coexist) */
   /* ── MARKET WATCH real coin logos ── */
   .mwc.mwci{background:#0d0d11;overflow:hidden}
   .mwc.mwci img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover}
+  /* ── goldilocks: the tank is a calm near-square bound to the rail's width;
+       the dense list breathes beneath it — art above, terminal below ── */
+  .tank{flex:0 0 auto;aspect-ratio:1/0.95;max-height:54vh;min-height:240px}
+  .markets .mk-split{display:flex}
+  /* ── timeframe machine: 1H 1D 1W 1M (active = green pill, dark type) ── */
+  .mk-tf{display:inline-flex;gap:2px;margin-left:10px;background:#17171C;border:1px solid var(--line);border-radius:9px;padding:2px}
+  .mk-tf button{border:0;background:none;color:#86C79A;font-family:var(--gk);font-weight:700;font-size:9px;letter-spacing:.06em;padding:3px 8px;border-radius:7px;cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)}
+  .mk-tf button:hover{color:#B6E8C4}
+  .mk-tf button.on{background:#6FBE7E;color:#0A0A0C}
 </style>
 
 <div class="app">
@@ -2177,11 +2185,11 @@
       </section>
 
       <section class="markets">
-        <div class="mk-head"><span class="lab">Markets</span><span class="mk-view" id="mkView"><button class="on" data-v="bubbles" type="button">Bubbles</button><button data-v="list" type="button">List</button></span><span class="live"><span class="d"></span>Live</span></div>
+        <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><span class="live"><span class="d"></span>Live</span></div>
         <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas></div>
         <div class="mk-split">
           <div class="mk-pane coins">
-            <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note">Spot · 24h</span></div>
+            <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
             <div class="mk-list" id="mkCoins"></div>
           </div>
           <div class="mk-pane preds">
@@ -2379,18 +2387,33 @@
   var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',TRUMP:'official-trump',MOODENG:'moo-deng',FARTCOIN:'fartcoin'};
   function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
   var LOGOS={};                                  // sym -> CoinGecko logo URL (the mission piece)
+  /* ── the time machine: 1H / 1D / 1W / 1M — one state, every surface obeys ── */
+  var TF='24h', TFL={'1h':'1H','24h':'1D','7d':'1W','30d':'1M'};
+  var PCT={};                                    // sym -> {1h,24h,7d,30d}
+  function applyTF(){
+    tape.forEach(function(t){ var p=PCT[t[0]]; if(p&&typeof p[TF]==='number') t[2]=p[TF]; });
+    var tr=$('tapeRow'); if(tr) tr.innerHTML=tape.map(tapeTick).join('')+tape.map(tapeTick).join('');
+    mix.forEach(function(mm){ var p=PCT[mm[0]]; if(p&&typeof p[TF]==='number') mm[3]=p[TF]; });
+    renderMarkets(); if(typeof tankSync==='function') tankSync();
+    var n=$('tfNote'); if(n) n.textContent='Spot · '+TFL[TF];
+    var box=$('mkTF'); if(box) [].forEach.call(box.children,function(b){ b.classList.toggle('on', b.dataset.tf===TF); });
+  }
   function fetchMarketsLive(){
     if(typeof fetch!=='function')return;
     var ids=Object.keys(CG).map(function(k){return CG[k];}).join(',');
-    fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=24h',{cache:'no-store'})
+    fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=1h,24h,7d,30d',{cache:'no-store'})
       .then(function(r){if(!r||!r.ok)throw 0;return r.json();})
       .then(function(arr){
         var byId={}; (arr||[]).forEach(function(d){ if(d&&d.id) byId[d.id]=d; });
-        Object.keys(CG).forEach(function(sym){ var d=byId[CG[sym]]; if(d&&d.image) LOGOS[sym]=d.image; });
-        tape.forEach(function(t){ var d=byId[CG[t[0]]]; if(d){ t[1]=fmtPx(d.current_price); if(typeof d.price_change_percentage_24h==='number')t[2]=d.price_change_percentage_24h; } });
-        var tr=$('tapeRow'); if(tr) tr.innerHTML=tape.map(tapeTick).join('')+tape.map(tapeTick).join('');
-        mix.forEach(function(mm){ var d=byId[CG[mm[0]]]; if(d){ mm[2]=fmtPx(d.current_price); if(typeof d.price_change_percentage_24h==='number')mm[3]=d.price_change_percentage_24h; } });
-        renderMarkets(); tankSync();
+        Object.keys(CG).forEach(function(sym){ var d=byId[CG[sym]]; if(!d)return;
+          if(d.image) LOGOS[sym]=d.image;
+          PCT[sym]={'1h':d.price_change_percentage_1h_in_currency,
+                    '24h':(typeof d.price_change_percentage_24h_in_currency==='number'?d.price_change_percentage_24h_in_currency:d.price_change_percentage_24h),
+                    '7d':d.price_change_percentage_7d_in_currency,
+                    '30d':d.price_change_percentage_30d_in_currency}; });
+        tape.forEach(function(t){ var d=byId[CG[t[0]]]; if(d) t[1]=fmtPx(d.current_price); });
+        mix.forEach(function(mm){ var d=byId[CG[mm[0]]]; if(d) mm[2]=fmtPx(d.current_price); });
+        applyTF();
       }).catch(function(){});
   }
   function fetchFG(){
@@ -2815,7 +2838,7 @@
     var d=b.d;
     tip.className='tooltip show';
     tip.innerHTML = d.kind==='coin'
-      ? '<div class="name">'+d.sym+' · '+d.name+'</div><div class="ml">$'+d.px+' · <b style="color:'+(d.val>=0?'var(--up)':'var(--down)')+'">'+(d.val>=0?'+':'')+d.val.toFixed(2)+'% </b>24h</div>'
+      ? '<div class="name">'+d.sym+' · '+d.name+'</div><div class="ml">$'+d.px+' · <b style="color:'+(d.val>=0?'var(--up)':'var(--down)')+'">'+(d.val>=0?'+':'')+d.val.toFixed(2)+'% </b>'+TFL[TF]+'</div>'
       : '<div class="name">'+d.q+'</div><div class="ml">'+d.vol+' Vol · '+d.cat+' · <b style="color:'+(d.side==='yes'?'var(--up)':'var(--down)')+'">'+d.odds+'% '+String(d.side).toUpperCase()+'</b></div><div class="sl">Polymarket prediction</div>';
     moveTip(e);
   }
@@ -2894,8 +2917,17 @@
         for(var li=0;li<ls.length;li++) cx.fillText(ls[li], b.x, (b.y-R*0.30)+(li-(ls.length-1)/2)*lh);
         cx.fillStyle='#F2F1ED'; cx.font='700 '+Math.max(10,R*0.30).toFixed(1)+'px "JetBrains Mono",monospace';
         cx.fillText(d.odds+'%', b.x, b.y+R*0.34);
-        cx.font='800 '+Math.max(7,R*0.17).toFixed(1)+'px "Space Grotesk",sans-serif';
-        cx.fillText(String(d.side).toUpperCase(), b.x, b.y+R*0.62);
+        var st=String(d.side).toUpperCase(), sf=Math.max(7,R*0.17);
+        cx.font='800 '+sf.toFixed(1)+'px "Space Grotesk",sans-serif';
+        var tw=cx.measureText(st).width, py=b.y+R*0.60, ph2=sf*1.6, pw=tw+sf*1.5;
+        cx.fillStyle=(d.side==='yes')?'rgba(74,222,128,.30)':'rgba(255,87,101,.30)';
+        cx.beginPath();
+        if(cx.roundRect) cx.roundRect(b.x-pw/2, py-ph2/2, pw, ph2, ph2/2); else cx.rect(b.x-pw/2, py-ph2/2, pw, ph2);
+        cx.fill();
+        cx.strokeStyle=(d.side==='yes')?'rgba(74,222,128,.6)':'rgba(255,87,101,.6)';
+        cx.lineWidth=1; cx.stroke();
+        cx.fillStyle='#fff';
+        cx.fillText(st, b.x, py+0.5);
       }
     }
   }
@@ -2908,6 +2940,7 @@
     cv.addEventListener('mouseleave',function(){TANK.hover=null;hideTip();});
     cv.addEventListener('click',tankClick);
     window.addEventListener('resize',tankSize);
+    var tfb=$('mkTF'); if(tfb) tfb.addEventListener('click',function(e){ var btn=e.target.closest('button'); if(!btn)return; TF=btn.dataset.tf||'24h'; applyTF(); });
     var mv=$('mkView'); if(mv) mv.addEventListener('click',function(e){ var btn=e.target.closest('button'); if(!btn)return;
       [].forEach.call(mv.children,function(x){x.classList.toggle('on',x===btn);});
       var sec=document.querySelector('.markets'); if(sec)sec.classList.toggle('view-list', btn.dataset.v==='list');
