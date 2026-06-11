@@ -2866,7 +2866,7 @@
     var verified=v.host?'<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .2.2 3L19.4 9 21 12l-1.6 3 .4 3-3 .2L15 21l-3-1.6L9 21l-1.8-2.6-3-.2.4-3L3 12l1.6-3-.2-3 3-.2L9.6 3.8z"/></svg>':'';
     var _ini=(v.h||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||(v.h||'?').slice(0,2);
     el.innerHTML='<div class="av '+v.plat+'" aria-hidden="true">'+_ini+'</div><div class="body"><div class="top"><span class="usr">'+v.h+'</span>'+verified+badges+
-      '<span class="right"><span class="ch">'+PLABEL[v.plat].toLowerCase()+'·'+v.src+'</span><span class="plat">'+ICON[v.plat]+PLABEL[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
+      '<span class="right"><span class="ch">'+PLABEL[v.plat].toLowerCase()+'·'+v.src+'</span><span class="plat" title="'+PLABEL[v.plat]+'" aria-label="'+PLABEL[v.plat]+'">'+ICON[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
       '<div class="txt">'+highlightText(text)+'</div></div>';
     attachTip(el,v);
     // apply current filter
