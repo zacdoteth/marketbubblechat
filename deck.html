@@ -2127,9 +2127,8 @@
   /* ── CINEMA — the director's cut: a self-performing trailer (Shift+D / ?cinema) ── */
   .cine{position:fixed;inset:0;z-index:200;display:none;pointer-events:none}
   .cine.on{display:block}
-  .cine-bar{position:absolute;left:0;width:100%;height:6.5vh;background:#000;transition:transform .9s var(--ease)}
-  .cine-bar.t{top:0;transform:translateY(-100%)} .cine-bar.b{bottom:0;transform:translateY(100%)}
-  .cine.on .cine-bar{transform:none}
+  .cine-bar{display:none}                                        /* bars cropped the brand row — the product is the hero */
+  body.cinema .predtape, body.cinema .confluxbar{display:none}   /* clean stage floor during the film */
   .cine-fade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .85s var(--ease)}
   .cine-fade.black{opacity:1}
   .cine-title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;transform:scale(1.035);transition:opacity .8s var(--ease),transform 1.5s var(--ease)}
@@ -3477,6 +3476,7 @@
   }catch(e){} }
   function cineFinish(){ var r=$('cine'); if(r){ r.classList.remove('on'); r.setAttribute('aria-hidden','true'); }
     ['cineFade','cineTitle','cineEnd','cineCap'].forEach(function(id){ var el=$(id); if(el){ el.classList.remove('black'); el.classList.remove('show'); } });
+    document.body.classList.remove('cinema');
     if(document.body.classList.contains('chat-collapsed')){ var b=$('oaFull'); if(b)b.click(); }
     try{ setLayout('deck'); }catch(e){}
     CINE.on=false; }
@@ -3486,7 +3486,7 @@
     var bl=document.querySelector('.brandlogo');
     if(bl){ var l1=$('cineLogo'), l2=$('cineEndLogo'); if(l1)l1.src=bl.src; if(l2)l2.src=bl.src; }
     try{
-      setLayout('deck');
+      setLayout('deck'); document.body.classList.add('cinema');
       root.classList.add('on'); root.setAttribute('aria-hidden','false');
       $('cineFade').classList.add('black');
       $('cineTitle').classList.add('show');
