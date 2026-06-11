@@ -393,17 +393,16 @@
   /* ── LAYOUT: SPOTLIGHT — big stage on top, deck intact below (desktop) ── */
   @media(min-width:1181px){
     body.lay-spotlight .deck{
-      grid-template-columns:296px minmax(0,1fr) 380px;
-      grid-template-rows:minmax(0,auto) minmax(0,1fr);
-      grid-template-areas:"stats onair onair" "stats wire markets";
+      grid-template-columns:284px minmax(0,1fr) 372px;
+      grid-template-rows:minmax(0,1fr) minmax(150px,38vh);
+      grid-template-areas:"stats onair wire" "stats markets wire";
     }
     body.lay-spotlight .rightcol{display:contents}
     body.lay-spotlight .stats{grid-area:stats}
-    body.lay-spotlight .wire{grid-area:wire;border-right:1px solid var(--line)}
-    body.lay-spotlight .onair{grid-area:onair;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
-    body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);min-height:0;display:flex;flex-direction:column}
+    body.lay-spotlight .wire{grid-area:wire;border-left:1px solid var(--line);min-height:0}     /* unified chat: full-height rail beside the stage */
+    body.lay-spotlight .onair{grid-area:onair;border-left:1px solid var(--line)}
+    body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);border-top:1px solid var(--line);min-height:0;display:flex;flex-direction:column}
     body.lay-spotlight .player{margin:12px}
-    body.lay-spotlight .feeds{aspect-ratio:16/6.4}
   }
   body.disconnected .tb-live{opacity:.45}
   body.disconnected .tb-live .d{animation:none;background:var(--dim)}
@@ -3065,35 +3064,36 @@
       var breath=(reduce?1:1+Math.sin(t*0.618+b.ph)*0.022);
       var R=Math.max(5,b.r*breath*sc);
       var mag = d.kind==='pred' ? Math.min(1,Math.abs((d.odds||50)-50)/40) : Math.min(1,Math.abs(d.val)/8);
-      var hue = d.kind==='pred' ? 221 : (d.val>=0?145:353);
-      var sat = Math.round((d.kind==='pred'?68:55)+mag*32);
-      var lig = Math.round(42+mag*20);
+      var hue = d.kind==='pred' ? 221 : (d.val>=0?142:356);
+      var sat = Math.round((d.kind==='pred'?72:66)+mag*28);
+      var lig = Math.round(46+mag*15);
       var hsla=function(a){ return 'hsla('+hue+','+sat+'%,'+lig+'%,'+a+')'; };
       var col=hsla(1);
       var hov = TANK.hover===b;
       var hsl2=function(l,a){ return 'hsla('+hue+','+sat+'%,'+l+'%,'+a+')'; };
-      // outer aura — each bubble breathes its colour into the water (hues blend seamlessly)
+      // soft aura — the colour breathes into the water
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      cx.shadowColor=col; cx.shadowBlur=(hov?26:14)+mag*16;
-      // luminous glass sphere: glossy lit cap -> airy translucent body -> bright saturated Fresnel rim
-      var g=cx.createRadialGradient(b.x-R*0.24,b.y-R*0.28,R*0.04, b.x,b.y,R);
-      g.addColorStop(0,   hsl2(Math.min(82,lig+34), 0.58));
-      g.addColorStop(0.46,hsl2(lig+8,               0.34));
-      g.addColorStop(0.84,hsl2(lig,                 0.52));
-      g.addColorStop(1,   hsl2(Math.min(80,lig+16), 0.95));
+      cx.shadowColor=col; cx.shadowBlur=(hov?24:12)+mag*14;
+      // lit glass sphere — luminous core, deep saturated edge (dark rides the OUTSIDE, like a real orb)
+      var g=cx.createRadialGradient(b.x-R*0.20,b.y-R*0.22,R*0.05, b.x,b.y,R*1.02);
+      g.addColorStop(0,    hsl2(Math.min(92,lig+36), 1));
+      g.addColorStop(0.48, hsl2(lig+10,              1));
+      g.addColorStop(0.82, hsl2(Math.max(22,lig-6),  1));
+      g.addColorStop(1,    hsl2(Math.max(14,lig-24), 1));
       cx.fillStyle=g; cx.fill(); cx.shadowBlur=0;
-      // whisper of shade behind the label — crisp white type, no mud
-      var tg=cx.createRadialGradient(b.x,b.y,0, b.x,b.y,R*0.62);
-      tg.addColorStop(0,'rgba(6,8,13,0.24)'); tg.addColorStop(1,'rgba(6,8,13,0)');
-      cx.fillStyle=tg; cx.fill();
-      // crisp luminous rim
+      // glossy top rim-light — the glass catches the sky
+      cx.beginPath(); cx.arc(b.x,b.y,R*0.93,-2.45,-0.75); cx.lineWidth=Math.max(1,R*0.05);
+      cx.lineCap='round'; cx.strokeStyle='rgba(255,255,255,'+(0.30+mag*0.10)+')'; cx.stroke(); cx.lineCap='butt';
+      // deep edge ring — seals the sphere, darkest on the outside
       cx.beginPath(); cx.arc(b.x,b.y,R,0,6.2832);
-      cx.lineWidth=(hov?2.2:1.3)+mag*0.7; cx.strokeStyle=hsl2(Math.min(86,lig+30),hov?1:0.9); cx.stroke();
-      // single soft window glint
-      var sx=b.x-R*0.30, sy=b.y-R*0.34, sr=Math.max(2,R*0.28);
+      cx.lineWidth=(hov?2:1.2); cx.strokeStyle=hsl2(Math.max(16,lig-18),hov?0.95:0.8); cx.stroke();
+      // single specular glint, top-left
+      var sx=b.x-R*0.30, sy=b.y-R*0.34, sr=Math.max(2,R*0.27);
       var spg=cx.createRadialGradient(sx,sy,0,sx,sy,sr);
-      spg.addColorStop(0,'rgba(255,255,255,0.55)'); spg.addColorStop(0.45,'rgba(255,255,255,0.10)'); spg.addColorStop(1,'rgba(255,255,255,0)');
+      spg.addColorStop(0,'rgba(255,255,255,0.92)'); spg.addColorStop(0.4,'rgba(255,255,255,0.20)'); spg.addColorStop(1,'rgba(255,255,255,0)');
       cx.beginPath(); cx.arc(sx,sy,sr,0,6.2832); cx.fillStyle=spg; cx.fill();
+      // text shadow keeps white type crisp on the luminous body (no dark centre disk)
+      cx.shadowColor='rgba(4,6,12,0.6)'; cx.shadowBlur=Math.max(2,R*0.07); cx.shadowOffsetY=0.6;
       cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#F2F1ED';
       if(d.kind==='coin'){
         var img=tankLogo(d.sym);
@@ -3136,6 +3136,7 @@
         cx.fillStyle='#fff';
         cx.fillText(st, b.x, py+0.5);
       }
+      cx.shadowBlur=0; cx.shadowOffsetY=0;
     }
     tankFx(cx);
     var hb=TANK.hover;
@@ -3162,7 +3163,7 @@
   }
   function tankBurst(b){ if(reduce)return; var d=b.d;
     var mg=d.kind==='pred'?Math.min(1,Math.abs((d.odds||50)-50)/40):Math.min(1,Math.abs(d.val)/8);
-    var hue=d.kind==='pred'?221:(d.val>=0?145:353), sat=Math.round((d.kind==='pred'?68:55)+mg*32), lig=Math.round(52+mg*16);
+    var hue=d.kind==='pred'?221:(d.val>=0?142:356), sat=Math.round((d.kind==='pred'?72:66)+mg*28), lig=Math.round(54+mg*14);
     var c='hsl('+hue+','+sat+'%,'+lig+'%)';
     TANK.fx.push({type:'ring',x:b.x,y:b.y,r:b.r*0.66,c:c,life:1});
     var n=12+Math.floor(Math.random()*5),k;
