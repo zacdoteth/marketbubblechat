@@ -10,6 +10,7 @@ export function createAggregator({ max = 100 } = {}) {
       return msg;
     },
     recent() { return buf.slice(); },
+    clear() { buf.length = 0; },
     get size() { return buf.length; },
   };
 }

@@ -23,3 +23,12 @@ test('recent returns a copy (mutation-safe)', () => {
   a.recent().push({ text: 'evil' });
   assert.equal(a.recent().length, 1);
 });
+
+test('clear() empties the buffer', () => {
+  const agg = createAggregator({ max: 10 });
+  agg.push({ id: 'a' }); agg.push({ id: 'b' });
+  assert.equal(agg.size, 2);
+  agg.clear();
+  assert.equal(agg.size, 0);
+  assert.deepEqual(agg.recent(), []);
+});

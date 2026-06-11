@@ -11,6 +11,11 @@ export const CONTROL_TOKEN = process.env.CONTROL_TOKEN || '';
 // ingest endpoint is DISABLED (503) — secure by default, no fake-injection surface.
 export const X_INGEST_TOKEN = process.env.X_INGEST_TOKEN || '';
 
+// Native MB chat: minimum interval between messages per connection (slow-mode default, ms).
+export const NATIVE_SLOWMODE_MS = Number(process.env.NATIVE_SLOWMODE_MS) || 2500;
+// Persisted show config (stream URLs + featured pick) — a Railway Volume file in prod.
+export const SHOW_CONFIG_PATH = process.env.SHOW_CONFIG_PATH || './.show.json';
+
 // Public, well-known unauthenticated identifiers (not secrets):
 export const TWITCH_GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 export const TWITCH_IRC_URL = 'wss://irc-ws.chat.twitch.tv:443';
@@ -24,5 +29,5 @@ if (PUBLIC_BASE_URL.includes('localhost') && process.env.NODE_ENV === 'productio
 }
 
 export const PLATFORM_COLORS = {
-  twitch: '#A571FF', x: '#F4F4F6', kick: '#53FC18',
+  twitch: '#A571FF', x: '#F4F4F6', kick: '#53FC18', mb: '#5B8CFF',
 };
