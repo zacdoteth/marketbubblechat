@@ -2504,11 +2504,12 @@
     var off=(streams||[]).filter(function(s){return s.status==='offline';});
     if(off.length) showConnectMsg(off[0].platform+'·'+streamName(off[0])+' is offline — no chat until it goes live',false); });
   onStats.push(function(st){ if(!st||!st.combined)return; var pf=st.perPlatform||{};
-    vTw=((pf.twitch||{}).viewers)||0; vKk=((pf.kick||{}).viewers)||0; vX=((pf.x||{}).viewers)||0;
-    peak=Math.max(peak,vTw+vKk+vX); paintViewers();
-    var mpm=st.combined.msgsPerMin||0; velPeak=Math.max(velPeak,mpm);
-    var a=$('mpmTop'),b=$('sMpm2'),c=$('velNow'),d=$('velPeak');
-    if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; });
+    var tw=((pf.twitch||{}).viewers)||0, kk=((pf.kick||{}).viewers)||0, xx=((pf.x||{}).viewers)||0;
+    if(tw+kk+xx>0){ vTw=tw; vKk=kk; vX=xx; peak=Math.max(peak,vTw+vKk+vX); paintViewers(); }   // keep the live numbers when backend reports 0 (offline)
+    var mpm=st.combined.msgsPerMin||0;
+    if(mpm>0){ velPeak=Math.max(velPeak,mpm);
+      var a=$('mpmTop'),b=$('sMpm2'),c=$('velNow'),d=$('velPeak');
+      if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; } });
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
   var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near',LINK:'chainlink',SUI:'sui',AVAX:'avalanche-2',TIA:'celestia',RENDER:'render-token',ONDO:'ondo-finance'};
