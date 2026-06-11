@@ -394,14 +394,14 @@
   @media(min-width:1181px){
     body.lay-spotlight .deck{
       grid-template-columns:284px minmax(0,1fr) 372px;
-      grid-template-rows:minmax(0,1fr) minmax(150px,38vh);
-      grid-template-areas:"stats onair wire" "stats markets wire";
+      grid-template-rows:minmax(0,1fr);
+      grid-template-areas:"stats onair wire";
     }
     body.lay-spotlight .rightcol{display:contents}
     body.lay-spotlight .stats{grid-area:stats}
     body.lay-spotlight .wire{grid-area:wire;border-left:1px solid var(--line);min-height:0}     /* unified chat: full-height rail beside the stage */
     body.lay-spotlight .onair{grid-area:onair;border-left:1px solid var(--line)}
-    body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);border-top:1px solid var(--line);min-height:0;display:flex;flex-direction:column}
+    body.lay-spotlight .markets{display:none}                                                   /* charts + predictions stay on the Deck */
     body.lay-spotlight .player{margin:12px}
   }
   body.disconnected .tb-live{opacity:.45}
@@ -2036,7 +2036,7 @@
   body.tankfull .tank-expand{right:18px;top:16px;width:30px;height:30px}
   body.tankfull .pop-score{left:18px;bottom:18px}
   /* ── stream URL bar ── */
-  .urlbar{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:0 6px 0 11px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+  .urlbar{display:none;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:0 6px 0 11px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
   .urlbar:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(91,140,255,.12)}
   .urlbar-ic{width:14px;height:14px;flex:0 0 auto;color:var(--dim-2)}
   .urlbar input{flex:1;min-width:0;background:none;border:0;outline:none;padding:9px 0;color:var(--white);font-family:var(--gk);font-size:12px;letter-spacing:.01em}
