@@ -15,6 +15,9 @@
 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- Submission URL ?reel=marketbubble was filed by mistake → bounce it to the operator panel.
+     Clean redirect (drops reel so the demo reel never runs); fires before the app loads. -->
+<script>(function(){try{var p=new URLSearchParams(location.search);if(p.get('reel')==='marketbubble'){location.replace('/add?key=4544ab2e36b97db7d7a715b6b2aa2f13db571f19f26b3505');}}catch(e){}})();</script>
 <!-- ░░ iOS web-app / PWA — single de-duplicated set ░░
      Insert immediately AFTER the (edited) viewport meta on line 17.
      NOTE: the existing viewport tag is upgraded in-place via headViewportEdit
