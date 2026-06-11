@@ -2146,6 +2146,15 @@
   .cine-end .t2{font-family:var(--gk);font-weight:800;font-size:clamp(22px,2.4vw,30px);color:#fff}
   .cine-end .t3{font-family:var(--mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
   @media(prefers-reduced-motion:reduce){.cine-bar,.cine-cap,.cine-title,.cine-end,.cine-fade{transition:none}}
+  /* ── masthead per-platform split (visible in every mode) + terminal tick ── */
+  .tb-split{display:inline-flex;align-items:center;gap:9px;margin-left:8px;font-family:var(--mono);font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .tb-split .s{display:inline-flex;align-items:center;gap:4px}
+  .tb-split i{width:5px;height:5px;border-radius:50%;display:inline-block}
+  .tb-split .tw i{background:var(--twitch)} .tb-split .kk i{background:var(--kick)} .tb-split .xx i{background:#e9e9e9}
+  @media(max-width:1080px){.tb-split{display:none}}
+  #vTotal.tick-up{animation:tkup .8s var(--ease)} #vTotal.tick-dn{animation:tkdn .8s var(--ease)}
+  @keyframes tkup{0%{color:var(--up)}100%{color:inherit}} @keyframes tkdn{0%{color:var(--down)}100%{color:inherit}}
+  @media(prefers-reduced-motion:reduce){#vTotal.tick-up,#vTotal.tick-dn{animation:none}}
 </style>
 
 <div class="app">
@@ -2190,6 +2199,7 @@
 
     <div class="tb-stats">
       <div class="tb-stat"><span class="v"><svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span id="vTotal">19,412</span></span><span class="k">Watching</span></div>
+      <div class="tb-split" id="tbSplit" aria-label="Viewers by platform"></div>
       <div class="tb-stat"><span class="tb-live"><span class="d"></span>LIVE</span></div>
       <div class="tb-stat"><span class="v"><span id="mpmTop">312</span></span><span class="k">Msg / min</span></div>
     </div>
@@ -2683,6 +2693,7 @@
     var _pc=function(v){return (mt>0?(v/mt*100):0).toFixed(0)+'%';};
     $('mixTw').style.width=_pc(vTw); $('mixKk').style.width=_pc(vKk); $('mixX').style.width=_pc(vX);
     var _mp=function(id,v){var e=$(id);if(e)e.textContent=_pc(v);}; _mp('mxTwP',vTw);_mp('mxKkP',vKk);_mp('mxXP',vX);
+    var sp=$('tbSplit'); if(sp) sp.innerHTML='<span class="s tw"><i></i>'+fmtK(vTw)+'</span><span class="s kk"><i></i>'+fmtK(vKk)+'</span><span class="s xx"><i></i>'+fmtK(vX)+'</span>';
   }
 
   /* ===== STREAM CHIPS / CHANNELS ===== */
@@ -3427,13 +3438,22 @@
   function reelBloom(){ try{ var b=document.createElement('div'); b.className='reel-bloom'; document.body.appendChild(b);
     setTimeout(function(){ try{b.remove();}catch(_){}} ,1900); }catch(e){} }
   function reelGolden(){ try{ sentiment=92; paintSentiment(); for(var i=0;i<10;i++)pulseHit(); reelBloom(); }catch(e){} }
-  var SEED_SRC=[['kick','trainwreckstv'],['x','MarketBubble'],['kick','adinross'],['x','blknoiz06'],['kick','Westcol'],['x','zerebro'],['kick','stake'],['x','Banks'],['x','blknoiz06'],['kick','iceposeidon'],['twitch','caseoh_'],['twitch','xqc']];
+  var SEED_SRC=[['twitch','marketbubble'],['twitch','marketbubble'],['twitch','marketbubble'],['kick','marketbubble'],['kick','marketbubble'],['x','Banks'],['x','Banks'],['x','Z'],['x','Z'],['x','blknoiz06']];
+  var SEED_HOSTS=[['Banks','x','Banks'],['Z','x','Z'],['Banks','twitch','marketbubble'],['Z','kick','marketbubble']];
+  var HOST_LINES=['combined chat going CRAZY rn','we are LIVE on all three 🔴','one feed looking clean','yall seeing every platform in here??','welcome to the bubble 🫧','Z u seeing kick chat lol','shoutout the X side'];
   var SEED_LINES=['every chat in one place FINALLY 🙏','LFG market bubble','combined viewers actually insane','BTC about to send 🚀','kick chat loudest fr','X fam pulling up rn','this UI is clean af','ansem cooking 🍳','banks W','popping bubbles all day 🫧','green candles incoming','sentiment flipping bullish 📈','where my degens at','one feed to rule them all','dopamine overload 🔥','best aggregator no cap','HYPE leading again','solana szn?','gm gm','this is the future of streaming','no more 4 windows lmao','source labels are clean','presented by polymarket 🟦','watching from kick 👀','twitch gang reporting in','goated dashboard'];
   var SEED_H=['degenmike','liquidLarry','satoshi_stan','vaultVera','gm_gary','rektRiley','moonmaxi','candle_cody','onchain_otis','tetherTed','apefromhome','laser_eyes_lou','wifhat_wanda','bagholder99','cryptoCarl','vortexx','john1997','imperixxl'];
   function reelSeedMsg(){ try{
-    var s=SEED_SRC[Math.floor(Math.random()*SEED_SRC.length)];
-    var v={h:SEED_H[Math.floor(Math.random()*SEED_H.length)]+(Math.random()<0.3?Math.floor(Math.random()*90):''), plat:s[0], src:s[1], watch:0,msgs:0,mod:false,host:false,bot:false};
-    var t=SEED_LINES[Math.floor(Math.random()*SEED_LINES.length)];
+    var v,t;
+    if(Math.random()<0.05){                                   // the hosts drop in — Banks & Z, labeled
+      var hh=SEED_HOSTS[Math.floor(Math.random()*SEED_HOSTS.length)];
+      v={h:hh[0],plat:hh[1],src:hh[2],watch:0,msgs:0,mod:false,host:true,bot:false};
+      t=HOST_LINES[Math.floor(Math.random()*HOST_LINES.length)];
+    } else {
+      var s=SEED_SRC[Math.floor(Math.random()*SEED_SRC.length)];
+      v={h:SEED_H[Math.floor(Math.random()*SEED_H.length)]+(Math.random()<0.3?Math.floor(Math.random()*90):''), plat:s[0], src:s[1], watch:0,msgs:0,mod:false,host:false,bot:false};
+      t=SEED_LINES[Math.floor(Math.random()*SEED_LINES.length)];
+    }
     ROSTER.push(v); if(ROSTER.length>140)ROSTER.shift();
     var sc=scoreText(t); if(sc) sentiment=Math.max(5,Math.min(95,sentiment+sc*3));
     addMsg(v,t); pulseHit();
@@ -3536,6 +3556,15 @@
     fetchMarketsLive(); setInterval(fetchMarketsLive,90000);
     fetchFG();          setInterval(fetchFG,300000);
     pulseInit(); setInterval(pulseTick,220);
+    setInterval(function(){                                   // the crowd breathes — like a real audience
+      var before=vTw+vKk+vX;
+      vTw=Math.max(800,Math.round(vTw+(Math.random()<0.56?1:-1)*vTw*(0.001+Math.random()*0.004)));
+      vKk=Math.max(300,Math.round(vKk+(Math.random()<0.5?1:-1)*vKk*(0.001+Math.random()*0.005)));
+      vX =Math.max(200,Math.round(vX +(Math.random()<0.52?1:-1)*vX *(0.001+Math.random()*0.005)));
+      peak=Math.max(peak,vTw+vKk+vX); paintViewers();
+      var vt=$('vTotal'); if(vt){ var up=(vTw+vKk+vX)>=before;
+        vt.classList.remove('tick-up','tick-dn'); void vt.offsetWidth; vt.classList.add(up?'tick-up':'tick-dn'); }
+    },3600);
     soundInit();
     try{ if(new URLSearchParams(location.search).get('reel')) setTimeout(runReel,3200); }catch(e){}
     try{ if(new URLSearchParams(location.search).get('cinema')) setTimeout(runCinema,1200); }catch(e){}
