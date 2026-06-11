@@ -1973,6 +1973,10 @@
   .markets .mrow,.markets .prow{border-bottom:1px solid var(--line-soft)}
   .markets .mk-list>*:last-child{border-bottom:none}
   .mk-list{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  /* ── official Market Bubble logo in the masthead ── */
+  .brandlogo{height:40px;width:auto;display:block;flex:0 0 auto}
+  .brandtag{font-family:var(--gk);font-size:8.5px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--dim-2);line-height:1.35;max-width:118px}
+  @media(max-width:860px){ .brandtag{display:none} .brandlogo{height:32px} }
 </style>
 
 <div class="app">
@@ -1982,8 +1986,8 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <a class="brand" href="#" aria-label="Market Bubble">
-      <span class="logo"><svg width="20" height="20" viewBox="0 0 34 34"><path d="M5 6h24a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H14l-7 6v-6H5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3Z" fill="none" stroke="#F2F1ED" stroke-width="1.8"/><path d="M19 8l-9 10h6l-3 9 11-12h-7l2-7Z" fill="#F2F1ED"/></svg></span>
-      <span class="tx"><span class="nm">Market&nbsp;Bubble</span><span class="sl">Command Deck · Every chat, one feed</span></span>
+      <img class="brandlogo" src="logo.png" alt="Market Bubble" />
+      <span class="brandtag">Command Deck · Every chat, one feed</span>
     </a>
 
     <div class="modetog" role="tablist" aria-label="Layout">
