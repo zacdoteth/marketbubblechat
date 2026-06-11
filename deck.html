@@ -2118,6 +2118,12 @@
   body.watch .oa-full{opacity:.85;pointer-events:auto}
   .oa-full:hover{background:rgba(22,22,28,.85);opacity:1}
   .oa-full svg{width:16px;height:16px}
+  /* ── maximize: collapse the chat rail so the stage fills the width ── */
+  body.watch .deck, body.lay-spotlight .deck{transition:grid-template-columns .34s var(--ease)}
+  body.watch.chat-collapsed .deck{grid-template-columns:minmax(0,1fr) 0}
+  body.lay-spotlight.chat-collapsed .deck{grid-template-columns:284px minmax(0,1fr) 0}
+  body.chat-collapsed .wire{overflow:hidden;opacity:0;pointer-events:none;border-left-color:transparent;transition:opacity .2s var(--ease)}
+  .oa-full.on{background:rgba(242,241,237,.92);color:#0a0a0c;opacity:1}
 </style>
 
 <div class="app">
@@ -2294,7 +2300,7 @@
             </div>
           </div>
           <div class="reacts" id="reacts"></div>
-          <button class="oa-full" id="oaFull" type="button" title="Fullscreen" aria-label="Fullscreen the stage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
+          <button class="oa-full" id="oaFull" type="button" title="Maximize — hide chat" aria-label="Maximize the stage / hide chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
         </div>
         <div class="oa-meta">
           <div class="ti">Liquidity, Rate Cuts &amp; the Next Cycle</div>
@@ -2490,9 +2496,11 @@
 
   /* ADAPTERS: hem's events -> the deck's renderers */
   onServerMessage.push(ingest);
-  onSnapshot.push(function(snap){ feedEl.innerHTML=''; rememberStreams(snap.streams); renderChips(); renderChannels();
+  onSnapshot.push(function(snap){ if(!snap||(!(snap.streams&&snap.streams.length)&&!(snap.messages&&snap.messages.length)))return;  // ignore EMPTY snapshots — never wipe the live view
+    feedEl.innerHTML=''; rememberStreams(snap.streams); renderChips(); renderChannels();
     (snap.messages||[]).forEach(ingest); feedEl.scrollTop=feedEl.scrollHeight; });
-  onStreams.push(function(streams){ rememberStreams(streams); renderChips(); renderChannels(); renderOnAir();
+  onStreams.push(function(streams){ if(!streams||!streams.length)return;  // keep the view when the feed is empty
+    rememberStreams(streams); renderChips(); renderChannels(); renderOnAir();
     var off=(streams||[]).filter(function(s){return s.status==='offline';});
     if(off.length) showConnectMsg(off[0].platform+'·'+streamName(off[0])+' is offline — no chat until it goes live',false); });
   onStats.push(function(st){ if(!st||!st.combined)return; var pf=st.perPlatform||{};
@@ -3258,8 +3266,8 @@
     var fsh=$('flexShare'); if(fsh) fsh.addEventListener('click',flexShare);
     var fcp=$('flexCopy'); if(fcp) fcp.addEventListener('click',function(){ flexCopy(false); });
     var fsv=$('flexSave'); if(fsv) fsv.addEventListener('click',flexDownload);
-    var oaF=$('oaFull'); if(oaF) oaF.addEventListener('click',function(){ var el=document.querySelector('.player');
-      try{ if(document.fullscreenElement){ document.exitFullscreen(); } else if(el&&el.requestFullscreen){ el.requestFullscreen(); } }catch(e){} });
+    var oaF=$('oaFull'); if(oaF) oaF.addEventListener('click',function(){ var on=document.body.classList.toggle('chat-collapsed');
+      oaF.classList.toggle('on',on); oaF.title=on?'Show chat':'Maximize — hide chat'; });
     var fw=$('flexWrap'); if(fw) fw.addEventListener('click',function(e){ if(e.target===fw) closeFlex(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('tankfull')) tankToggleFull(); });
     if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
