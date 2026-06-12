@@ -436,7 +436,9 @@
     body.lay-spotlight .onair{grid-area:onair;border-left:1px solid var(--line)}
     body.lay-spotlight .markets{grid-area:markets;border-left:1px solid var(--line);border-top:1px solid var(--line);min-height:0;display:flex;flex-direction:column;padding:0}
     body.lay-spotlight .markets .mk-split, body.lay-spotlight .markets .mk-foot{display:none}  /* ribbon = MARKETS header + bubbles (charts/preds stay on the Deck) */
-    body.lay-spotlight .markets .tank{display:block;flex:1;min-height:0;margin:0;border-radius:0}
+    body.lay-spotlight .markets .tank{display:block;flex:1;min-height:0;margin:0;border-radius:0;aspect-ratio:auto;max-height:none}
+    body.lay-spotlight .wxrail .wxc{flex:1 1 0;min-width:0}                                   /* forecast fills the ribbon edge-to-edge */
+    body.lay-spotlight .wxrail .wxc.more{flex:0 0 62px}
     body.lay-spotlight .oa-meta, body.lay-spotlight .onair .oa-head{display:none}              /* drop title/sub buttons — more room for the show */
     body.lay-spotlight .player{margin:12px auto;max-width:min(100%,calc((100vh - clamp(200px,28vh,360px) - 150px)*1.7778))}
   }
