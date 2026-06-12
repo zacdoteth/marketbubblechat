@@ -2174,7 +2174,7 @@
   @keyframes cinehot{0%,100%{transform:scale(1)}38%{transform:scale(1.16);filter:drop-shadow(0 0 18px rgba(131,166,255,.65))}}
   @media(prefers-reduced-motion:reduce){.tb-stat.cine-hot{animation:none}}
   /* ── mobile WIRE: full-height chat, the show floats as an X-style PiP ── */
-  .pip-x,.pip-back{display:none}
+  .pip-x,.pip-back,.pip-max-btn,.pip-grip{display:none}   /* hidden everywhere by default; the mobile block re-shows max/grip on the wire PiP (desktop kept them in flow → a black strip under the stream) */
   @media(max-width:860px){
     html body.m-tab-wire .onair,
     html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair{
