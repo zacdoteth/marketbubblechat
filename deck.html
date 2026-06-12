@@ -155,7 +155,8 @@
   .crow .ct{margin-left:auto;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--white)}
 
   .velrow{display:flex;align-items:baseline;justify-content:space-between}
-  .velrow .now{font-family:var(--mono);font-size:24px;font-weight:700}
+  .velrow .now{font-family:var(--mono);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .velrow .now b{font-weight:inherit}
   .velrow .now small{font-size:11px;color:var(--dim);font-weight:400;margin-left:5px}
   .velrow .pk{font-family:var(--mono);font-size:11px;color:var(--dim-2)}
 
@@ -2197,6 +2198,7 @@
   /* ── masthead per-platform split (visible in every mode) + terminal tick ── */
   .tb-split{display:inline-flex;align-items:center;gap:9px;margin-left:8px;font-family:var(--mono);font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
   .tb-split .s{display:inline-flex;align-items:center;gap:4px}
+  .tb-split .s b{font-weight:inherit;color:inherit}
   .tb-split i{width:5px;height:5px;border-radius:50%;display:inline-block}
   .tb-split .tw i{background:var(--twitch)} .tb-split .kk i{background:var(--kick)} .tb-split .xx i{background:#e9e9e9}
   @media(max-width:1080px){.tb-split{display:none}}
@@ -2433,10 +2435,10 @@
     </div>
 
     <div class="tb-stats">
-      <div class="tb-stat"><span class="v"><svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span id="vTotal">19,412</span></span><span class="k">Watching</span></div>
+      <div class="tb-stat"><span class="v"><svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span id="vTotal">0</span></span><span class="k">Watching</span></div>
       <div class="tb-split" id="tbSplit" aria-label="Viewers by platform"></div>
       <div class="tb-stat"><span class="tb-live"><span class="d"></span>LIVE</span></div>
-      <div class="tb-stat"><span class="v"><span id="mpmTop">312</span></span><span class="k">Msg / min</span></div>
+      <div class="tb-stat"><span class="v"><span id="mpmTop">0</span></span><span class="k">Msg / min</span></div>
     </div>
     <button class="tb-sound tb-adm" id="admBtn" type="button" title="Admin — manage streams" aria-label="Admin panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h8m6 0h2M4 12h2m6 0h8M4 18h8m6 0h2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg><span class="tb-adm-lbl">Admin</span></button>
     <button class="tb-sound" id="soundBtn" type="button" title="Play theme music" aria-pressed="false" aria-label="Theme music"><svg class="snd-note" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg><span class="eqi" aria-hidden="true"><i></i><i></i><i></i></span></button>
@@ -2458,8 +2460,8 @@
     <aside class="stats" aria-label="Live stats">
       <div class="sblock">
         <div class="bh lab">Live Stats</div>
-        <div class="bignum" id="sBig">19,412</div>
-        <div class="sub"><span id="sMpm2">312</span> msg/min · across 3 platforms</div>
+        <div class="bignum" id="sBig">0</div>
+        <div class="sub"><span id="sMpm2">0</span> msg/min · across 3 platforms</div>
       </div>
 
       <div class="sblock">
@@ -2506,7 +2508,7 @@
 
       <div class="sblock">
         <div class="bh lab">Msg Velocity</div>
-        <div class="velrow"><span class="now" id="velNow">312<small>msg/min</small></span><span class="pk">peak <span id="velPeak">680</span></span></div>
+        <div class="velrow"><span class="now" id="velNow"><b>0</b><small>msg/min</small></span><span class="pk">peak <span id="velPeak">680</span></span></div>
       </div>
 
       <div class="sblock">
@@ -2824,7 +2826,10 @@
     peak=Math.max(peak,(vTotalOverride!=null?vTotalOverride:vTw+vKk+vX+vMb)); paintViewers();
     var mpm=(st.combined&&st.combined.msgsPerMin)||0; velPeak=Math.max(velPeak,mpm);
     var a=$('mpmTop'),b=$('sMpm2'),c=$('velNow'),d=$('velPeak');
-    if(a)a.textContent=mpm; if(b)b.textContent=mpm; if(c)c.innerHTML=mpm+'<small>msg/min</small>'; if(d)d.textContent=velPeak; }
+    var iF=function(v){return String(Math.round(v));};
+    if(a)countTo(a,mpm,iF); if(b)countTo(b,mpm,iF);
+    if(c){var cb=c.querySelector('b'); if(cb)countTo(cb,mpm,iF); else c.innerHTML=mpm+'<small>msg/min</small>';}
+    if(d)countTo(d,velPeak,iF); }
   onStats.push(applyStats);
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
@@ -2867,7 +2872,7 @@
     fetch('https://api.alternative.me/fng/?limit=1',{cache:'no-store'}).then(function(r){if(!r||!r.ok)throw 0;return r.json();})
       .then(function(j){ var d=j&&j.data&&j.data[0]; if(!d)return; var v=parseInt(d.value,10); if(isNaN(v))return;
         var col=v<=24?'var(--down)':v<=44?'#FF9F45':v<=54?'var(--white)':v<=74?'#9BE36B':'var(--up)';
-        var el=$('fngVal'),lb=$('fngLbl'); if(el){el.textContent=v;el.style.color=col;} if(lb){lb.textContent=d.value_classification||'';lb.style.color=col;}
+        var el=$('fngVal'),lb=$('fngLbl'); if(el){countTo(el,v,function(x){return String(Math.round(x));});el.style.color=col;} if(lb){lb.textContent=d.value_classification||'';lb.style.color=col;}
       }).catch(function(){});
   }
 
@@ -2963,16 +2968,34 @@
   /* ===== VIEWERS (social proof) ===== */
   var vTw=0, vKk=0, vX=0, peak=0;
   function fmtK(n){return n>=1000?(n/1000).toFixed(1)+'K':String(n);}
+  /* count-up — numbers travel, never teleport. Ease-out tween from the
+     on-screen value to the target; duration scales with the distance so
+     0→18K feels like a meter spinning up, ±3 is a quick settle. */
+  function countTo(el,target,fmt){
+    if(!el)return; target=Number(target)||0; if(!fmt)fmt=function(v){return Math.round(v).toLocaleString();};
+    var from=el.__nv;
+    if(typeof from!=='number'){ var t=String(el.textContent||''); from=parseFloat(t.replace(/[^0-9.\-]/g,''))||0; if(/k/i.test(t))from*=1000; }
+    if(el.__nvR){cancelAnimationFrame(el.__nvR);el.__nvR=null;}
+    var ad=Math.abs(target-from);
+    if(ad<2){ el.__nv=target; el.textContent=fmt(target); return; }
+    var dur=ad>=1000?1100:ad>=100?750:450, t0=null;
+    var step=function(ts){ if(t0===null)t0=ts; var k=Math.min(1,(ts-t0)/dur); k=1-Math.pow(1-k,3);
+      var v=from+(target-from)*k; el.__nv=v; el.textContent=fmt(v);
+      el.__nvR=(k<1)?requestAnimationFrame(step):null; };
+    el.__nvR=requestAnimationFrame(step);
+  }
   function paintViewers(){
     var total=(vTotalOverride!=null)?vTotalOverride:(vTw+vKk+vX+vMb);
-    $('vTotal').textContent=total.toLocaleString();
-    $('sBig').textContent=total.toLocaleString();
-    $('pTw').textContent=fmtK(vTw); $('pKk').textContent=fmtK(vKk); $('pX').textContent=fmtK(vX);
+    countTo($('vTotal'),total); countTo($('sBig'),total);
+    var kf=function(v){return fmtK(Math.round(v));};
+    countTo($('pTw'),vTw,kf); countTo($('pKk'),vKk,kf); countTo($('pX'),vX,kf);
     var mt=vTw+vKk+vX;
     var _pc=function(v){return (mt>0?(v/mt*100):0).toFixed(0)+'%';};
     $('mixTw').style.width=_pc(vTw); $('mixKk').style.width=_pc(vKk); $('mixX').style.width=_pc(vX);
-    var _mp=function(id,v){var e=$(id);if(e)e.textContent=_pc(v);}; _mp('mxTwP',vTw);_mp('mxKkP',vKk);_mp('mxXP',vX);
-    var sp=$('tbSplit'); if(sp) sp.innerHTML='<span class="s tw"><i></i>'+fmtK(vTw)+'</span><span class="s kk"><i></i>'+fmtK(vKk)+'</span><span class="s xx"><i></i>'+fmtK(vX)+'</span><span class="s mb"><i></i>'+fmtK(vMb)+'</span>';
+    var _mp=function(id,v){var e=$(id);if(e)countTo(e,mt>0?(v/mt*100):0,function(x){return Math.round(x)+'%';});}; _mp('mxTwP',vTw);_mp('mxKkP',vKk);_mp('mxXP',vX);
+    var sp=$('tbSplit'); if(sp){ /* build once, tween forever — innerHTML rebuilds would reset the tween state */
+      if(!sp.__built){ sp.innerHTML='<span class="s tw"><i></i><b></b></span><span class="s kk"><i></i><b></b></span><span class="s xx"><i></i><b></b></span><span class="s mb"><i></i><b></b></span>'; sp.__built=1; }
+      var bs=sp.querySelectorAll('b'); countTo(bs[0],vTw,kf); countTo(bs[1],vKk,kf); countTo(bs[2],vX,kf); countTo(bs[3],vMb,kf); }
   }
 
   /* ===== STREAM CHIPS / CHANNELS ===== */
@@ -4149,7 +4172,7 @@
     for(var i=0;i<n;i++){ var r=pool[i%(pool.length||1)]; var plat=r?r.plat:platforms[i%3]; var ini=r?(r.h[0]||'').toUpperCase():'';
       out.push('<span class="a '+plat+(i===0?' nu':'')+'">'+ini+'</span>'); }
     c.innerHTML=out.join('');
-    var nN=$('audN'); if(nN)nN.textContent=(vTw+vKk+vX).toLocaleString();
+    var nN=$('audN'); if(nN)countTo(nN,vTw+vKk+vX);
   }
   // seed from whoever's already in the roster, then keep them fresh
   ROSTER.forEach(noteFirstTimer);
