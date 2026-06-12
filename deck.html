@@ -1821,8 +1821,14 @@
   .tb-sound.on .eqi i:nth-child(3){animation-delay:0s}
   @keyframes eq{0%,100%{height:4px}50%{height:13px}}
   @media(prefers-reduced-motion:reduce){ .tb-sound.on .eqi i{animation:none;height:9px} }
-  /* ── admin door — quiet sliders icon; blue (operator colour) when you're inside ── */
+  /* ── ADMIN control — obvious labeled pill, admin-only (revealed by a control key), an on/off switch ── */
+  .tb-adm{display:none;gap:6px;color:var(--blue-hi);border-color:rgba(91,140,255,.45)}
+  body.has-ctl .tb-adm{display:flex}                                  /* only key-holders ever see it */
   .tb-adm svg{width:15px;height:15px;flex:0 0 auto}
+  .tb-adm-lbl{font-family:var(--gk);font-size:11px;font-weight:700;letter-spacing:.03em}
+  .tb-adm:hover{color:#fff;border-color:var(--blue-hi);background:rgba(91,140,255,.14)}
+  .tb-adm.on{color:#06070a;background:var(--blue-hi);border-color:transparent;box-shadow:0 0 16px -3px rgba(91,140,255,.7)}  /* switch ON */
+  .tb-adm.on:hover{color:#06070a;background:var(--blue-hi)}
   /* ── NATIVE MB chat identity (brand blue) ── */
   .wmsg.mb .usr{color:var(--blue-hi)}
   .wmsg.mb .plat{background:rgba(91,140,255,.16);color:var(--blue-hi)}
@@ -2193,6 +2199,71 @@
       align-items:center;justify-content:center;cursor:pointer;box-shadow:0 14px 38px -10px rgba(0,0,0,.8)}
     .pip-back svg{width:20px;height:20px}
   }
+  /* ════════════════════════════════════════════════════════════════
+     MOBILE PIXEL-PASS — density + draggable PiP (the late authority)
+     ════════════════════════════════════════════════════════════════ */
+  @media(max-width:860px){
+    /* — THE WIRE header: a quiet label, not a headline. chat is the hero — */
+    .wire-head{padding:5px 12px 4px !important;gap:8px}
+    .wire-head .ttl{font-family:var(--gk) !important;font-size:11px !important;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+    .wire-head .tools{gap:4px}
+    .wire-head .wtool{width:30px;height:30px}
+    /* composer to the FLOOR — kill the stale 72px reservation from the old fixed-bar era */
+    html body.m-tab-wire .wire,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .wire{padding-bottom:12px !important}
+    .wtabs{padding:4px 10px !important;gap:3px}
+    .wtabs button{padding:5px 11px !important;font-size:11px !important;min-height:30px !important;border-radius:7px}
+
+    /* — MARKET WATCH: kill the plate, shrink F&G to a chip, let the coins RUN — */
+    .mw-plate{display:none !important}
+    .tape-tag{display:none !important}
+    .fng{padding:0 10px !important;gap:5px;border-right:1px solid var(--line)}
+    .fng .k{display:none !important}                                /* "Fear & Greed" words eat the row */
+    .fng .v{font-size:12px !important}
+    .fng .s{display:inline !important;font-size:8px !important}     /* keep the mood word, tiny */
+    .tape-track{overflow:hidden !important}                         /* marquee drives it now */
+    .tape-row{animation:marq 42s linear infinite !important;width:max-content !important;transform:none}
+    .tape:active .tape-row,.tape-track:active .tape-row{animation-play-state:paused !important}
+
+    /* — CONNECT (+) FAB: an operator action. hide for viewers, lift clear of the composer — */
+    body:not(.op) .mb-fab{display:none !important}
+    body.op.m-tab-wire .mb-fab{display:flex}
+    .mb-fab{bottom:calc(var(--nav-h) + var(--sab) + 78px)}
+
+    /* — THE PiP: flies top-right (over OLD msgs, never the fresh ones), drag + maximize — */
+    html body.m-tab-wire .onair,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair{
+      top:calc(var(--top-h) + var(--tape-h) + 8px) !important; bottom:auto !important;
+      right:8px !important; left:auto !important;
+      width:min(46vw,210px) !important; height:auto !important; aspect-ratio:16/9 !important;
+      touch-action:none}
+    /* dragged → anchor by the saved corner */
+    html body.pip-moved.m-tab-wire .onair,
+    html body.pip-moved:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair{
+      left:var(--pip-x,8px) !important; top:var(--pip-y,90px) !important; right:auto !important; bottom:auto !important}
+    /* maximized → big glass card, same drag anchor */
+    html body.pip-max.m-tab-wire .onair,
+    html body.pip-max:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair{
+      width:min(92vw,560px) !important}
+    /* the grab layer — drag the whole card over the iframe; buttons sit above it */
+    .pip-grip{display:none}
+    html body.m-tab-wire .onair .pip-grip,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .pip-grip{
+      display:block;position:absolute;inset:0;z-index:8;cursor:grab;touch-action:none}
+    html body.pip-dragging .onair .pip-grip{cursor:grabbing}
+    /* maximize button — top-left twin of the close (×) */
+    .pip-max-btn{display:none}
+    html body.m-tab-wire .onair .pip-max-btn,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .pip-max-btn{
+      display:flex;position:absolute;top:5px;left:5px;z-index:9;width:25px;height:25px;border:0;border-radius:50%;padding:0;
+      background:rgba(8,8,12,.74);color:#fff;align-items:center;justify-content:center;cursor:pointer}
+    .pip-max-btn svg{width:14px;height:14px}
+    /* close (×) and switcher stay clickable above the grip; desktop theater btn is irrelevant here */
+    html body.m-tab-wire .onair .pip-x,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .pip-x{z-index:9}
+    html body.m-tab-wire .onair .oa-full,
+    html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .oa-full{display:none !important}
+  }
   /* ── v2: shared show / operator / hints ── */
   .onair .player{margin-bottom:12px}
   .mixbar .m-x{background:#8E8E96}                /* silver, not white — a full X bar must read as data, not a blank bar */
@@ -2269,7 +2340,7 @@
       <div class="tb-stat"><span class="tb-live"><span class="d"></span>LIVE</span></div>
       <div class="tb-stat"><span class="v"><span id="mpmTop">312</span></span><span class="k">Msg / min</span></div>
     </div>
-    <button class="tb-sound tb-adm" id="admBtn" type="button" title="Admin — manage streams" aria-label="Admin panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h8m6 0h2M4 12h2m6 0h8M4 18h8m6 0h2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg></button>
+    <button class="tb-sound tb-adm" id="admBtn" type="button" title="Admin — manage streams" aria-label="Admin panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h8m6 0h2M4 12h2m6 0h8M4 18h8m6 0h2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></svg><span class="tb-adm-lbl">Admin</span></button>
     <button class="tb-sound" id="soundBtn" type="button" title="Play theme music" aria-pressed="false" aria-label="Theme music"><svg class="snd-note" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg><span class="eqi" aria-hidden="true"><i></i><i></i><i></i></span></button>
   </header>
 
@@ -2373,7 +2444,7 @@
           <span class="op-tag">Operator</span>
           <button id="opClear" type="button">Clear chat</button>
           <label class="op-slow">Slow mode <select id="opSlow"><option value="0">off</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select></label>
-          <span class="op-lock">Operator access required \u2014 open /add?key=YOUR_TOKEN</span>
+          <span class="op-lock">Admin key required — open your keyed /add link</span>
         </div>
         <div class="chips" id="streamChips"></div>
       </div>
@@ -2413,6 +2484,8 @@
           </div>
           <div class="reacts" id="reacts"></div>
           <button class="pip-x" id="pipX" type="button" aria-label="Hide video">&times;</button>
+          <button class="pip-max-btn" id="pipMax" type="button" aria-label="Resize video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+          <div class="pip-grip" id="pipGrip" aria-hidden="true"></div>
           <button class="oa-full" id="oaFull" type="button" title="Maximize — hide chat" aria-label="Maximize the stage / hide chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
         </div>
         <div class="oa-meta" style="display:none">
@@ -2545,6 +2618,7 @@
   var FEATURED_ID=null, GUEST_ID=null, vMb=0, vTotalOverride=null, SLOWN=0;
   var IS_OP=/\/add\/?$/.test(location.pathname)||new URLSearchParams(location.search).has('add');
   if(IS_OP){ document.body.classList.add('op'); if(!controlToken()) document.body.classList.add('op-locked'); }
+  if(controlToken()||IS_OP) document.body.classList.add('has-ctl');   /* the Admin switch is revealed only to key-holders */
   var onSnapshot=[], onServerMessage=[], onStats=[], onStreams=[];
   var reconnectDelay=1000+Math.random()*1000, RECONNECT_MAX=30000;
   function scheduleReconnect(){ setTimeout(connectBackend,reconnectDelay); reconnectDelay=Math.min(reconnectDelay*1.5,RECONNECT_MAX); }
@@ -2887,7 +2961,7 @@
     var verified=v.host?'<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .2.2 3L19.4 9 21 12l-1.6 3 .4 3-3 .2L15 21l-3-1.6L9 21l-1.8-2.6-3-.2.4-3L3 12l1.6-3-.2-3 3-.2L9.6 3.8z"/></svg>':'';
     var _ini=(v.h||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||(v.h||'?').slice(0,2);
     el.innerHTML='<div class="av '+v.plat+'" aria-hidden="true">'+_ini+'</div><div class="body"><div class="top"><span class="usr">'+v.h+'</span>'+verified+badges+
-      '<span class="right"><span class="ch">'+PLABEL[v.plat].toLowerCase()+'·'+v.src+'</span><span class="plat" title="'+PLABEL[v.plat]+'" aria-label="'+PLABEL[v.plat]+'">'+ICON[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
+      '<span class="right"><span class="ch">'+v.src+'</span><span class="plat" title="'+PLABEL[v.plat]+'" aria-label="'+PLABEL[v.plat]+'">'+ICON[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
       '<div class="txt">'+highlightText(text)+'</div></div>';
     attachTip(el,v);
     // apply current filter
@@ -3406,7 +3480,7 @@
        already saved ?key= to localStorage on the operator's first keyed visit) */
     var adm=$('admBtn');
     if(adm){
-      if(IS_OP){ adm.classList.add('on'); adm.title='Exit admin — back to the show'; adm.setAttribute('aria-label','Exit admin'); }
+      if(IS_OP){ adm.classList.add('on'); adm.title='Exit admin — back to the show'; adm.setAttribute('aria-label','Exit admin'); var _l=adm.querySelector('.tb-adm-lbl'); if(_l)_l.textContent='Exit'; }
       adm.addEventListener('click',function(){
         try{
           if(location.protocol==='file:'){ var u=new URL(location.href); if(IS_OP) u.searchParams.delete('add'); else u.searchParams.set('add','1'); u.searchParams.delete('key'); location.href=u.href; }
@@ -3418,6 +3492,43 @@
     var os=$('opSlow'); if(os) os.addEventListener('change',function(){ sendBackend({type:'slowMode',seconds:(parseInt(os.value,10)||0),token:controlToken()}); });
     var px=$('pipX'); if(px) px.addEventListener('click',function(ev){ ev.stopPropagation(); document.body.classList.add('pip-off'); });
     var pb=$('pipBack'); if(pb) pb.addEventListener('click',function(){ document.body.classList.remove('pip-off'); });
+    /* ── PiP: draggable like the X mini-player + maximize (tap toggles, grab moves) ── */
+    (function(){
+      var oa=document.querySelector('.onair'); if(!oa) return;
+      var grip=$('pipGrip'), maxb=$('pipMax');
+      var dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0, w=0, h=0;
+      function clamp(v,min,max){ return v<min?min:(v>max?max:v); }
+      function pt(e){ return e.touches&&e.touches[0] ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:e.clientX,y:e.clientY}; }
+      function reclamp(){ if(!document.body.classList.contains('pip-moved')) return;
+        var r=oa.getBoundingClientRect();
+        document.documentElement.style.setProperty('--pip-x',clamp(r.left,6,innerWidth-r.width-6)+'px');
+        document.documentElement.style.setProperty('--pip-y',clamp(r.top,6,innerHeight-r.height-6)+'px'); }
+      function toggleMax(){ document.body.classList.toggle('pip-max'); requestAnimationFrame(reclamp); }
+      function start(e){ var r=oa.getBoundingClientRect(); w=r.width; h=r.height; var p=pt(e); sx=p.x; sy=p.y; ox=r.left; oy=r.top;
+        moved=false; dragging=true; document.body.classList.add('pip-dragging');
+        try{ if(e.pointerId!=null) grip.setPointerCapture(e.pointerId); }catch(_){} }
+      function move(e){ if(!dragging) return; var p=pt(e); var dx=p.x-sx, dy=p.y-sy;
+        if(Math.abs(dx)+Math.abs(dy)>4) moved=true;
+        document.body.classList.add('pip-moved');
+        document.documentElement.style.setProperty('--pip-x',clamp(ox+dx,6,innerWidth-w-6)+'px');
+        document.documentElement.style.setProperty('--pip-y',clamp(oy+dy,6,innerHeight-h-6)+'px');
+        if(e.cancelable) e.preventDefault(); }
+      function end(){ if(!dragging) return; dragging=false; document.body.classList.remove('pip-dragging'); if(!moved) toggleMax(); }
+      if(grip){
+        if(window.PointerEvent){
+          grip.addEventListener('pointerdown',start);
+          grip.addEventListener('pointermove',move);
+          grip.addEventListener('pointerup',end);
+          grip.addEventListener('pointercancel',end);
+        } else {
+          grip.addEventListener('touchstart',start,{passive:true});
+          grip.addEventListener('touchmove',move,{passive:false});
+          grip.addEventListener('touchend',end);
+        }
+      }
+      if(maxb) maxb.addEventListener('click',function(ev){ ev.stopPropagation(); toggleMax(); });
+      addEventListener('resize',reclamp);
+    })();
     var oaF=$('oaFull'); if(oaF) oaF.addEventListener('click',function(){ var on=document.body.classList.toggle('chat-collapsed');
       oaF.classList.toggle('on',on); oaF.title=on?'Show chat':'Maximize — hide chat'; });
     var fw=$('flexWrap'); if(fw) fw.addEventListener('click',function(e){ if(e.target===fw) closeFlex(); });
