@@ -279,7 +279,7 @@
   .react{position:absolute;bottom:0;font-size:18px;animation:fup 2.4s var(--ease) forwards}
   @keyframes fup{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-86px) scale(1.15);opacity:0}}
 
-  .oa-meta{padding:11px 14px 13px}
+  .oa-meta{padding:7px 14px 11px}
   .oa-meta .ti{font-family:var(--serif);font-size:14px;font-weight:700;line-height:1.25}
   .oa-meta .who{font-family:var(--gk);font-size:11px;color:var(--dim);margin-top:3px}
   .oa-meta .who b{color:var(--blue)}
@@ -331,7 +331,8 @@
   .wxc{flex:0 0 116px;scroll-snap-align:start;padding:7px 8px 6px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line-soft);transition:border-color .2s var(--ease)}
   .wxc:hover{border-color:rgba(91,140,255,.35)}
   .wxc .wxt{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.09em;color:var(--dim)}
-  .wxc .wxt .ic{margin-left:auto;font-size:12px;line-height:1}
+  .wxc .wxt .ic{margin-left:auto;display:inline-flex;color:var(--dim)}
+  .wxc .wxt .ic svg{width:12px;height:12px}
   .wxc .wxq{font-family:var(--gk);font-size:11.5px;font-weight:700;color:var(--white);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .wxc .wxm{display:flex;align-items:center;gap:5px;margin-top:5px}
   .wxc .wxl{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;flex:0 0 auto}
@@ -1185,7 +1186,7 @@
     overflow-y:auto;-webkit-overflow-scrolling:touch;border:none}
   body[data-tab="onair"] .player{margin:12px}
   body[data-tab="onair"] .feeds{aspect-ratio:16/10}
-  body[data-tab="onair"] .oa-meta{padding:12px 14px calc(16px + env(safe-area-inset-bottom))}
+  body[data-tab="onair"] .oa-meta{padding:8px 14px calc(16px + env(safe-area-inset-bottom))}
 
   /* MARKETS (.markets lives inside .rightcol) */
   body[data-tab="markets"] .rightcol{display:flex}
@@ -1481,7 +1482,7 @@
   body.watch .vf.hero .np .nm{font-size:20px}
   .lt{left:10px;right:10px;bottom:10px}
   .lt .ti{font-size:clamp(14px,4.4vw,20px)}
-  .oa-meta{padding:13px 14px calc(var(--nav-h) + var(--sab) + 20px)}
+  .oa-meta{padding:8px 14px calc(var(--nav-h) + var(--sab) + 20px)}
   .oa-meta .ti{font-size:16px}
   .oa-act{gap:9px;margin-top:13px}
   .obtn{padding:13px 0;font-size:12px;min-height:48px}
@@ -1685,7 +1686,7 @@
   .feeds{display:flex;flex-wrap:wrap;aspect-ratio:auto;gap:6px}
   .vf.hero{order:-1;flex:1 1 100%;aspect-ratio:16/9}
   .vf:not(.hero){flex:1 1 calc(50% - 3px);aspect-ratio:4/3}
-  .oa-meta{padding:13px 16px 18px}
+  .oa-meta{padding:8px 16px 14px}
   .oa-act .obtn{padding:13px 0;font-size:12px} /* fat-finger CTAs */
 
   /* MARKETS as its own tab — always available */
@@ -1815,7 +1816,7 @@
   .oa-src.on{opacity:1;border-color:var(--blue)}
   .oa-src.twitch.on{border-color:var(--twitch)} .oa-src.kick.on{border-color:var(--kick)}
   /* ── MARKETS: coins + predictions, both visible (split scroll panes) ── */
-  .mk-split{flex:1 0 auto;display:flex;flex-direction:column}
+  .mk-split{flex:0 0 auto;display:flex;flex-direction:column}   /* content height — FORECAST hugs the lists, no dead band */
   .mk-pane{min-height:0;display:flex;flex-direction:column;overflow:hidden}
   .mk-pane.coins{flex:0 0 auto;border-bottom:1px solid var(--line)}
   @media(min-width:861px){ .mk-pane.coins .mk-list,.mk-pane.preds .mk-list{max-height:300px} }   /* desktop: equal panes, inner scroll carries the rest */
@@ -2037,7 +2038,7 @@
   .mwc.mwci img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover}
   /* ── goldilocks: the tank is a calm near-square bound to the rail's width;
        the dense list breathes beneath it — art above, terminal below ── */
-  .tank{flex:0 0 auto;aspect-ratio:16/9;max-height:215px;min-height:140px}   /* shorter bubble → forecast rail + lists breathe below */
+  .tank{flex:1 0 auto;aspect-ratio:16/9;max-height:300px;min-height:140px}   /* the hero absorbs tall-viewport slack (grow, capped) */
   .markets .mk-split{display:flex}
   /* ── timeframe machine: 1H 1D 1W 1M (active = green pill, dark type) ── */
   .mk-tf{display:inline-flex;gap:2px;margin-left:10px;background:#17171C;border:1px solid var(--line);border-radius:9px;padding:2px}
@@ -3194,13 +3195,18 @@
     ['US recession before 2027?',23,'no','$1.6M','Macro'],
     ['Trump approval > 50% by EOY?',41,'no','$720K','Politics'],
     ['Govt shutdown in 2026?',33,'no','$410K','Politics']];
+  var WXI={ /* Lucide (ISC) — sun / cloud-rain / cloud-sun / cloud-lightning */
+    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+    rain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6M8 14v6M12 16v6"/></svg>',
+    cloudsun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg>',
+    storm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>'};
   var wx=[
-    ['🇺🇸','NYC','☀️','87°+ today',64,'yes','$412K'],
-    ['🇬🇧','LONDON','🌧️','Rain by 6pm',58,'yes','$238K'],
-    ['🇯🇵','TOKYO','⛅','79°+ high',73,'yes','$187K'],
-    ['🇺🇸','MIAMI','⛈️','Storm today',53,'no','$154K'],
-    ['🇫🇷','PARIS','⛅','75°+ high',61,'no','$121K'],
-    ['🇦🇪','DUBAI','☀️','105°+ high',91,'yes','$96K']];
+    ['NYC','sun','87°+ today',64,'yes','$412K'],
+    ['LONDON','rain','Rain by 6pm',58,'yes','$238K'],
+    ['TOKYO','cloudsun','79°+ high',73,'yes','$187K'],
+    ['MIAMI','storm','Storm today',53,'no','$154K'],
+    ['PARIS','cloudsun','75°+ high',61,'no','$121K'],
+    ['DUBAI','sun','105°+ high',91,'yes','$96K']];
   function groupLabel(title,note){
     var el=document.createElement('div'); el.className='mk-group';
     el.innerHTML='<span class="lab">'+title+'</span><span class="note">'+note+'</span>';
@@ -3713,11 +3719,11 @@
     var wc=$('mkWx');
     if(wc&&!wc.childElementCount){
       wx.forEach(function(w){
-        var el=document.createElement('div'); el.className='wxc '+w[5]; el.title=w[1]+' — '+w[3]+'? · '+(w[5]==='yes'?'YES':'NO')+' '+w[4]+'%';
-        el.innerHTML='<div class="wxt">'+w[0]+' '+w[1]+'<span class="ic">'+w[2]+'</span></div>'+
-          '<div class="wxq">'+w[3]+'?</div>'+
-          '<div class="wxm"><span class="wxl">'+(w[5]==='yes'?'YES':'NO')+'</span><span class="wxb"><i style="width:'+w[4]+'%"></i></span><span class="wxp">'+w[4]+'%</span></div>'+
-          '<div class="wxv">'+w[6]+' VOL</div>';
+        var el=document.createElement('div'); el.className='wxc '+w[4]; el.title=w[0]+' — '+w[2]+'? · '+(w[4]==='yes'?'YES':'NO')+' '+w[3]+'%';
+        el.innerHTML='<div class="wxt">'+w[0]+'<span class="ic">'+(WXI[w[1]]||'')+'</span></div>'+
+          '<div class="wxq">'+w[2]+'?</div>'+
+          '<div class="wxm"><span class="wxl">'+(w[4]==='yes'?'YES':'NO')+'</span><span class="wxb"><i style="width:'+w[3]+'%"></i></span><span class="wxp">'+w[3]+'%</span></div>'+
+          '<div class="wxv">'+w[5]+' VOL</div>';
         wc.appendChild(el);
       });
       var more=document.createElement('div'); more.className='wxc more'; more.textContent='+12 MORE'; wc.appendChild(more);
