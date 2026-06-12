@@ -241,7 +241,7 @@
   /* ───────── RIGHT: ON AIR + MARKETS ───────── */
   .onair{flex:0 0 auto;border-bottom:1px solid var(--line)}
   body.watch .onair{flex:1 1 auto;border-bottom:none;display:flex;flex-direction:column}
-  .oa-head{display:flex;align-items:center;gap:8px;padding:11px 14px}
+  .oa-head{display:flex;align-items:center;gap:8px;padding:5px 14px 7px}
   .oa-head .lab{display:flex;align-items:center;gap:6px}
   .oa-head .lab .d{width:6px;height:6px;border-radius:50%;background:var(--down);animation:lp var(--phi) infinite}
   .oa-head .feat{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--twitch-t)}
@@ -923,7 +923,7 @@
 
   /* ---- 2e. ON AIR pane ---- */
   .onair{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}
-  .oa-head{position:sticky;top:0;z-index:4;padding:12px 16px;
+  .oa-head{position:sticky;top:0;z-index:4;padding:5px 16px 7px;
     background:var(--glass-bg-soft);
     -webkit-backdrop-filter:blur(16px) saturate(1.4);
     backdrop-filter:blur(16px) saturate(1.4);}
@@ -1448,8 +1448,8 @@
 
   /* 6 ─ ON AIR region : clean 16:9 hero, single feed */
   .onair{flex:0 0 auto}
-  body.m-tab-onair .onair{padding-top:6px}
-  .oa-head{padding:11px 14px}
+  body.m-tab-onair .onair{padding-top:0}
+  .oa-head{padding:5px 14px 7px}
   .player{margin:0 12px!important;border-radius:12px}
   body.watch .player{margin:0 12px!important;flex:0 0 auto}
   .feeds{display:block!important;aspect-ratio:16/9!important;height:auto!important;padding:0!important;gap:0}
@@ -1870,10 +1870,10 @@
   @media(prefers-reduced-motion:reduce){ .oa-idle::before,.oa-idle-mark{animation:none} }
   /* ── mobile: the stream sits clean at the top of the ON AIR pane ── */
   @media(max-width:860px){
-    .onair{padding-top:10px}
+    .onair{padding-top:0}
     .onair .player{margin:0 12px !important;border-radius:14px}
     .onair .oa-idle-sub{font-size:14px}
-    .onair .oa-head{padding:2px 14px 8px}
+    .onair .oa-head{padding:4px 14px 7px}
   }
   @media(max-width:860px){
     /* ── WIRE/LIVE tab = video on top (16/9), chat below — like the Twitch app ── */
@@ -3689,24 +3689,100 @@
 
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
+  var EMBED_FAIL={}, KICK_FAIL_TTL=90000, KICK_CHECK_MS=2600, EMBED_LOAD_MS=9000;
+  function streamSlug(v){ return String(v||'').trim().toLowerCase().replace(/^@/,'').replace(/[\/?#].*$/,''); }
+  function streamToken(v){ return streamSlug(v).replace(/[^a-z0-9]/g,''); }
   function playerSrc(s){
     if(s.plat==='twitch') return 'https://player.twitch.tv/?'+(s.video?('video='+encodeURIComponent(s.video)+'&time='+encodeURIComponent(s.time||'0h0m0s')):('channel='+encodeURIComponent(s.ch)))+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted='+(STREAM_MUTED?'true':'false')+'&autoplay=true';
-    if(s.plat==='kick'){ var kch=String(s.ch||'').trim().toLowerCase().replace(/^@/,'').replace(/[\/?#].*$/,'');   /* kick slugs are lowercase — caps/paths trip "this embed seems to be misconfigured" */
-      return 'https://player.kick.com/'+encodeURIComponent(kch)+'?autoplay=true&muted='+(STREAM_MUTED?'true':'false'); }
+    if(s.plat==='kick'){ var kch=streamSlug(s.ch);   /* current Kick embed requires only /<username>; query params are optional and can fail closed */
+      return kch?'https://player.kick.com/'+encodeURIComponent(kch):''; }
     return '';
   }
   /* ON AIR — ONE video at a time. The connected Market Bubble stream fills the whole box.
      (Other connected channels are TEST placeholders — pick which is featured via the switcher.) */
   var featuredKey=null, prevKeys={};
-  function camKey(s){ return s.plat+'/'+s.ch; }
+  function camKey(s){ return (s.plat||'')+'/'+streamSlug(s.ch); }
+  function embedFailed(s){
+    var f=EMBED_FAIL[camKey(s)];
+    if(!f) return false;
+    if(Date.now()-f.t>KICK_FAIL_TTL){ delete EMBED_FAIL[camKey(s)]; return false; }
+    return true;
+  }
+  function markEmbedFailed(s,why){ EMBED_FAIL[camKey(s)]={t:Date.now(),why:why||'failed'}; }
+  function sameCreator(a,b){
+    var ac=streamToken(a&&a.ch), bc=streamToken(b&&b.ch), as=streamToken(a&&a.src), bs=streamToken(b&&b.src);
+    return !!((ac&&ac===bc)||(ac&&ac===bs)||(as&&as===bc)||(as&&as===bs));
+  }
+  function creatorTwitch(kick,live){
+    for(var i=0;i<live.length;i++){
+      if(live[i].plat==='twitch'&&sameCreator(kick,live[i])&&!embedFailed(live[i])) return live[i];
+    }
+    return null;
+  }
+  function pickOnAir(live){
+    var i,sel=null;
+    if(FEATURED_ID!=null) for(i=0;i<live.length;i++){ if(live[i].id===FEATURED_ID){ sel=live[i]; break; } }
+    if(sel){
+      if(sel.plat==='kick'&&embedFailed(sel)) return creatorTwitch(sel,live);
+      return sel;
+    }
+    for(i=0;i<live.length;i++){
+      if(live[i].plat==='twitch'&&!embedFailed(live[i])) return live[i];
+      if(live[i].plat==='kick'){
+        if(!embedFailed(live[i])) return live[i];
+        var tw=creatorTwitch(live[i],live); if(tw) return tw;
+      }
+    }
+    return null;
+  }
+  function kickLiveCheck(s,done){
+    var slug=streamSlug(s&&s.ch), called=false, ctl=null, tid=0;
+    function finish(v){ if(called)return; called=true; clearTimeout(tid); try{ if(ctl)ctl.abort(); }catch(_){} done(v); }
+    function liveValue(d){
+      if(!d||typeof d!=='object') return null;
+      if('livestream' in d) return !!d.livestream;
+      if(d.data&&typeof d.data==='object'&&'livestream' in d.data) return !!d.data.livestream;
+      if('is_live' in d) return !!d.is_live;
+      if('live' in d) return !!d.live;
+      return null;
+    }
+    if(!slug||typeof fetch!=='function'){ finish(null); return; }
+    try{ if(typeof AbortController==='function') ctl=new AbortController(); }catch(_){}
+    tid=setTimeout(function(){ finish(null); },KICK_CHECK_MS);
+    try{
+      fetch('https://kick.com/api/v2/channels/'+encodeURIComponent(slug),{credentials:'omit',mode:'cors',signal:ctl&&ctl.signal})
+        .then(function(r){ if(!r.ok) return null; return r.json(); })
+        .then(function(d){ finish(liveValue(d)); })
+        .catch(function(){ finish(null); });
+    }catch(e){ finish(null); }
+  }
   function setEmbed(vf,s){
     var h=vf.querySelector('.vf-embed'); if(!h){ h=document.createElement('div'); h.className='vf-embed'; vf.insertBefore(h, vf.firstChild); }
-    if(vf.getAttribute('data-ch')!==camKey(s)){
-      h.innerHTML='<iframe src="'+playerSrc(s).replace(/"/g,'&quot;')+'" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="'+(s.ch||'')+'"></iframe>';
-      vf.setAttribute('data-ch',camKey(s));
+    var key=camKey(s), src=playerSrc(s);
+    if(vf.getAttribute('data-ch')===key&&h.getAttribute('data-src')===src&&h.querySelector('iframe')) return;
+    h.innerHTML=''; h.setAttribute('data-src',src); vf.setAttribute('data-ch',key);
+    function fail(why){
+      markEmbedFailed(s,why);
+      if(vf.getAttribute('data-ch')===key){
+        h.remove(); vf.classList.remove('isLive'); vf.removeAttribute('data-ch');
+      }
+      setTimeout(renderOnAir,0);
     }
+    function mount(){
+      if(vf.getAttribute('data-ch')!==key||h.getAttribute('data-src')!==src) return;
+      if(!src){ fail('empty-src'); return; }
+      var loaded=false, timer=setTimeout(function(){ if(!loaded) fail('timeout'); },EMBED_LOAD_MS);
+      var fr=document.createElement('iframe');
+      fr.src=src; fr.title=s.ch||''; fr.allow='autoplay; fullscreen; encrypted-media; picture-in-picture';
+      fr.setAttribute('allowfullscreen','true'); fr.setAttribute('scrolling','no');
+      fr.onerror=function(){ if(!loaded){ clearTimeout(timer); fail('iframe-error'); } };
+      fr.onload=function(){ loaded=true; clearTimeout(timer); };
+      h.appendChild(fr);
+    }
+    if(s.plat==='kick') kickLiveCheck(s,function(isLive){ if(isLive===false) fail('not-live'); else mount(); });
+    else mount();
   }
-  function renderSwitch(live){
+  function renderSwitch(live,activeId){
     var box=document.getElementById('oaSwitch');
     if(!box){ var pl=document.querySelector('.player'); if(!pl)return;
       box=document.createElement('div'); box.id='oaSwitch'; box.className='oa-switch';
@@ -3715,16 +3791,15 @@
       pl.appendChild(box); }
     if(live.length<2){ box.innerHTML=''; box.style.display='none'; return; }
     box.style.display='flex';
-    box.innerHTML=live.map(function(s){ return '<button class="oa-src '+s.plat+(s.id===FEATURED_ID?' on':'')+'" data-fid="'+s.id+'" type="button" title="Feature '+s.ch+'">'+(ICON[s.plat]||'')+'<span>'+s.ch+'</span></button>'; }).join('');
+    if(arguments.length<2) activeId=FEATURED_ID;
+    box.innerHTML=live.map(function(s){ return '<button class="oa-src '+s.plat+(s.id===activeId?' on':'')+'" data-fid="'+s.id+'" type="button" title="Feature '+s.ch+'">'+(ICON[s.plat]||'')+'<span>'+s.ch+'</span></button>'; }).join('');
   }
   function renderOnAir(){
     try{
       var live=(sources||[]).filter(function(s){return s.live&&s.ch;});
       var hero=document.querySelector('.feeds .vf.hero'); var feeds=document.querySelector('.feeds'); var pl=document.querySelector('.player');
       if(!hero||!feeds) return;
-      var feat=null,i;
-      for(i=0;i<live.length;i++){ if(FEATURED_ID!=null&&live[i].id===FEATURED_ID){ feat=live[i]; break; } }
-      if(!feat) for(i=0;i<live.length;i++){ if(live[i].plat==='twitch'||live[i].plat==='kick'){ feat=live[i]; break; } }
+      var feat=pickOnAir(live);
       if(!feat || (feat.plat!=='twitch'&&feat.plat!=='kick')){
         /* empty show, or featured is an X broadcast (no embed) → honest idle stage; the merged chat carries it */
         feeds.classList.remove('has-live'); if(pl)pl.classList.remove('liveon');
@@ -3733,13 +3808,13 @@
         var sub=document.querySelector('.oa-idle-sub');
         if(sub) sub.textContent=feat?'':'Connect a stream \u2014 the stage goes live';
         var ow0=$('oaWho'); if(ow0){ ow0.innerHTML=''; ow0.parentNode.style.display='none'; }
-        renderSwitch(live); return;
+        renderSwitch(live,null); return;
       }
       feeds.classList.add('has-live'); if(pl)pl.classList.add('liveon');
       setEmbed(hero,feat); hero.classList.add('isLive');
       var ow=$('oaWho'); if(ow){ var plats=[]; live.forEach(function(s){ var L=PLABEL[s.plat]||s.plat; if(plats.indexOf(L)<0)plats.push(L); });
         ow.innerHTML='<b>'+feat.ch+'</b> \u00b7 live on '+plats.join(' \u00b7 '); ow.parentNode.style.display=''; }
-      renderSwitch(live);
+      renderSwitch(live,feat.id);
     }catch(e){}
   }
   function soundInit(){
