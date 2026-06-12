@@ -322,6 +322,15 @@
   .prow .ppct{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto;margin-left:auto}
   .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:3px}
   .prow.yes .pbar i{background:var(--up)} .prow.no .pbar i{background:var(--down)}
+  /* odds sparklines — the line wanders like the market, the dot is now */
+  .prow .pspark{flex:0 0 96px;height:13px;display:block}
+  .prow .pspark svg,.wxc .wxs svg{width:100%;height:100%;display:block;overflow:visible}
+  .prow.yes .pspark{color:var(--up)} .prow.no .pspark{color:var(--down)}
+  .wxc .wxs{flex:1;min-width:0;height:11px;display:block}
+  .wxc.yes .wxs{color:var(--up)} .wxc.no .wxs{color:var(--down)}
+  .pspark .lv,.wxs .lv{animation:pulse var(--phi) infinite}
+  .ppct.tick,.wxp.tick{animation:oddsTick .7s var(--ease)}
+  @keyframes oddsTick{0%{filter:brightness(2.2)}100%{filter:brightness(1)}}
   .prow.yes .plead,.prow.yes .ppct{color:var(--up)} .prow.no .plead,.prow.no .ppct{color:var(--down)}
   /* ── RAINMAN FORECAST — Polymarket weather dailies, swipeable card rail ── */
   .wx-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 5px;border-top:1px solid var(--line-soft)}
@@ -438,7 +447,8 @@
   .pm-logo{width:14px;height:14px;flex:0 0 auto;border-radius:4px}
   .pm-by b{color:var(--blue-hi);font-weight:700;text-transform:none;letter-spacing:.01em;font-size:10.5px}
   .pm-cat{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 4px;border-top:1px solid var(--line-soft)}
-  .pm-cat-l{font-family:var(--gk);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .pm-cat-l{font-family:var(--gk);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:inline-flex;align-items:center;gap:5px}
+  .pm-cat-l svg{width:10px;height:10px;opacity:.75;flex:0 0 auto}
   .pm-cat-n{font-family:var(--mono);font-size:9px;color:var(--dim-2);letter-spacing:.02em}
   .pm-presented{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft);font-family:var(--gk);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim-2)}
   .pm-presented b{color:var(--white);font-weight:700;text-transform:none;letter-spacing:0;font-size:12px}
@@ -3207,6 +3217,19 @@
     ['MIAMI','storm','Storm today',53,'no','$154K'],
     ['PARIS','cloudsun','75°+ high',61,'no','$121K'],
     ['DUBAI','sun','105°+ high',91,'yes','$96K']];
+  var CATI={ /* Lucide (ISC): bitcoin / cpu / landmark / vote */
+    Crypto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>',
+    Tech:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></svg>',
+    Macro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
+    Politics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></svg>'};
+  /* odds sparkline — a random walk pulled toward the live odds, dot = now */
+  function oddsSpark(pct,w,h,n){
+    var pts=[],v=pct+(Math.random()*26-13),ey=((h-1.5)-(pct/100)*(h-3));
+    for(var i=0;i<n;i++){ v+=(Math.random()-0.5)*10+(pct-v)*0.3; v=Math.max(3,Math.min(97,v));
+      pts.push((i*w/(n-1)).toFixed(1)+','+((h-1.5)-(v/100)*(h-3)).toFixed(1)); }
+    pts[n-1]=(w-2)+','+ey.toFixed(1);
+    return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><polyline points="'+pts.join(' ')+'" fill="none" stroke="currentColor" stroke-width="1.3" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/><circle class="lv" cx="'+(w-2)+'" cy="'+ey.toFixed(1)+'" r="1.5" fill="currentColor"/></svg>';
+  }
   function groupLabel(title,note){
     var el=document.createElement('div'); el.className='mk-group';
     el.innerHTML='<span class="lab">'+title+'</span><span class="note">'+note+'</span>';
@@ -3704,13 +3727,13 @@
       ['Crypto','Tech','Macro','Politics'].forEach(function(cat){
         var rows=preds.filter(function(p){return p[4]===cat;}); if(!rows.length)return;
         var ch=document.createElement('div'); ch.className='pm-cat';
-        ch.innerHTML='<span class="pm-cat-l">'+cat+'</span><span class="pm-cat-n">'+rows.length+' market'+(rows.length>1?'s':'')+'</span>';
+        ch.innerHTML='<span class="pm-cat-l">'+(CATI[cat]||'')+cat+'</span><span class="pm-cat-n">'+rows.length+' market'+(rows.length>1?'s':'')+'</span>';
         pc.appendChild(ch);
         rows.forEach(function(p){
           var side=p[2], lead=(side==='yes'?'YES':'NO'), pct=(side==='yes'?p[1]:100-p[1]);
           var el=document.createElement('div'); el.className='prow '+side; el.title=p[0];
           el.innerHTML='<div class="pq">'+p[0]+'</div>'+
-            '<div class="pmeta"><span class="plead">'+lead+'</span><span class="pbar"><i style="width:'+pct+'%"></i></span><span class="ppct">'+pct+'%</span></div>'+
+            '<div class="pmeta"><span class="plead">'+lead+'</span><span class="pspark">'+oddsSpark(pct,96,13,14)+'</span><span class="ppct">'+pct+'%</span></div>'+
             '<div class="pvol">'+p[3]+' Vol</div>';
           pc.appendChild(el);
         });
@@ -3722,7 +3745,7 @@
         var el=document.createElement('div'); el.className='wxc '+w[4]; el.title=w[0]+' — '+w[2]+'? · '+(w[4]==='yes'?'YES':'NO')+' '+w[3]+'%';
         el.innerHTML='<div class="wxt">'+w[0]+'<span class="ic">'+(WXI[w[1]]||'')+'</span></div>'+
           '<div class="wxq">'+w[2]+'?</div>'+
-          '<div class="wxm"><span class="wxl">'+(w[4]==='yes'?'YES':'NO')+'</span><span class="wxb"><i style="width:'+w[3]+'%"></i></span><span class="wxp">'+w[3]+'%</span></div>'+
+          '<div class="wxm"><span class="wxl">'+(w[4]==='yes'?'YES':'NO')+'</span><span class="wxs">'+oddsSpark(w[3],60,11,10)+'</span><span class="wxp">'+w[3]+'%</span></div>'+
           '<div class="wxv">'+w[5]+' VOL</div>';
         wc.appendChild(el);
       });
@@ -3734,6 +3757,16 @@
   function predTick(p){ var yes=p[2]==='yes'; var q=p[0]; if(q.charAt(q.length-1)==='?')q=q.slice(0,-1);
     return '<span class="ptk '+(yes?'yes':'no')+'"><span class="q">'+q+'</span><span class="od">'+p[1]+'%</span><span class="oc">'+(yes?'YES':'NO')+'</span><span class="dot"></span></span>'; }
   function renderPredTape(){ var r=$('predRow'); if(!r)return; var h=preds.map(predTick).join(''); r.innerHTML=h+h; }
+
+  /* live odds tick — one market breathes ±1% every few seconds */
+  setInterval(function(){ try{
+    var els=document.querySelectorAll('#mkPreds .ppct, #mkWx .wxp'); if(!els.length) return;
+    var el=els[Math.floor(Math.random()*els.length)];
+    var v=parseInt(el.textContent,10); if(isNaN(v)) return;
+    v=Math.max(2,Math.min(98,v+(Math.random()<0.5?-1:1)));
+    el.textContent=v+'%';
+    el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+  }catch(_){ } },4200);
 
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
