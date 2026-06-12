@@ -289,7 +289,8 @@
   .obtn.primary{background:var(--blue);border-color:var(--blue)}.obtn.primary:hover{background:var(--blue-hi)}
 
   /* markets */
-  .markets{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .markets{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .markets::-webkit-scrollbar{width:6px}.markets::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
   body.watch .markets{display:none}
   .mk-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:11px 14px 9px}
   .mk-head .lab{display:flex;align-items:center;gap:6px}
@@ -322,6 +323,24 @@
   .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:5px}
   .prow.yes .pbar i{background:var(--up)} .prow.no .pbar i{background:var(--down)}
   .prow.yes .plead,.prow.yes .ppct{color:var(--up)} .prow.no .plead,.prow.no .ppct{color:var(--down)}
+  /* ── RAINMAN FORECAST — Polymarket weather dailies, swipeable card rail ── */
+  .wx-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 6px;border-top:1px solid var(--line-soft)}
+  .wxrail{flex:0 0 auto;display:flex;gap:7px;padding:1px 14px 11px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
+  .wxrail::-webkit-scrollbar{display:none}
+  .wxc{flex:0 0 118px;scroll-snap-align:start;padding:8px 9px 7px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line-soft);transition:border-color .2s var(--ease)}
+  .wxc:hover{border-color:rgba(91,140,255,.35)}
+  .wxc .wxt{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.09em;color:var(--dim)}
+  .wxc .wxt .ic{margin-left:auto;font-size:12px;line-height:1}
+  .wxc .wxq{font-family:var(--gk);font-size:11.5px;font-weight:700;color:var(--white);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wxc .wxm{display:flex;align-items:center;gap:5px;margin-top:6px}
+  .wxc .wxl{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;flex:0 0 auto}
+  .wxc .wxb{flex:1;min-width:0;height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+  .wxc .wxb i{display:block;height:100%;border-radius:2px;transition:width .8s var(--ease)}
+  .wxc .wxp{font-family:var(--mono);font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .wxc.yes .wxb i{background:var(--up)} .wxc.no .wxb i{background:var(--down)}
+  .wxc.yes .wxl,.wxc.yes .wxp{color:var(--up)} .wxc.no .wxl,.wxc.no .wxp{color:var(--down)}
+  .wxc .wxv{font-family:var(--mono);font-size:8px;letter-spacing:.05em;color:var(--dim-2);margin-top:5px}
+  .wxc.more{flex:0 0 62px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);background:transparent;border-style:dashed}
   .mk-foot{flex:0 0 auto;display:flex;justify-content:space-between;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--dim-2)}
   .mk-foot b{color:var(--white)}
 
@@ -1795,10 +1814,11 @@
   .oa-src.on{opacity:1;border-color:var(--blue)}
   .oa-src.twitch.on{border-color:var(--twitch)} .oa-src.kick.on{border-color:var(--kick)}
   /* ── MARKETS: coins + predictions, both visible (split scroll panes) ── */
-  .mk-split{flex:1;min-height:0;display:flex;flex-direction:column}
+  .mk-split{flex:1 0 auto;display:flex;flex-direction:column}
   .mk-pane{min-height:0;display:flex;flex-direction:column;overflow:hidden}
-  .mk-pane.coins{flex:1 1 45%;border-bottom:1px solid var(--line)}
-  .mk-pane.preds{flex:1 1 55%}
+  .mk-pane.coins{flex:0 0 auto;border-bottom:1px solid var(--line)}
+  @media(min-width:861px){ .mk-pane.coins .mk-list{max-height:222px} }   /* desktop: coins cap + inner scroll → predictions peek above the fold */
+  .mk-pane.preds{flex:0 0 auto}   /* predictions run full — the column scroll carries them */
   .mk-pane-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 7px;background:linear-gradient(180deg,var(--panel),transparent)}
   .mk-pane-h .note{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2)}
   .mk-pane-h .pm-by{display:inline-flex;align-items:center;gap:5px;font-family:var(--gk);font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim-2)}
@@ -2016,7 +2036,7 @@
   .mwc.mwci img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover}
   /* ── goldilocks: the tank is a calm near-square bound to the rail's width;
        the dense list breathes beneath it — art above, terminal below ── */
-  .tank{flex:0 0 auto;aspect-ratio:16/10;max-height:300px;min-height:170px}   /* shorter bubble → the list breathes below (bubble above, list below) */
+  .tank{flex:0 0 auto;aspect-ratio:16/9;max-height:215px;min-height:140px}   /* shorter bubble → forecast rail + lists breathe below */
   .markets .mk-split{display:flex}
   /* ── timeframe machine: 1H 1D 1W 1M (active = green pill, dark type) ── */
   .mk-tf{display:inline-flex;gap:2px;margin-left:10px;background:#17171C;border:1px solid var(--line);border-radius:9px;padding:2px}
@@ -2554,6 +2574,8 @@
       <section class="markets">
         <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><button class="mk-add" id="mkAdd" type="button" title="Add a trending coin" aria-label="Add coin">+</button><span class="live"><span class="d"></span>Live</span></div>
         <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button></div>
+        <div class="wx-h"><span class="lab">Forecast</span><span class="note">Weather dailies</span></div>
+        <div class="wxrail" id="mkWx" aria-label="Polymarket weather prediction markets"></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
@@ -3171,6 +3193,13 @@
     ['US recession before 2027?',23,'no','$1.6M','Macro'],
     ['Trump approval > 50% by EOY?',41,'no','$720K','Politics'],
     ['Govt shutdown in 2026?',33,'no','$410K','Politics']];
+  var wx=[
+    ['🇺🇸','NYC','☀️','87°+ today',64,'yes','$412K'],
+    ['🇬🇧','LONDON','🌧️','Rain by 6pm',58,'yes','$238K'],
+    ['🇯🇵','TOKYO','⛅','79°+ high',73,'yes','$187K'],
+    ['🇺🇸','MIAMI','⛈️','Storm today',53,'no','$154K'],
+    ['🇫🇷','PARIS','⛅','75°+ high',61,'no','$121K'],
+    ['🇦🇪','DUBAI','☀️','105°+ high',91,'yes','$96K']];
   function groupLabel(title,note){
     var el=document.createElement('div'); el.className='mk-group';
     el.innerHTML='<span class="lab">'+title+'</span><span class="note">'+note+'</span>';
@@ -3679,6 +3708,18 @@
           pc.appendChild(el);
         });
       });
+    }
+    var wc=$('mkWx');
+    if(wc&&!wc.childElementCount){
+      wx.forEach(function(w){
+        var el=document.createElement('div'); el.className='wxc '+w[5]; el.title=w[1]+' — '+w[3]+'? · '+(w[5]==='yes'?'YES':'NO')+' '+w[4]+'%';
+        el.innerHTML='<div class="wxt">'+w[0]+' '+w[1]+'<span class="ic">'+w[2]+'</span></div>'+
+          '<div class="wxq">'+w[3]+'?</div>'+
+          '<div class="wxm"><span class="wxl">'+(w[5]==='yes'?'YES':'NO')+'</span><span class="wxb"><i style="width:'+w[4]+'%"></i></span><span class="wxp">'+w[4]+'%</span></div>'+
+          '<div class="wxv">'+w[6]+' VOL</div>';
+        wc.appendChild(el);
+      });
+      var more=document.createElement('div'); more.className='wxc more'; more.textContent='+12 MORE'; wc.appendChild(more);
     }
   }
 
