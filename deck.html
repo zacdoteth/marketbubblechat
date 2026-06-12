@@ -2264,6 +2264,19 @@
     html body.m-tab-wire .onair .oa-full,
     html body:not(.m-tab-onair):not(.m-tab-markets):not(.m-tab-intel) .onair .oa-full{display:none !important}
   }
+  /* ── TAP FOR SOUND — muted autoplay is a browser rule; one tap brings the audio ── */
+  .oa-sound-cta{display:none;position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:9;align-items:center;gap:7px;
+    padding:7px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(8,9,12,.72);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font-family:var(--gk);font-size:11px;font-weight:600;
+    cursor:pointer;box-shadow:0 8px 28px -8px rgba(0,0,0,.8);transition:transform .15s var(--ease),background .2s var(--ease);animation:sndpulse 2.4s var(--ease) infinite}
+  .oa-sound-cta svg{width:14px;height:14px}
+  .oa-sound-cta:hover{background:rgba(22,24,30,.86)}
+  .oa-sound-cta:active{transform:translateX(-50%) scale(.94)}
+  .player.liveon .oa-sound-cta{display:inline-flex}
+  body.sound-on .oa-sound-cta{display:none !important}
+  @media(max-width:860px){ body.m-tab-wire .oa-sound-cta span{display:none} body.m-tab-wire .oa-sound-cta{padding:6px;bottom:6px} }
+  @keyframes sndpulse{0%,100%{box-shadow:0 8px 28px -8px rgba(0,0,0,.8),0 0 0 0 rgba(91,140,255,.35)}50%{box-shadow:0 8px 28px -8px rgba(0,0,0,.8),0 0 0 7px rgba(91,140,255,0)}}
+  @media(prefers-reduced-motion:reduce){ .oa-sound-cta{animation:none} }
   /* ── v2: shared show / operator / hints ── */
   .onair .player{margin-bottom:12px}
   .mixbar .m-x{background:#8E8E96}                /* silver, not white — a full X bar must read as data, not a blank bar */
@@ -2305,6 +2318,24 @@
     transition:opacity .25s var(--ease),transform .25s var(--ease)}
   .mb-hint.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .flexnote{margin:-10px 0 14px;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim-2)}
+  /* ── FIRST-LAND TOUR — spotlight (Driver.js technique) flipped into ZCADE ── */
+  .intro-wrap{position:fixed;inset:0;z-index:120;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease)}
+  .intro-wrap.on{opacity:1;visibility:visible;pointer-events:auto}
+  .intro-ring{position:fixed;left:0;top:0;width:0;height:0;border-radius:13px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(5,6,9,.74),0 0 0 1px var(--blue-hi),0 0 26px -1px rgba(91,140,255,.55);
+    transition:opacity .25s var(--ease)}
+  .intro-card{position:fixed;left:0;top:0;width:min(304px,calc(100vw - 30px));z-index:121;padding:15px 16px 14px;border-radius:15px;
+    background:linear-gradient(180deg,rgba(21,22,28,.98),rgba(12,13,17,.99));border:1px solid var(--line);
+    box-shadow:0 26px 72px -18px rgba(0,0,0,.88);transition:left .32s var(--ease),top .32s var(--ease)}
+  .intro-ey{font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--blue-hi)}
+  .intro-t{font-family:var(--serif);font-weight:800;font-size:19px;line-height:1.08;color:#fff;margin-top:7px}
+  .intro-b{font-family:var(--gk);font-size:12.5px;line-height:1.5;color:var(--dim);margin-top:7px}
+  .intro-acts{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+  .intro-skip{background:none;border:0;color:var(--dim-2);font-family:var(--gk);font-size:11px;letter-spacing:.02em;cursor:pointer;padding:6px 2px}
+  .intro-skip:hover{color:var(--white)}
+  .intro-next{background:var(--blue-hi);color:#06070a;border:0;border-radius:9px;padding:8px 15px;font-family:var(--gk);font-size:12px;font-weight:700;cursor:pointer;transition:transform .1s var(--ease),filter .2s var(--ease)}
+  .intro-next:hover{filter:brightness(1.08)} .intro-next:active{transform:scale(.95)}
+  @media(prefers-reduced-motion:reduce){ .intro-ring,.intro-card{transition:none} }
 </style>
 
 <div class="app">
@@ -2312,6 +2343,15 @@
   <audio id="theme" src="theme.mp3" loop preload="none"></audio>
   <div class="dimlights" aria-hidden="true"></div>
   <div class="cmd-scrim" id="cmdScrim" aria-hidden="true"></div>
+  <div class="intro-wrap" id="introWrap" aria-hidden="true">
+    <div class="intro-ring" id="introRing"></div>
+    <div class="intro-card" id="introCard" role="dialog" aria-label="Welcome — quick tour">
+      <span class="intro-ey"></span>
+      <div class="intro-t"></div>
+      <div class="intro-b"></div>
+      <div class="intro-acts"><button class="intro-skip" type="button">Skip</button><button class="intro-next" type="button">Next &rarr;</button></div>
+    </div>
+  </div>
   <div class="mb-hint" id="mbHint" aria-live="polite"></div>
   <button class="pip-back" id="pipBack" type="button" aria-label="Show video"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm5 3.5v6l5-3z"/></svg></button>
   <div class="cine" id="cine" aria-hidden="true">
@@ -2500,6 +2540,7 @@
             </div>
           </div>
           <div class="reacts" id="reacts"></div>
+          <button class="oa-sound-cta" id="oaSound" type="button" aria-label="Tap for sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3Z" fill="currentColor"/><path d="M16.5 8.8a4 4 0 0 1 0 6.4M19 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Tap for sound</span></button>
           <button class="pip-x" id="pipX" type="button" aria-label="Hide video">&times;</button>
           <button class="pip-max-btn" id="pipMax" type="button" aria-label="Resize video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
           <div class="pip-grip" id="pipGrip" aria-hidden="true"></div>
@@ -2632,7 +2673,7 @@
   var BACKEND_URL=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
     ? 'ws://localhost:8787' : 'wss://conflux-backend-production.up.railway.app';
   var backendWS=null, backendReady=false;
-  var FEATURED_ID=null, GUEST_ID=null, vMb=0, vTotalOverride=null, SLOWN=0;
+  var FEATURED_ID=null, GUEST_ID=null, vMb=0, vTotalOverride=null, SLOWN=0, STREAM_MUTED=true;
   var IS_OP=/\/add\/?$/.test(location.pathname)||new URLSearchParams(location.search).has('add');
   if(IS_OP){ document.body.classList.add('op'); if(!controlToken()) document.body.classList.add('op-locked'); }
   if(controlToken()||IS_OP){ document.body.classList.add('has-ctl'); document.body.classList.add('op'); }   /* key-holders = operators (Admin switch + FAB revealed) */
@@ -3515,11 +3556,60 @@
         if(e.target.closest('.streammgmt')||e.target.closest('#admBtn')) return;
         closeCmd(); });
       document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('cmd')) closeCmd(); });
-      if(IS_OP) openCmd();   /* hem's /add?key= link lands with the drawer already open */
+      /* no auto-drop of the drawer on land — the first-land tour points to Admin instead */
     }
     var oc=$('opClear'); if(oc) oc.addEventListener('click',function(){ sendBackend({type:'clearChat',token:controlToken()}); });
     var os=$('opSlow'); if(os) os.addEventListener('change',function(){ sendBackend({type:'slowMode',seconds:(parseInt(os.value,10)||0),token:controlToken()}); });
     var px=$('pipX'); if(px) px.addEventListener('click',function(ev){ ev.stopPropagation(); document.body.classList.add('pip-off'); });
+    var snd=$('oaSound'); if(snd) snd.addEventListener('click',function(ev){ ev.stopPropagation();
+      STREAM_MUTED=false; document.body.classList.add('sound-on');
+      try{ var hero=document.querySelector('.feeds .vf.hero'); if(hero)hero.removeAttribute('data-ch'); renderOnAir(); }catch(_){ } });
+    /* ── first-land tour — essentials only, shown once ── */
+    (function(){
+      var KEY='mb_intro_v1';
+      var force=/[?&](intro|tour)=1/.test(location.search);
+      try{ if(!force && localStorage.getItem(KEY)) return; }catch(_){}
+      var wrap=$('introWrap'), ring=$('introRing'), card=$('introCard'); if(!wrap||!ring||!card) return;
+      var STEPS=[
+        {sel:'.tb-stats', t:'One audience', b:'Twitch, Kick and X — counted together as one real number.', pos:'below'},
+        {sel:'.wirewrap,#feed', t:'One feed', b:'Every platform’s chat, merged into a single live stream.', pos:'auto'},
+        {sel:'#mbsayBar', t:'Jump in', b:'Chat from the site itself — your message joins everyone’s feed.', pos:'above'}
+      ];
+      if(document.body.classList.contains('has-ctl')) STEPS.push({sel:'#admBtn', t:'Run the show', b:'Admin — paste a Twitch / Kick / X link and it goes live for every viewer.', pos:'below'});
+      var i=0;
+      var tgt=function(sel){ var a=sel.split(','); for(var k=0;k<a.length;k++){ var e=document.querySelector(a[k].trim()); if(e) return e; } return null; };
+      var pad2=function(n){ n=String(n); return n.length<2?('0'+n):n; };
+      var tries=0;
+      function place(){
+        var st=STEPS[i], el=tgt(st.sel); if(!el){ next(); return; }
+        card.querySelector('.intro-ey').textContent=pad2(i+1)+' / '+pad2(STEPS.length);
+        card.querySelector('.intro-t').textContent=st.t;
+        card.querySelector('.intro-b').textContent=st.b;
+        card.querySelector('.intro-next').innerHTML=(i===STEPS.length-1)?'Got it 🫧':'Next &rarr;';
+        card.style.visibility='hidden';
+        var paint=function(){
+          var r=el.getBoundingClientRect(), pad=8;          /* one fresh read drives BOTH ring + card */
+          if((r.width<2||r.height<2)&&tries<40){ tries++; requestAnimationFrame(paint); return; } tries=0;
+          ring.style.left=(r.left-pad)+'px'; ring.style.top=(r.top-pad)+'px'; ring.style.width=(r.width+pad*2)+'px'; ring.style.height=(r.height+pad*2)+'px';
+          var cw=card.offsetWidth, ch=card.offsetHeight, m=14;
+          var below=(st.pos==='below')||(st.pos==='auto'&&r.top<innerHeight/2);
+          var top=below?(r.bottom+pad+m):(r.top-pad-m-ch);
+          if(top<m) top=r.bottom+pad+m; if(top+ch>innerHeight-m) top=Math.max(m,innerHeight-m-ch);
+          var left=Math.max(m,Math.min(r.left+r.width/2-cw/2, innerWidth-m-cw));
+          card.style.left=left+'px'; card.style.top=top+'px'; card.style.visibility='visible';
+        };
+        requestAnimationFrame(paint);
+      }
+      function show(){ wrap.classList.add('on'); place(); }
+      function next(){ i++; tries=0; if(i>=STEPS.length){ end(); return; } place(); }
+      function end(){ wrap.classList.remove('on'); try{localStorage.setItem(KEY,'1');}catch(_){} }
+      card.querySelector('.intro-next').addEventListener('click',next);
+      card.querySelector('.intro-skip').addEventListener('click',end);
+      wrap.addEventListener('click',function(e){ if(e.target===wrap||e.target===ring) end(); });
+      document.addEventListener('keydown',function(e){ if(!wrap.classList.contains('on'))return; if(e.key==='Escape')end(); else if(e.key==='Enter')next(); });
+      addEventListener('resize',function(){ if(wrap.classList.contains('on'))place(); });
+      setTimeout(show, 1500);
+    })();
     var pb=$('pipBack'); if(pb) pb.addEventListener('click',function(){ document.body.classList.remove('pip-off'); });
     /* ── PiP: draggable like the X mini-player + maximize (tap toggles, grab moves) ── */
     (function(){
@@ -3600,9 +3690,9 @@
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
   function playerSrc(s){
-    if(s.plat==='twitch') return 'https://player.twitch.tv/?'+(s.video?('video='+encodeURIComponent(s.video)+'&time='+encodeURIComponent(s.time||'0h0m0s')):('channel='+encodeURIComponent(s.ch)))+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted=true&autoplay=true';
+    if(s.plat==='twitch') return 'https://player.twitch.tv/?'+(s.video?('video='+encodeURIComponent(s.video)+'&time='+encodeURIComponent(s.time||'0h0m0s')):('channel='+encodeURIComponent(s.ch)))+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted='+(STREAM_MUTED?'true':'false')+'&autoplay=true';
     if(s.plat==='kick'){ var kch=String(s.ch||'').trim().toLowerCase().replace(/^@/,'').replace(/[\/?#].*$/,'');   /* kick slugs are lowercase — caps/paths trip "this embed seems to be misconfigured" */
-      return 'https://player.kick.com/'+encodeURIComponent(kch)+'?autoplay=true&muted=true'; }
+      return 'https://player.kick.com/'+encodeURIComponent(kch)+'?autoplay=true&muted='+(STREAM_MUTED?'true':'false'); }
     return '';
   }
   /* ON AIR — ONE video at a time. The connected Market Bubble stream fills the whole box.
