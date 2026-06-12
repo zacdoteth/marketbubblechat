@@ -219,9 +219,8 @@
   .wmsg .bdg{font-family:var(--gk);font-size:8px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;text-transform:uppercase}
   .bdg.host{background:var(--blue);color:#fff} .bdg.mod{background:var(--up);color:#062b00} .bdg.bot{background:var(--dim-3);color:var(--white)}
   .wmsg .right{margin-left:auto;display:flex;align-items:center;gap:9px}
-  .wmsg .plat{display:inline-flex;align-items:center;gap:4px;font-family:var(--gk);font-size:8px;font-weight:700;letter-spacing:.05em;
-    text-transform:uppercase;padding:2px 6px 2px 4px;border-radius:4px}
-  .wmsg .plat svg{width:10px;height:10px}
+  .wmsg .plat{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;border-radius:5px;flex:0 0 auto}
+  .wmsg .plat svg{width:11px;height:11px;display:block}
   .wmsg.twitch .plat{background:rgba(145,70,255,.16);color:var(--twitch-t)}
   .wmsg.x .plat{background:rgba(255,255,255,.12);color:var(--x-t)}
   .wmsg.kick .plat{background:rgba(83,252,24,.14);color:var(--kick-t)}
@@ -311,17 +310,18 @@
   .mrow .pr .ch{font-family:var(--mono);font-size:10px}
   .mrow.up .pr .ch{color:var(--up)} .mrow.dn .pr .ch{color:var(--down)}
   /* prediction row — matched to coin-row density */
-  .prow{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line-soft)}
-  .prow .nm{min-width:0}
-  .prow .nm .t{font-family:var(--gk);font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .prow .nm .s{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2)}
-  .prow .pbar{flex:0 0 auto;width:64px;height:5px;border-radius:3px;background:var(--panel-2);overflow:hidden}
-  .prow .pbar i{display:block;height:100%;border-radius:3px}
+  /* PREDICTIONS — premoji editorial stack: QUESTION / leader · bar · % / volume */
+  .prow{display:block;padding:10px 14px;border-bottom:1px solid var(--line-soft)}
+  .prow .pq{font-family:var(--gk);font-weight:700;font-size:12px;letter-spacing:.01em;text-transform:uppercase;color:var(--white);line-height:1.22;
+    display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .prow .pmeta{display:flex;align-items:center;gap:9px;margin-top:5px}
+  .prow .plead{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;flex:0 0 auto}
+  .prow .pbar{flex:0 0 96px;height:4px;border-radius:3px;background:var(--panel-2);overflow:hidden}
+  .prow .pbar i{display:block;height:100%;border-radius:3px;transition:width .8s var(--ease)}
+  .prow .ppct{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto;margin-left:auto}
+  .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:5px}
   .prow.yes .pbar i{background:var(--up)} .prow.no .pbar i{background:var(--down)}
-  .prow .pr{margin-left:auto;text-align:right;flex:0 0 auto}
-  .prow .pr .px{font-family:var(--mono);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-  .prow .pr .ch{font-family:var(--mono);font-size:9px;letter-spacing:.06em}
-  .prow.yes .pr .px,.prow.yes .pr .ch{color:var(--up)} .prow.no .pr .px,.prow.no .pr .ch{color:var(--down)}
+  .prow.yes .plead,.prow.yes .ppct{color:var(--up)} .prow.no .plead,.prow.no .ppct{color:var(--down)}
   .mk-foot{flex:0 0 auto;display:flex;justify-content:space-between;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--dim-2)}
   .mk-foot b{color:var(--white)}
 
@@ -1951,7 +1951,7 @@
   .markets .mrow .pr .px{font-size:11px}
   .markets .mrow .pr .ch{font-size:9px}
   /* predictions -> compact 2-line cards (question wraps, bar + odds beneath) */
-  .markets .prow{display:grid;grid-template-columns:1fr auto;grid-template-areas:"q q" "bar pr";gap:5px 8px;align-items:center;padding:8px 11px}
+  .markets .prow{display:block;padding:9px 12px}
   .markets .prow .nm{grid-area:q;min-width:0}
   .markets .prow .nm .t{white-space:normal;font-size:10.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .markets .prow .nm .s{font-size:8px}
@@ -3552,10 +3552,11 @@
         ch.innerHTML='<span class="pm-cat-l">'+cat+'</span><span class="pm-cat-n">'+rows.length+' market'+(rows.length>1?'s':'')+'</span>';
         pc.appendChild(ch);
         rows.forEach(function(p){
-          var el=document.createElement('div'); el.className='prow '+p[2]; el.title=p[0];
-          el.innerHTML='<div class="nm"><div class="t">'+p[0]+'</div><div class="s">'+p[3]+' Vol</div></div>'+
-            '<div class="pbar"><i style="width:'+p[1]+'%"></i></div>'+
-            '<div class="pr"><div class="px">'+p[1]+'%</div><div class="ch">'+(p[2]==='yes'?'YES':'NO')+'</div></div>';
+          var side=p[2], lead=(side==='yes'?'YES':'NO'), pct=(side==='yes'?p[1]:100-p[1]);
+          var el=document.createElement('div'); el.className='prow '+side; el.title=p[0];
+          el.innerHTML='<div class="pq">'+p[0]+'</div>'+
+            '<div class="pmeta"><span class="plead">'+lead+'</span><span class="pbar"><i style="width:'+pct+'%"></i></span><span class="ppct">'+pct+'%</span></div>'+
+            '<div class="pvol">'+p[3]+' Vol</div>';
           pc.appendChild(el);
         });
       });
