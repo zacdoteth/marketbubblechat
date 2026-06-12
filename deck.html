@@ -227,7 +227,13 @@
   .wmsg.kick .plat{background:rgba(83,252,24,.14);color:var(--kick-t)}
   .wmsg .ts{font-family:var(--mono);font-size:10px;color:var(--dim-2)}
   .wmsg .ch{font-family:var(--mono);font-size:9px;color:var(--dim-3)}
-  .wmsg .txt{font-family:var(--gk);font-size:13px;color:#d9d8d3;margin-top:3px;line-height:1.4}
+  .wmsg .txt{font-family:var(--gk);font-size:13px;color:#d9d8d3;margin-top:3px;line-height:1.4;overflow-wrap:anywhere}
+  /* SPAM ARMOR — copypasta walls fold to 3 lines; tap to unfold */
+  .wmsg .txt.clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+  .wmsg .more{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim-2);background:none;border:0;padding:0;cursor:pointer;transition:color .15s var(--ease)}
+  .wmsg .more:hover{color:var(--white)}
+  .wmsg .more svg{width:10px;height:10px;transition:transform .28s var(--ease)}
+  .wmsg .more.open svg{transform:rotate(180deg)}
   .wmsg .txt .mention{color:var(--blue);background:rgba(91,140,255,.12);border-radius:4px;padding:0 4px;font-weight:600}
   .wmsg .txt .em{color:var(--twitch-t);font-weight:600}
   .wmsg.you{background:rgba(91,140,255,.06)}
@@ -2749,7 +2755,7 @@
   }
   function sendBackend(o){ if(backendReady) try{ backendWS.send(JSON.stringify(o)); }catch(_){} }
   function setConn(ok){ document.body.classList.toggle('disconnected',!ok); }
-  function cleanText(t){ return String(t||'').replace(/\[emote:\d+:([^\]]+)\]/g,':$1:'); }
+  function cleanText(t){ return String(t||''); }   /* emote tokens render in highlightText (Kick CDN art) */
   /* POGGERS layer: 7TV + BTTV global emotes — pure render-time swap; text stays the source of truth */
   var EMOTES={};
   (function(){ if(typeof fetch!=='function')return;
@@ -2884,8 +2890,8 @@
     tip.className='tooltip show '+v.plat;
     var b=(v.host?'<span class="bdg host" style="margin-right:5px">Host</span>':'')+(v.mod?'<span class="bdg mod">Mod</span>':'');
     tip.innerHTML='<div class="th"><span class="pp">'+ICON[v.plat]+PLABEL[v.plat]+'</span>'+b+'</div>'+
-      '<div class="name">'+v.h+'</div>'+
-      '<div class="ml">via <b>'+PLABEL[v.plat]+' · '+v.src+'</b><br><b>'+(topTally[v.h]||1)+'</b> msgs in this room</div>'+
+      '<div class="name">'+escHTML(v.h)+'</div>'+
+      '<div class="ml">via <b>'+PLABEL[v.plat]+' · '+escHTML(v.src)+'</b><br><b>'+(topTally[v.h]||1)+'</b> msgs in this room</div>'+
       '<div class="sl">Source: <b style="color:var(--white)">'+PLABEL[v.plat]+'</b></div>';
     moveTip(e);
   }
@@ -3063,7 +3069,12 @@
     R_TICK++; ROSTER.push(v); if(ROSTER.length>120)ROSTER.shift();
     return v;
   }
+  function escHTML(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function highlightText(t){
+    t=escHTML(t);   /* chat is hostile input — escape before any markup goes in */
+    /* Kick channel emotes — render the actual art, same as native Kick chat */
+    t=t.replace(/\[emote:(\d+):([A-Za-z0-9_\-!]{1,40})\]/g,'<img class="emote" src="https://files.kick.com/emotes/$1/fullsize" alt="$2" title="$2" loading="lazy"/>');
+    t=t.replace(/\[emote:\d+:([^\]]*)\]/g,':$1:');   /* odd names: graceful :name: fallback */
     t=t.replace(/(^|\s)(:?)([A-Za-z0-9_]{2,30})(:?)(?=$|\s)/g,function(full,sp,c1,w,c2){
       var u=EMOTES[w]; return u?(sp+'<img class="emote" src="'+u+'" alt="'+w+'" title="'+w+'" loading="lazy"/>'):full; });
     return t.replace(/@(\w+)/g,'<span class="mention">@$1</span>')
@@ -3085,9 +3096,25 @@
     if(v.bot)badges+='<span class="bdg bot">Bot</span>';
     var verified=v.host?'<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .2.2 3L19.4 9 21 12l-1.6 3 .4 3-3 .2L15 21l-3-1.6L9 21l-1.8-2.6-3-.2.4-3L3 12l1.6-3-.2-3 3-.2L9.6 3.8z"/></svg>':'';
     var _ini=(v.h||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||(v.h||'?').slice(0,2);
-    el.innerHTML='<div class="av '+v.plat+'" aria-hidden="true">'+_ini+'</div><div class="body"><div class="top"><span class="usr">'+v.h+'</span>'+verified+badges+
-      '<span class="right"><span class="ch">'+v.src+'</span><span class="plat" title="'+PLABEL[v.plat]+'" aria-label="'+PLABEL[v.plat]+'">'+ICON[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
+    el.innerHTML='<div class="av '+v.plat+'" aria-hidden="true">'+escHTML(_ini)+'</div><div class="body"><div class="top"><span class="usr">'+escHTML(v.h)+'</span>'+verified+badges+
+      '<span class="right"><span class="ch">'+escHTML(v.src)+'</span><span class="plat" title="'+PLABEL[v.plat]+'" aria-label="'+PLABEL[v.plat]+'">'+ICON[v.plat]+'</span><span class="ts">'+timeStr()+'</span></span></div>'+
       '<div class="txt">'+highlightText(text)+'</div></div>';
+    var _plain=text.replace(/\[emote:\d+:[^\]]*\]/g,'##');   /* emotes are art, not length */
+    if(_plain.length>280||(text.match(/\[emote:/g)||[]).length>30){
+      var _tx=el.querySelector('.txt'); _tx.classList.add('clamp');
+      var _mr=document.createElement('button'); _mr.type='button'; _mr.className='more';
+      _mr.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><span>SHOW MORE</span>';
+      _mr.addEventListener('click',function(ev){ ev.stopPropagation();
+        var h0=_tx.offsetHeight, c=_tx.classList.toggle('clamp'), h1=_tx.offsetHeight;
+        _mr.classList.toggle('open',!c); _mr.querySelector('span').textContent=c?'SHOW MORE':'SHOW LESS';
+        if(_tx.animate){ _tx.style.overflow='hidden';   /* fold breathes — no jump cuts, ever */
+          var an=_tx.animate([{height:h0+'px'},{height:h1+'px'}],{duration:280,easing:'cubic-bezier(.22,.61,.36,1)'});
+          an.onfinish=function(){ _tx.style.overflow=''; };
+          setTimeout(function(){ try{an.finish();}catch(_){ _tx.style.overflow=''; } },340);   /* timeline stall = no stuck fold */
+        }
+      });
+      _tx.parentNode.appendChild(_mr);
+    }
     attachTip(el,v);
     // apply current filter
     if(!matchFilter(el)) el.style.display='none';
