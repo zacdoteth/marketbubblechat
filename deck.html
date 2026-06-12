@@ -2448,7 +2448,7 @@
   <div class="tape">
     <div class="tape-l">
       <div class="mw-plate"><b>Market Watch</b></div>
-      <div class="fng"><span class="k">Fear &amp; Greed</span><span class="v" id="fngVal">9</span><span class="s" id="fngLbl">Extreme Fear</span></div>
+      <div class="fng"><span class="k">Fear &amp; Greed</span><span class="v" id="fngVal">0</span><span class="s" id="fngLbl">&mdash;</span></div>
     </div>
     <div class="tape-track"><div class="tape-row" id="tapeRow"></div></div>
   </div>
@@ -2466,9 +2466,9 @@
 
       <div class="sblock">
         <div class="bh lab">By Platform</div>
-        <div class="statrow tw"><span class="dot"></span><span class="nm">Twitch</span><span class="rt"><span class="big" id="pTw">12.2K</span><div class="mpm"><span id="pTwM">204</span>/min</div></span></div>
-        <div class="statrow kk"><span class="dot"></span><span class="nm">Kick</span><span class="rt"><span class="big" id="pKk">4.3K</span><div class="mpm"><span id="pKkM">71</span>/min</div></span></div>
-        <div class="statrow x"><span class="dot"></span><span class="nm">X</span><span class="rt"><span class="big" id="pX">2.9K</span><div class="mpm"><span id="pXM">37</span>/min</div></span></div>
+        <div class="statrow tw"><span class="dot"></span><span class="nm">Twitch</span><span class="rt"><span class="big" id="pTw">0</span><div class="mpm"><span id="pTwM">0</span>/min</div></span></div>
+        <div class="statrow kk"><span class="dot"></span><span class="nm">Kick</span><span class="rt"><span class="big" id="pKk">0</span><div class="mpm"><span id="pKkM">0</span>/min</div></span></div>
+        <div class="statrow x"><span class="dot"></span><span class="nm">X</span><span class="rt"><span class="big" id="pX">0</span><div class="mpm"><span id="pXM">0</span>/min</div></span></div>
       </div>
 
       <div class="sblock">
@@ -2497,8 +2497,8 @@
 
       <div class="sblock">
         <div class="bh lab">Chat Mix</div>
-        <div class="mixbar"><i class="m-tw" id="mixTw" style="width:64%"></i><i class="m-kk" id="mixKk" style="width:22%"></i><i class="m-x" id="mixX" style="width:14%"></i></div>
-        <div class="mix-legend"><span class="lg tw"><i></i>Twitch <b id="mxTwP">64%</b></span><span class="lg kk"><i></i>Kick <b id="mxKkP">22%</b></span><span class="lg x"><i></i>X <b id="mxXP">14%</b></span></div>
+        <div class="mixbar"><i class="m-tw" id="mixTw" style="width:0%"></i><i class="m-kk" id="mixKk" style="width:0%"></i><i class="m-x" id="mixX" style="width:0%"></i></div>
+        <div class="mix-legend"><span class="lg tw"><i></i>Twitch <b id="mxTwP">0%</b></span><span class="lg kk"><i></i>Kick <b id="mxKkP">0%</b></span><span class="lg x"><i></i>X <b id="mxXP">0%</b></span></div>
       </div>
 
       <div class="sblock">
@@ -2508,7 +2508,7 @@
 
       <div class="sblock">
         <div class="bh lab">Msg Velocity</div>
-        <div class="velrow"><span class="now" id="velNow"><b>0</b><small>msg/min</small></span><span class="pk">peak <span id="velPeak">680</span></span></div>
+        <div class="velrow"><span class="now" id="velNow"><b>0</b><small>msg/min</small></span><span class="pk">peak <span id="velPeak">0</span></span></div>
       </div>
 
       <div class="sblock">
@@ -2703,7 +2703,7 @@
   feedEl.addEventListener('mouseenter',function(){ hoverHold=true; });
   feedEl.addEventListener('mouseleave',function(){ hoverHold=false;
     if(autoscroll && !paused){ feedEl.scrollTop=feedEl.scrollHeight; } });
-  var msgPerMin=0, velPeak=680, newCount=0, mentionTotal=0, allTotal=0;
+  var msgPerMin=0, velPeak=0, newCount=0, mentionTotal=0, allTotal=0;
   var recent=[]; // for rivalry/hype
   var topTally={};
   var chMsgCount={};
@@ -2829,7 +2829,8 @@
     var iF=function(v){return String(Math.round(v));};
     if(a)countTo(a,mpm,iF); if(b)countTo(b,mpm,iF);
     if(c){var cb=c.querySelector('b'); if(cb)countTo(cb,mpm,iF); else c.innerHTML=mpm+'<small>msg/min</small>';}
-    if(d)countTo(d,velPeak,iF); }
+    if(d)countTo(d,velPeak,iF);
+    countTo($('pTwM'),((pf.twitch||{}).msgsPerMin)||0,iF); countTo($('pKkM'),((pf.kick||{}).msgsPerMin)||0,iF); countTo($('pXM'),((pf.x||{}).msgsPerMin)||0,iF); }
   onStats.push(applyStats);
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
