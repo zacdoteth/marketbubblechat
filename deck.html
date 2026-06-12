@@ -315,31 +315,32 @@
   .prow{display:block;padding:10px 14px;border-bottom:1px solid var(--line-soft)}
   .prow .pq{font-family:var(--gk);font-weight:700;font-size:12px;letter-spacing:.01em;text-transform:uppercase;color:var(--white);line-height:1.22;
     display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-  .prow .pmeta{display:flex;align-items:center;gap:9px;margin-top:5px}
+  .prow .pmeta{display:flex;align-items:center;gap:9px;margin-top:3px}
   .prow .plead{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;flex:0 0 auto}
   .prow .pbar{flex:0 0 96px;height:3px;border-radius:3px;background:var(--panel-2);overflow:hidden}
   .prow .pbar i{display:block;height:100%;border-radius:3px;transition:width .8s var(--ease)}
   .prow .ppct{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto;margin-left:auto}
-  .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:5px}
+  .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:3px}
   .prow.yes .pbar i{background:var(--up)} .prow.no .pbar i{background:var(--down)}
   .prow.yes .plead,.prow.yes .ppct{color:var(--up)} .prow.no .plead,.prow.no .ppct{color:var(--down)}
   /* ── RAINMAN FORECAST — Polymarket weather dailies, swipeable card rail ── */
-  .wx-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 6px;border-top:1px solid var(--line-soft)}
-  .wxrail{flex:0 0 auto;display:flex;gap:7px;padding:1px 14px 11px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
+  .wx-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 5px;border-top:1px solid var(--line-soft)}
+  .wx-h .note{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2)}
+  .wxrail{flex:0 0 auto;display:flex;gap:6px;padding:1px 14px 10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
   .wxrail::-webkit-scrollbar{display:none}
-  .wxc{flex:0 0 118px;scroll-snap-align:start;padding:8px 9px 7px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line-soft);transition:border-color .2s var(--ease)}
+  .wxc{flex:0 0 116px;scroll-snap-align:start;padding:7px 8px 6px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line-soft);transition:border-color .2s var(--ease)}
   .wxc:hover{border-color:rgba(91,140,255,.35)}
   .wxc .wxt{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.09em;color:var(--dim)}
   .wxc .wxt .ic{margin-left:auto;font-size:12px;line-height:1}
   .wxc .wxq{font-family:var(--gk);font-size:11.5px;font-weight:700;color:var(--white);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .wxc .wxm{display:flex;align-items:center;gap:5px;margin-top:6px}
+  .wxc .wxm{display:flex;align-items:center;gap:5px;margin-top:5px}
   .wxc .wxl{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;flex:0 0 auto}
   .wxc .wxb{flex:1;min-width:0;height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
   .wxc .wxb i{display:block;height:100%;border-radius:2px;transition:width .8s var(--ease)}
   .wxc .wxp{font-family:var(--mono);font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto}
   .wxc.yes .wxb i{background:var(--up)} .wxc.no .wxb i{background:var(--down)}
   .wxc.yes .wxl,.wxc.yes .wxp{color:var(--up)} .wxc.no .wxl,.wxc.no .wxp{color:var(--down)}
-  .wxc .wxv{font-family:var(--mono);font-size:8px;letter-spacing:.05em;color:var(--dim-2);margin-top:5px}
+  .wxc .wxv{font-family:var(--mono);font-size:8px;letter-spacing:.05em;color:var(--dim-2);margin-top:4px}
   .wxc.more{flex:0 0 62px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);background:transparent;border-style:dashed}
   .mk-foot{flex:0 0 auto;display:flex;justify-content:space-between;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--dim-2)}
   .mk-foot b{color:var(--white)}
@@ -1986,16 +1987,16 @@
   /* one consistent 12px gutter everywhere in the rail */
   .mk-head{padding:10px 12px 8px}
   .mk-pane-h{padding:10px 12px 6px}
-  .markets .pm-cat{padding:8px 12px 3px}
+  .markets .pm-cat{padding:7px 12px 2px}
   .mk-foot{padding:8px 12px}
   /* coins -> dense ~31px watchlist rows, price over % tight */
-  .markets .mrow{padding:5px 12px;gap:8px;align-items:center}
+  .markets .mrow{padding:4px 12px;gap:8px;align-items:center}
   .markets .mrow .nm .t{font-size:11px;line-height:1;letter-spacing:.01em}
   .markets .mrow .pr{line-height:1.05}
   .markets .mrow .pr .px{font-size:11.5px;line-height:1.12}
   .markets .mrow .pr .ch{font-size:8.5px;line-height:1;letter-spacing:.02em}
   /* predictions -> tight cards: 2-line question, tiny vol, INLINE odds (61% YES) */
-  .markets .prow{padding:7px 12px;gap:5px 8px}
+  .markets .prow{padding:6px 12px;gap:5px 8px}
   .markets .prow .nm .t{font-size:10.5px;line-height:1.2}
   .markets .prow .nm .s{font-size:8px;line-height:1;margin-top:2px;letter-spacing:.02em;color:var(--dim-2)}
   .markets .prow .pbar{height:3px;align-self:center}
