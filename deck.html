@@ -317,7 +317,7 @@
     display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .prow .pmeta{display:flex;align-items:center;gap:9px;margin-top:5px}
   .prow .plead{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;flex:0 0 auto}
-  .prow .pbar{flex:0 0 96px;height:4px;border-radius:3px;background:var(--panel-2);overflow:hidden}
+  .prow .pbar{flex:0 0 96px;height:3px;border-radius:3px;background:var(--panel-2);overflow:hidden}
   .prow .pbar i{display:block;height:100%;border-radius:3px;transition:width .8s var(--ease)}
   .prow .ppct{font-family:var(--mono);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto;margin-left:auto}
   .prow .pvol{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2);margin-top:5px}
@@ -1817,7 +1817,7 @@
   .mk-split{flex:1 0 auto;display:flex;flex-direction:column}
   .mk-pane{min-height:0;display:flex;flex-direction:column;overflow:hidden}
   .mk-pane.coins{flex:0 0 auto;border-bottom:1px solid var(--line)}
-  @media(min-width:861px){ .mk-pane.coins .mk-list{max-height:222px} }   /* desktop: coins cap + inner scroll → predictions peek above the fold */
+  @media(min-width:861px){ .mk-pane.coins .mk-list,.mk-pane.preds .mk-list{max-height:300px} }   /* desktop: equal panes, inner scroll carries the rest */
   .mk-pane.preds{flex:0 0 auto}   /* predictions run full — the column scroll carries them */
   .mk-pane-h{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 7px;background:linear-gradient(180deg,var(--panel),transparent)}
   .mk-pane-h .note{font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:var(--dim-2)}
@@ -1998,7 +1998,7 @@
   .markets .prow{padding:7px 12px;gap:5px 8px}
   .markets .prow .nm .t{font-size:10.5px;line-height:1.2}
   .markets .prow .nm .s{font-size:8px;line-height:1;margin-top:2px;letter-spacing:.02em;color:var(--dim-2)}
-  .markets .prow .pbar{height:5px;align-self:center}
+  .markets .prow .pbar{height:3px;align-self:center}
   .markets .prow .pr{display:inline-flex;align-items:baseline;gap:4px;margin-left:0}
   .markets .prow .pr .px{font-size:11px;line-height:1}
   .markets .prow .pr .ch{font-size:8px;line-height:1;letter-spacing:.04em}
@@ -2574,8 +2574,6 @@
       <section class="markets">
         <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><button class="mk-add" id="mkAdd" type="button" title="Add a trending coin" aria-label="Add coin">+</button><span class="live"><span class="d"></span>Live</span></div>
         <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button></div>
-        <div class="wx-h"><span class="lab">Forecast</span><span class="note">Weather dailies</span></div>
-        <div class="wxrail" id="mkWx" aria-label="Polymarket weather prediction markets"></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
@@ -2586,6 +2584,8 @@
             <div class="mk-list" id="mkPreds"></div>
           </div>
         </div>
+        <div class="wx-h"><span class="lab">Forecast</span><span class="note">Weather dailies</span></div>
+        <div class="wxrail" id="mkWx" aria-label="Polymarket weather prediction markets"></div>
         <div class="mk-foot"><span>MCAP <b id="mcap">$2.15T</b></span><span>24H VOL <b>$105B</b></span><span>BTC DOM <b>56.0%</b></span></div>
       </section>
     </aside>
