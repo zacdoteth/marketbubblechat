@@ -2050,10 +2050,14 @@
   .mk-view button.on{background:rgba(91,140,255,.16);color:var(--blue-hi)}
   .tank{flex:1;min-height:0;position:relative;overflow:hidden}
   /* RESIZE SEAM — pointer-capture drag handle at the tank's lower edge */
-  .tank-grip{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:152px;height:15px;z-index:7;display:flex;align-items:center;justify-content:center;cursor:row-resize;touch-action:none}
-  .tank-grip .gr{width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);transition:background .16s var(--ease),width .16s var(--ease),box-shadow .16s var(--ease)}
-  .tank-grip:hover .gr{background:rgba(255,255,255,.44);width:54px}
-  body.tank-dragging .tank-grip .gr{background:var(--blue);width:62px;box-shadow:0 0 11px -1px var(--blue)}
+  .tank-grip{flex:0 0 auto;position:relative;height:15px;display:flex;align-items:center;justify-content:center;cursor:row-resize;touch-action:none}
+  .tank-grip::before{content:'';position:absolute;left:14px;right:14px;top:50%;height:1px;margin-top:-.5px;background:var(--line-soft);transition:background .16s var(--ease)}
+  .tank-grip .gr{position:relative;display:inline-flex;align-items:center;justify-content:center;width:46px;height:16px;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,.35);color:rgba(255,255,255,.6);transition:color .16s var(--ease),border-color .16s var(--ease),background .16s var(--ease),box-shadow .16s var(--ease),transform .16s var(--ease)}
+  .tank-grip .gr svg{width:20px;height:12px;display:block;pointer-events:none}
+  .tank-grip:hover::before{background:rgba(255,255,255,.14)}
+  .tank-grip:hover .gr{color:#fff;border-color:rgba(255,255,255,.38);transform:scaleX(1.1)}
+  body.tank-dragging .tank-grip .gr{color:#fff;border-color:var(--blue);box-shadow:0 0 12px -1px var(--blue)}
+  body.tank-dragging .tank-grip::before{background:var(--blue)}
   body.tank-sized .markets .tank{height:var(--tank-h);max-height:none;min-height:0;flex:0 0 auto;aspect-ratio:auto}
   body.tank-dragging{cursor:row-resize;user-select:none}
   body.tank-dragging .tank canvas{pointer-events:none}
@@ -2613,7 +2617,8 @@
 
       <section class="markets">
         <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><button class="mk-add" id="mkAdd" type="button" title="Add a trending coin" aria-label="Add coin">+</button><span class="live"><span class="d"></span>Live</span></div>
-        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button><div class="tank-grip" id="tankGrip" title="Drag to resize · double-click to reset" aria-label="Resize bubble view" role="separator" aria-orientation="horizontal"><span class="gr" aria-hidden="true"></span></div></div>
+        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button></div>
+        <div class="tank-grip" id="tankGrip" title="Drag to resize the bubbles · double-click to reset" aria-label="Resize bubble view" role="separator" aria-orientation="horizontal"><span class="gr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="9" r="1.4"/><circle cx="12" cy="9" r="1.4"/><circle cx="19" cy="9" r="1.4"/><circle cx="5" cy="15" r="1.4"/><circle cx="12" cy="15" r="1.4"/><circle cx="19" cy="15" r="1.4"/></svg></span></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
