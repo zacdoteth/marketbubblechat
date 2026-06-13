@@ -2049,6 +2049,15 @@
   .mk-view button{border:0;background:none;color:var(--dim);font-family:var(--gk);font-weight:700;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:5px;cursor:pointer;transition:color .2s var(--ease),background .2s var(--ease)}
   .mk-view button.on{background:rgba(91,140,255,.16);color:var(--blue-hi)}
   .tank{flex:1;min-height:0;position:relative;overflow:hidden}
+  /* RESIZE SEAM — pointer-capture drag handle at the tank's lower edge */
+  .tank-grip{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:152px;height:15px;z-index:7;display:flex;align-items:center;justify-content:center;cursor:row-resize;touch-action:none}
+  .tank-grip .gr{width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);transition:background .16s var(--ease),width .16s var(--ease),box-shadow .16s var(--ease)}
+  .tank-grip:hover .gr{background:rgba(255,255,255,.44);width:54px}
+  body.tank-dragging .tank-grip .gr{background:var(--blue);width:62px;box-shadow:0 0 11px -1px var(--blue)}
+  body.tank-sized .markets .tank{height:var(--tank-h);max-height:none;min-height:0;flex:0 0 auto;aspect-ratio:auto}
+  body.tank-dragging{cursor:row-resize;user-select:none}
+  body.tank-dragging .tank canvas{pointer-events:none}
+  body.lay-spotlight .tank-grip,body.tankfull .tank-grip,body.watch .tank-grip{display:none}
   .tank canvas{position:absolute;inset:0;display:block}
   /* (toggle retired — tank + list coexist) */
   /* ── MARKET WATCH real coin logos ── */
@@ -2602,7 +2611,7 @@
 
       <section class="markets">
         <div class="mk-head"><span class="lab">Markets</span><span class="mk-tf" id="mkTF"><button data-tf="1h" type="button">1H</button><button class="on" data-tf="24h" type="button">1D</button><button data-tf="7d" type="button">1W</button><button data-tf="30d" type="button">1M</button></span><button class="mk-add" id="mkAdd" type="button" title="Add a trending coin" aria-label="Add coin">+</button><span class="live"><span class="d"></span>Live</span></div>
-        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button></div>
+        <div class="tank" id="tank"><canvas id="bubbleTank" aria-label="Market bubbles — coins and Polymarket predictions"></canvas><div class="pop-score" id="popScore" title="Bubbles you've popped — all-time (the only stat that doesn't matter)"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg><b id="popN">0</b></div><button class="tank-expand" id="tankExpand" type="button" title="Expand / collapse the bubble view (Esc)" aria-label="Expand bubble view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg></button><div class="tank-grip" id="tankGrip" title="Drag to resize · double-click to reset" aria-label="Resize bubble view" role="separator" aria-orientation="horizontal"><span class="gr" aria-hidden="true"></span></div></div>
         <div class="mk-split">
           <div class="mk-pane coins">
             <div class="mk-pane-h"><span class="lab">Bullpen Mix</span><span class="note" id="tfNote">Spot · 1D</span></div>
@@ -3647,6 +3656,26 @@
       if(btn.dataset.v!=='list'){ tankSize(); tankScatter(); } });
     var pn=$('popN'); if(pn) pn.textContent=popCount;
     var ex=$('tankExpand'); if(ex) ex.addEventListener('click',tankToggleFull);
+    /* TANK GRIP — drag the lower seam to size the bubble tank (pointer capture) */
+    (function(){ var grip=$('tankGrip'), tk=$('tank'); if(!grip||!tk) return;
+      var KEY='mb_tank_h', dragging=false, startY=0, startH=0, raf=0;
+      function clampH(h){ var mn=120, mx=Math.min(660,Math.round((window.innerHeight||800)*0.7)); return Math.max(mn,Math.min(mx,Math.round(h))); }
+      function apply(h){ document.body.classList.add('tank-sized'); document.body.style.setProperty('--tank-h',h+'px'); }
+      try{ var saved=parseInt(localStorage.getItem(KEY),10); if(saved>0){ apply(clampH(saved)); tankSize(); tankScatter(); } }catch(_){}
+      grip.addEventListener('pointerdown',function(e){ e.preventDefault(); dragging=true; startY=e.clientY;
+        startH=tk.getBoundingClientRect().height; document.body.classList.add('tank-dragging');
+        try{ grip.setPointerCapture(e.pointerId); }catch(_){} });
+      grip.addEventListener('pointermove',function(e){ if(!dragging)return;
+        apply(clampH(startH+(e.clientY-startY)));
+        if(!raf) raf=requestAnimationFrame(function(){ raf=0; tankSize(); }); });
+      function end(e){ if(!dragging)return; dragging=false; document.body.classList.remove('tank-dragging');
+        try{ grip.releasePointerCapture(e.pointerId); }catch(_){} tankSize();
+        try{ localStorage.setItem(KEY, String(Math.round(tk.getBoundingClientRect().height))); }catch(_){} }
+      grip.addEventListener('pointerup',end); grip.addEventListener('pointercancel',end); grip.addEventListener('lostpointercapture',end);
+      grip.addEventListener('dblclick',function(e){ e.preventDefault();
+        document.body.classList.remove('tank-sized'); document.body.style.removeProperty('--tank-h');
+        try{ localStorage.removeItem(KEY); }catch(_){} tankSize(); tankScatter(); });
+    })();
     var ad=$('mkAdd'); if(ad) ad.addEventListener('click',tankAddCoin);
     var ps=$('popScore'); if(ps) ps.addEventListener('click',openFlex);
     var fcl=$('flexClose'); if(fcl) fcl.addEventListener('click',closeFlex);
