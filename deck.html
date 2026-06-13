@@ -3872,8 +3872,8 @@
   function streamToken(v){ return streamSlug(v).replace(/[^a-z0-9]/g,''); }
   function playerSrc(s){
     if(s.plat==='twitch') return 'https://player.twitch.tv/?'+(s.video?('video='+encodeURIComponent(s.video)+'&time='+encodeURIComponent(s.time||'0h0m0s')):('channel='+encodeURIComponent(s.ch)))+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&muted='+(STREAM_MUTED?'true':'false')+'&autoplay=true';
-    if(s.plat==='kick'){ var kch=streamSlug(s.ch);   /* current Kick embed requires only /<username>; query params are optional and can fail closed */
-      return kch?'https://player.kick.com/'+encodeURIComponent(kch):''; }
+    if(s.plat==='kick'){ var kch=streamSlug(s.ch);   /* ?muted=true is verified load-neutral on live channels (doesn't trigger the playback-url misconfigure); honored → starts muted like Twitch */
+      return kch?'https://player.kick.com/'+encodeURIComponent(kch)+(STREAM_MUTED?'?muted=true':''):''; }
     return '';
   }
   /* ON AIR — ONE video at a time. The connected Market Bubble stream fills the whole box.
