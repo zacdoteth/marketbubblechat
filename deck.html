@@ -2178,6 +2178,9 @@
   body.watch .oa-full{opacity:.85;pointer-events:auto}
   .oa-full:hover{background:rgba(22,22,28,.85);opacity:1}
   .oa-full svg{width:16px;height:16px}
+  .oa-full .ic-show{display:none}
+  .oa-full.on .ic-hide{display:none}
+  .oa-full.on .ic-show{display:block}
   /* ── maximize: collapse the chat rail so the stage fills the width ── */
   body.watch .deck, body.lay-spotlight .deck{transition:grid-template-columns .34s var(--ease)}
   body.watch.chat-collapsed .deck{grid-template-columns:minmax(0,1fr) 0}
@@ -2540,7 +2543,6 @@
     <!-- THE WIRE -->
     <main class="wire" aria-label="The wire — unified chat">
       <div class="wire-head">
-        <span class="ttl">The Wire</span>
         <span class="src">All sources</span>
         <div class="tools">
           <button class="wtool" id="pauseBtn" title="Pause feed"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg></button>
@@ -2602,7 +2604,7 @@
           <button class="pip-x" id="pipX" type="button" aria-label="Hide video">&times;</button>
           <button class="pip-max-btn" id="pipMax" type="button" aria-label="Resize video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
           <div class="pip-grip" id="pipGrip" aria-hidden="true"></div>
-          <button class="oa-full" id="oaFull" type="button" title="Maximize — hide chat" aria-label="Maximize the stage / hide chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
+          <button class="oa-full" id="oaFull" type="button" title="Hide chat" aria-label="Toggle the unified chat"><svg class="ic-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m10 8 3 3-3 3"/></svg><svg class="ic-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m13 8-3 3 3 3"/></svg></button>
         </div>
         <div class="oa-meta" style="display:none">
           <div class="who" id="oaWho"></div>
@@ -2952,7 +2954,7 @@
     document.body.classList.toggle('dash',!theater);
     document.body.classList.toggle('watch',theater);
     document.body.classList.toggle('chat-collapsed',theater);             // theater = curtains drawn; the button brings chat back
-    var _mx=$('oaFull'); if(_mx){ _mx.classList.toggle('on',theater); _mx.title=theater?'Show chat':'Maximize — hide chat'; }
+    var _mx=$('oaFull'); if(_mx){ _mx.classList.toggle('on',theater); _mx.title=theater?'Show chat':'Hide chat'; }
     document.body.classList.toggle('lay-spotlight',l==='spotlight');
     $('mDeck').classList.toggle('on',l==='deck');
     $('mSpot').classList.toggle('on',l==='spotlight');
@@ -3797,7 +3799,7 @@
       addEventListener('resize',reclamp);
     })();
     var oaF=$('oaFull'); if(oaF) oaF.addEventListener('click',function(){ var on=document.body.classList.toggle('chat-collapsed');
-      oaF.classList.toggle('on',on); oaF.title=on?'Show chat':'Maximize — hide chat'; });
+      oaF.classList.toggle('on',on); oaF.title=on?'Show chat':'Hide chat'; });
     var fw=$('flexWrap'); if(fw) fw.addEventListener('click',function(e){ if(e.target===fw) closeFlex(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('tankfull')) tankToggleFull(); });
     if(!TANK.raf) TANK.raf=requestAnimationFrame(tankFrame);
