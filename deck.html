@@ -3862,6 +3862,7 @@
   /* ===== INIT + LOOPS ===== */
   /* ON AIR — real players. The connected live Twitch/Kick streams ARE the cams. */
   var EMBED_FAIL={}, KICK_FAIL_TTL=90000, KICK_CHECK_MS=2600, EMBED_LOAD_MS=9000;
+  var KICK_PROBE_TRIES=3, KICK_PROBE_GAP=900, KICK_PROBE_TIMEOUT=2200;   // warm-up probe of Kick's flaky playback-url endpoint
   function streamSlug(v){ return String(v||'').trim().toLowerCase().replace(/^@/,'').replace(/[\/?#].*$/,''); }
   function streamToken(v){ return streamSlug(v).replace(/[^a-z0-9]/g,''); }
   function playerSrc(s){
@@ -3906,6 +3907,26 @@
       }
     }
     return null;
+  }
+  /* Kick's player fetches /channels/<slug>/playback-url, and Cloudflare blocks that ONE endpoint
+     intermittently → "misconfigured" even when the channel is live. Probe the SAME endpoint first
+     (a few spaced tries) and only mount once it answers 200, so the player's own call lands in a
+     healthy window. done(false) → caller falls back to the live check (offline vs best-effort). */
+  function kickPlaybackReady(s,done){
+    var slug=streamSlug(s&&s.ch), tries=KICK_PROBE_TRIES, fin=false;
+    function finish(v){ if(fin)return; fin=true; done(v); }
+    function next(){ if(fin)return; if(--tries<=0){ finish(false); return; } setTimeout(attempt,KICK_PROBE_GAP); }
+    function attempt(){
+      var ctl=null; try{ if(typeof AbortController==='function') ctl=new AbortController(); }catch(_){}
+      var tid=setTimeout(function(){ try{ if(ctl)ctl.abort(); }catch(_){} },KICK_PROBE_TIMEOUT);
+      try{
+        fetch('https://kick.com/api/v2/channels/'+encodeURIComponent(slug)+'/playback-url',{credentials:'omit',mode:'cors',signal:ctl&&ctl.signal})
+          .then(function(r){ clearTimeout(tid); if(r&&r.ok) finish(true); else next(); })
+          .catch(function(){ clearTimeout(tid); next(); });
+      }catch(e){ clearTimeout(tid); next(); }
+    }
+    if(!slug||typeof fetch!=='function'){ finish(false); return; }
+    attempt();
   }
   function kickLiveCheck(s,done){
     var slug=streamSlug(s&&s.ch), called=false, ctl=null, tid=0;
@@ -3958,7 +3979,10 @@
         h.appendChild(aid);
       }
     }
-    if(s.plat==='kick') kickLiveCheck(s,function(isLive){ if(isLive===false) fail('not-live'); else mount(); });
+    if(s.plat==='kick') kickPlaybackReady(s,function(ok){
+      if(ok){ mount(); return; }                                                   // playback-url is warm → player will get its stream
+      kickLiveCheck(s,function(isLive){ if(isLive===false) fail('not-live'); else mount(); }); // ambiguous → offline gets the clean fallback, else best-effort
+    });
     else mount();
   }
   function renderSwitch(live,activeId){
