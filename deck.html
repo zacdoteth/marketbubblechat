@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <!--
   MARKET BUBBLE — CONFLUX // THE COMMAND DECK
   $10,000 Vibe Code Challenge. Unified chat aggregator — Twitch + X + Kick
@@ -32,8 +33,33 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230A0A0C'/%3E%3Cpath d='M115 48l-44 49h29l-15 44 54-59h-35l11-34z' fill='%235B8CFF'/%3E%3C/svg%3E" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Market%20Bubble%20Command%20Deck%22%2C%22short_name%22%3A%22Market%20Bubble%22%2C%22description%22%3A%22Every%20chat.%20Every%20platform.%20One%20feed.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230A0A0C%22%2C%22theme_color%22%3A%22%230A0A0C%22%2C%22start_url%22%3A%22.%22%2C%22scope%22%3A%22.%22%7D" />
 
+<!-- ░░ SEO / social — were missing (Lighthouse) ░░ -->
+<title>Market Bubble — Command Deck · Every chat. Every platform. One feed.</title>
+<meta name="description" content="Market Bubble Command Deck — one unified live chat across Twitch, Kick and X, with combined viewers, live sentiment and markets. Every chat. Every platform. One feed." />
+<meta property="og:title" content="Market Bubble — Command Deck" />
+<meta property="og:description" content="Every chat. Every platform. One feed. The unified live-chat deck for Twitch, Kick and X." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0A0C'/%3E%3Cpath d='M20 7l-9 11h6l-4 7 11-12h-7l3-6z' fill='%235B8CFF'/%3E%3C/svg%3E" />
+<!-- ░░ resource hints — warm the hot origins; DNS-prefetch the rest ░░ -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://conflux-backend-production.up.railway.app" />
+<link rel="preconnect" href="https://files.kick.com" />
+<link rel="dns-prefetch" href="https://player.kick.com" />
+<link rel="dns-prefetch" href="https://player.twitch.tv" />
+<link rel="dns-prefetch" href="https://7tv.io" />
+<link rel="dns-prefetch" href="https://cdn.7tv.app" />
+<link rel="dns-prefetch" href="https://api.betterttv.net" />
+<link rel="dns-prefetch" href="https://cdn.betterttv.net" />
+<link rel="dns-prefetch" href="https://api.coingecko.com" />
+<link rel="dns-prefetch" href="https://api.alternative.me" />
+<link rel="dns-prefetch" href="https://kick.com" />
+<!-- fonts via <link> (parallel + preconnected) instead of a render-blocking @import; display=swap kept -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,500&family=Oswald:wght@500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,500&family=Oswald:wght@500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  /* Fonts now load via <link rel="stylesheet"> in <head> above — preconnected, parallel, no render-blocking @import. */
 
   :root{
     --ink:#070709; --bg:#0A0A0C; --panel:#101015; --panel-2:#15151B;
@@ -3089,10 +3115,10 @@
   function highlightText(t){
     t=escHTML(t);   /* chat is hostile input — escape before any markup goes in */
     /* Kick channel emotes — render the actual art, same as native Kick chat */
-    t=t.replace(/\[emote:(\d+):([A-Za-z0-9_\-!]{1,40})\]/g,'<img class="emote" src="https://files.kick.com/emotes/$1/fullsize" alt="$2" title="$2" loading="lazy"/>');
+    t=t.replace(/\[emote:(\d+):([A-Za-z0-9_\-!]{1,40})\]/g,'<img class="emote" src="https://files.kick.com/emotes/$1/fullsize" alt="$2" title="$2" loading="lazy" decoding="async"/>');
     t=t.replace(/\[emote:\d+:([^\]]*)\]/g,':$1:');   /* odd names: graceful :name: fallback */
     t=t.replace(/(^|\s)(:?)([A-Za-z0-9_]{2,30})(:?)(?=$|\s)/g,function(full,sp,c1,w,c2){
-      var u=EMOTES[w]; return u?(sp+'<img class="emote" src="'+u+'" alt="'+w+'" title="'+w+'" loading="lazy"/>'):full; });
+      var u=EMOTES[w]; return u?(sp+'<img class="emote" src="'+u+'" alt="'+w+'" title="'+w+'" loading="lazy" decoding="async"/>'):full; });
     return t.replace(/@(\w+)/g,'<span class="mention">@$1</span>')
             .replace(/(🔥|📈|🚀)/g,'<span class="em">$1</span>')
             .replace(/(OMEGALUL|PagMan|KEKW|FeelsBadMan|fbcrac\w*)/g,'<span class="em">$1</span>');
@@ -4457,3 +4483,4 @@
   }catch(err){ /* fail-safe: never break the wired engine */ }
 })();
 </script>
+</html>
