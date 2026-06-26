@@ -17,7 +17,7 @@
    • OBS lifecycle aware (pauses when the source is hidden). Silent.
 
   Drop the URL into an OBS Browser Source, set Width = Height (square).
-  Tunables (all optional): ?bg=dark|transparent|<hex>  ?font=18  ?max=18
+  Tunables (all optional): ?bg=window|gradient|clear|<hex>  (gradient = see-through + legible, recommended)  ?scrim=pill (per-msg floor for bright footage)  ?font=18  ?max=18
    ?fade=0  ?platforms=all|twitch,kick,x,mb  ?compact=0  ?scrim=0
    ?anim=1  ?bots=0  ?status=1  ?badges=1  ?radius=12 (0 = hard square corners)
   Presets (set source W=H to match): ?preset=square (≈560×560) · ?preset=strip (≈480×960, the recommended hero — chat flows vertically).
@@ -61,6 +61,15 @@
     background:var(--scrim);border:1px solid rgba(255,255,255,.08);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -70px 70px -50px rgba(0,0,0,.45);}
   body.bg-transparent .panel{background:transparent;border-color:transparent;box-shadow:none;border-radius:0}
+  /* GRADIENT scrim — the broadcast-grade see-through: eased bottom-anchored ramp (no hard band),
+     faded to the SAME hue at zero alpha (never through grey), no box edge. Legible over white AND black. */
+  body.bg-gradient .panel{border:none;box-shadow:none;border-radius:0;background:linear-gradient(to top,
+    rgba(8,10,16,0.62) 0%, rgba(8,10,16,0.58) 8%, rgba(8,10,16,0.50) 18%, rgba(8,10,16,0.40) 30%,
+    rgba(8,10,16,0.30) 42%, rgba(8,10,16,0.205) 53%, rgba(8,10,16,0.13) 64%, rgba(8,10,16,0.075) 74%,
+    rgba(8,10,16,0.037) 83%, rgba(8,10,16,0.015) 92%, rgba(8,10,16,0) 100%)}
+  /* per-message PILL — the hard contrast floor for the brightest/busiest footage (?scrim=pill) */
+  body.scrim-pill .msg{background:rgba(8,10,16,.62);border-radius:8px;padding:6px 10px 7px;box-shadow:inset 0 0 0 1px var(--cb)}
+  body.scrim-pill .feed{gap:calc(var(--gap,6px) + 2px)}
 
   /* feed: column-reverse pins newest to the bottom, older rise & clip at the top — no JS scroll */
   .feed{display:flex;flex-direction:column-reverse;gap:var(--gap,6px);min-height:0;overflow:hidden;
@@ -74,14 +83,14 @@
   /* platform source CHIP — color-as-data, broadcast-safe (no color-mix dependency) */
   .msg .src{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
     width:calc(var(--font) * 1.34);height:calc(var(--font) * 1.34);border-radius:6px;color:var(--c);
-    background:var(--cs);box-shadow:inset 0 0 0 1px var(--cb)}
+    background:var(--cs);box-shadow:inset 0 0 0 1px var(--cb), 0 1px 3px rgba(0,0,0,.55)}
   .msg .src svg{width:calc(var(--font) * .78);height:calc(var(--font) * .78);display:block;
     filter:drop-shadow(0 1px 1px rgba(0,0,0,.55))}
   .msg .usr{font-weight:700;font-size:calc(var(--font) * 1.02);color:var(--c);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:62%}
   .msg .bdg{flex:0 0 auto;font-family:var(--mono);font-size:calc(var(--font) * .52);font-weight:700;
     letter-spacing:.04em;text-transform:uppercase;padding:2px 5px;border-radius:5px;line-height:1;
-    color:#0A0A0C;text-shadow:none}
+    color:#0A0A0C;text-shadow:none;box-shadow:0 1px 2px rgba(0,0,0,.5)}
   .msg .bdg.host{background:var(--mb)} .msg .bdg.mod{background:var(--kick)}
   .msg .txt{font-size:var(--font);line-height:1.32;color:var(--body);overflow-wrap:anywhere;max-width:96%}
   .msg .txt .mention{color:var(--mb);font-weight:600}
@@ -93,6 +102,8 @@
     paint-order:stroke fill;-webkit-text-stroke:.8px rgba(0,0,0,.92);
     text-shadow:0 1px 2px rgba(0,0,0,.92), 0 0 4px rgba(0,0,0,.7);}
   .msg.m-x .usr{ -webkit-text-stroke:.95px rgba(0,0,0,.96); }   /* white names need extra outline */
+  /* CLEAR (bare) mode: add a 4-way faux-stroke so text reads even white-on-white with no scrim */
+  body.bg-transparent .msg .usr,body.bg-transparent .msg .txt{text-shadow:-1px -1px 0 rgba(0,0,0,.95),1px -1px 0 rgba(0,0,0,.95),-1px 1px 0 rgba(0,0,0,.95),1px 1px 0 rgba(0,0,0,.95),0 1px 2px rgba(0,0,0,.9)}
 
   .msg.m-twitch{--c:var(--twitch);--cs:rgba(145,70,255,.17);--cb:rgba(145,70,255,.4)}
   .msg.m-kick{--c:var(--kick);--cs:rgba(83,252,24,.14);--cb:rgba(83,252,24,.38)}
@@ -161,12 +172,15 @@
   if(CFG.anim) bodyEl.classList.add('anim');
   if(CFG.status) bodyEl.classList.add('show-status');
   // background mode
-  if(CFG.bg==='transparent'||CFG.bg==='clear'||CFG.bg==='none'){ bodyEl.classList.add('bg-transparent'); }
-  else if(CFG.bg!=='dark'){ // custom hex/rgb
+  if(CFG.bg==='gradient'){ bodyEl.classList.add('bg-gradient'); }
+  else if(CFG.bg==='transparent'||CFG.bg==='clear'||CFG.bg==='none'){ bodyEl.classList.add('bg-transparent'); }
+  else if(CFG.bg!=='dark'&&CFG.bg!=='window'){ // custom hex/rgb
     var safe=/^#?[0-9a-f]{3,8}$|^rgba?\(/i.test(CFG.bg) ? (/^[0-9a-f]{3,8}$/i.test(CFG.bg)?('#'+CFG.bg):CFG.bg) : null;
     if(safe) root.setProperty('--scrim', safe);
   }
   if(CFG.scrim==='0') bodyEl.classList.add('bg-transparent');
+  else if(CFG.scrim==='soft') bodyEl.classList.add('bg-gradient');
+  else if(CFG.scrim==='pill') bodyEl.classList.add('scrim-pill');
   // platform filter
   var ENABLED=(function(){ if(CFG.platforms==='all') return {twitch:1,kick:1,x:1,mb:1};
     var o={}; CFG.platforms.split(',').forEach(function(p){ p=p.trim(); if(p)o[p]=1; }); return o; })();

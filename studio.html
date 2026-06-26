@@ -152,7 +152,7 @@
           </div>
           <div class="sec">
             <h3>Background</h3>
-            <div class="seg" data-k="bg"><button data-v="dark">Dark window</button><button data-v="transparent">Transparent</button></div>
+            <div class="seg" data-k="bg"><button data-v="window">Window</button><button data-v="gradient">Gradient</button><button data-v="clear">Clear</button></div>
           </div>
           <div class="sec">
             <h3>Corners</h3>
@@ -178,6 +178,7 @@
             <div class="toggle"><span>Host / Mod badges</span><div class="sw" data-t="badges"></div></div>
             <div class="toggle"><span>Connection dot</span><div class="sw" data-t="status"></div></div>
             <div class="toggle"><span>Entrance animation</span><div class="sw" data-t="anim"></div></div>
+            <div class="toggle"><span>Bright-footage floor <span style="color:var(--dim-2);font-size:11px">(per-message)</span></span><div class="sw" data-t="pill"></div></div>
           </div>
         </div>
 
@@ -205,8 +206,8 @@
   var OVR_PUBLIC  = (location.protocol==='file:') ? (location.href.replace(/studio\.html.*$/,'overlay.html')) : (location.origin + '/overlay');
 
   // perfect default = the recommended config (decide for them)
-  var S = { preset:'strip', bg:'dark', corners:'rounded', font:22, max:16,
-            plats:{twitch:1,kick:1,x:1,mb:1}, bots:0, badges:1, status:1, anim:1 };
+  var S = { preset:'strip', bg:'gradient', corners:'rounded', font:22, max:16,
+            plats:{twitch:1,kick:1,x:1,mb:1}, bots:0, badges:1, status:1, anim:1, pill:0 };
 
   function presetSize(){ return S.preset==='square' ? {w:560,h:560} : {w:480,h:960}; }
 
@@ -223,6 +224,7 @@
     if(!S.badges) p.push('badges=0');
     if(!S.status) p.push('status=0');
     if(!S.anim) p.push('anim=0');
+    if(S.pill) p.push('scrim=pill');
     return p.join('&');
   }
 
