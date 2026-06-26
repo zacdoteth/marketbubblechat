@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  MARKET BUBBLE — OVERLAY STUDIO  ·  the producer's control room
+  ───────────────────────────────────────────────────────────────
+  NOT a broadcast surface. This is where the producer dials in the
+  combined-chat overlay (live preview over a fake stream) and copies
+  the exact OBS Browser Source URL. The overlay itself stays headerless
+  and pure — all the knobs live HERE, off the air. (Miyamoto: the config
+  screen is never inside the level.)
+-->
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Market Bubble — Overlay Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+<style>
+  :root{
+    --bg:#0A0A0C; --panel:#101015; --panel-2:#15151B; --line:#23232A; --line-soft:#1A1A20;
+    --white:#F4F5F8; --dim:#9aa0ad; --dim-2:#676d79;
+    --blue:#5B8CFF; --blue-hi:#83A6FF; --twitch:#B69BFF; --kick:#53FC18; --up:#4ADE80;
+    --gk:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(1200px 600px at 70% -10%, #14141d, var(--bg)) fixed;color:var(--white);
+    font-family:var(--gk);-webkit-font-smoothing:antialiased}
+  a{color:var(--blue-hi)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 22px 60px}
+  .top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .top h1{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0}
+  .top .tag{font-family:var(--mono);font-size:11px;color:var(--dim-2);letter-spacing:.04em}
+  .sub{color:var(--dim);font-size:13px;margin:0 0 22px}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;align-items:start}
+  @media(max-width:880px){ .grid{grid-template-columns:1fr} }
+
+  /* ── live preview over a fake stream ── */
+  .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    background:
+      radial-gradient(circle at 24% 26%, #ffe9a8 0, rgba(255,233,168,0) 24%),
+      radial-gradient(circle at 80% 30%, #eafff0 0, rgba(234,255,240,0) 20%),
+      radial-gradient(circle at 62% 82%, #53fc18 0, rgba(83,252,24,0) 30%),
+      linear-gradient(135deg,#16224a 0,#4a1d63 46%,#0b2c1c 100%);
+    min-height:560px;display:flex;align-items:flex-end;justify-content:flex-end;padding:26px}
+  .stage .cam{position:absolute;left:22px;top:18px;display:flex;align-items:center;gap:8px;color:#fff;opacity:.82;
+    font-size:12px;text-shadow:0 1px 3px #000}
+  .stage .cam .rec{width:9px;height:9px;border-radius:50%;background:#FF5765;box-shadow:0 0 8px #FF5765;animation:bl 1.6s infinite}
+  @keyframes bl{50%{opacity:.35}}
+  .stage .lower{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);
+    display:flex;align-items:center;gap:14px;padding:0 20px;color:#dfe3ea;font-family:var(--mono);font-size:12px}
+  .stage .lower b{color:var(--up)}
+  /* the overlay preview iframe — sized to the chosen format */
+  .pv{position:relative;z-index:3;border:0;background:transparent;box-shadow:0 18px 50px -18px rgba(0,0,0,.7);
+    transition:width .3s var(--ease),height .3s var(--ease)}
+  .pv.strip{width:300px;height:560px}
+  .pv.square{width:480px;height:480px}
+  @media(max-width:880px){ .pv.square{width:340px;height:340px} .pv.strip{width:240px;height:440px} }
+
+  /* ── controls ── */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:6px 16px 18px}
+  .sec{padding:14px 0;border-bottom:1px solid var(--line-soft)}
+  .sec:last-child{border-bottom:0}
+  .sec h3{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim-2);margin:0 0 10px}
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;font-family:var(--gk);font-size:12.5px;font-weight:600;color:var(--dim);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 8px;cursor:pointer;transition:.15s var(--ease)}
+  .seg button:hover{color:var(--white);border-color:#33333d}
+  .seg button.on{color:#08121f;background:var(--blue);border-color:var(--blue)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0}
+  .row label{font-size:13px;color:var(--white)}
+  .row .v{font-family:var(--mono);font-size:12px;color:var(--blue-hi);min-width:42px;text-align:right}
+  input[type=range]{flex:1;accent-color:var(--blue);height:4px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;font-weight:600;color:var(--dim);background:var(--panel-2);border:1px solid var(--line);
+    border-radius:8px;padding:7px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s var(--ease)}
+  .chip .d{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+  .chip.on{color:var(--white);border-color:#3a3a45}
+  .chip.on .d{opacity:1}
+  .chip.tw.on{box-shadow:inset 0 0 0 1px var(--twitch)} .chip.tw .d{color:var(--twitch)}
+  .chip.kk.on{box-shadow:inset 0 0 0 1px var(--kick)} .chip.kk .d{color:var(--kick)}
+  .chip.xx.on{box-shadow:inset 0 0 0 1px #fff} .chip.xx .d{color:#fff}
+  .chip.mb.on{box-shadow:inset 0 0 0 1px var(--blue)} .chip.mb .d{color:var(--blue)}
+  .toggle{display:flex;align-items:center;justify-content:space-between;margin:8px 0;font-size:13px}
+  .sw{width:38px;height:22px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);position:relative;cursor:pointer;transition:.18s var(--ease);flex:0 0 auto}
+  .sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--dim);transition:.18s var(--ease)}
+  .sw.on{background:var(--blue);border-color:var(--blue)} .sw.on::after{left:18px;background:#08121f}
+
+  /* ── output ── */
+  .out{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .out .lbl{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim-2);margin-bottom:9px}
+  .urlbox{display:flex;gap:8px}
+  .urlbox input{flex:1;min-width:0;font-family:var(--mono);font-size:12px;color:var(--blue-hi);background:var(--bg);
+    border:1px solid var(--line);border-radius:9px;padding:11px 12px}
+  .urlbox button{font-family:var(--gk);font-weight:700;font-size:13px;color:#08121f;background:var(--blue);
+    border:0;border-radius:9px;padding:0 16px;cursor:pointer;transition:.15s var(--ease);white-space:nowrap}
+  .urlbox button:hover{background:var(--blue-hi)} .urlbox button.done{background:var(--up)}
+  .hint{margin-top:12px;font-size:12.5px;color:var(--dim);line-height:1.5}
+  .hint b{color:var(--white);font-family:var(--mono)}
+  .steps{margin:10px 0 0;padding-left:18px;color:var(--dim);font-size:12.5px;line-height:1.7}
+  .steps b{color:var(--white)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Overlay Studio</h1>
+      <span class="tag">market bubble · combined chat for OBS</span>
+    </div>
+    <p class="sub">Dial it in on the live preview, copy the URL, drop it into an OBS Browser Source. The overlay stays headerless — every knob lives here.</p>
+
+    <div class="grid">
+      <!-- PREVIEW -->
+      <div>
+        <div class="stage" id="stage">
+          <div class="cam"><span class="rec"></span> SIMULATED STREAM — live preview composited like OBS</div>
+          <iframe class="pv strip" id="pv" title="overlay preview"></iframe>
+          <div class="lower">BTC <b>$63,940</b> · ETH <b>$3,310</b> · combined viewers <b>18,402</b></div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div>
+        <div class="panel">
+          <div class="sec">
+            <h3>Format</h3>
+            <div class="seg" data-k="preset"><button data-v="strip">Strip ▏tall</button><button data-v="square">Square ◻</button></div>
+          </div>
+          <div class="sec">
+            <h3>Background</h3>
+            <div class="seg" data-k="bg"><button data-v="dark">Dark window</button><button data-v="transparent">Transparent</button></div>
+          </div>
+          <div class="sec">
+            <h3>Corners</h3>
+            <div class="seg" data-k="corners"><button data-v="rounded">Rounded</button><button data-v="square">Square</button></div>
+          </div>
+          <div class="sec">
+            <h3>Type &amp; density</h3>
+            <div class="row"><label>Font size</label><input type="range" id="font" min="16" max="30" step="1"><span class="v" id="fontV"></span></div>
+            <div class="row"><label>Max messages</label><input type="range" id="max" min="6" max="24" step="1"><span class="v" id="maxV"></span></div>
+          </div>
+          <div class="sec">
+            <h3>Platforms</h3>
+            <div class="chips" id="plats">
+              <span class="chip tw" data-p="twitch"><span class="d"></span>Twitch</span>
+              <span class="chip kk" data-p="kick"><span class="d"></span>Kick</span>
+              <span class="chip xx" data-p="x"><span class="d"></span>X</span>
+              <span class="chip mb" data-p="mb"><span class="d"></span>MB</span>
+            </div>
+          </div>
+          <div class="sec">
+            <h3>Extras</h3>
+            <div class="toggle"><span>Show bot / !command messages</span><div class="sw" data-t="bots"></div></div>
+            <div class="toggle"><span>Host / Mod badges</span><div class="sw" data-t="badges"></div></div>
+            <div class="toggle"><span>Connection dot</span><div class="sw" data-t="status"></div></div>
+            <div class="toggle"><span>Entrance animation</span><div class="sw" data-t="anim"></div></div>
+          </div>
+        </div>
+
+        <div class="out">
+          <div class="lbl">OBS Browser Source URL</div>
+          <div class="urlbox"><input id="url" readonly><button id="copy">Copy</button></div>
+          <div class="hint">In OBS set the source size to <b id="size"></b> for this format.</div>
+          <ol class="steps">
+            <li><b>Sources → ➕ → Browser</b></li>
+            <li>Paste the URL above; set <b>Width &amp; Height</b> to the size shown</li>
+            <li>FPS <b>30</b>; tick <b>Shutdown source when not visible</b></li>
+            <li>Drag to the <b>lower-right</b>, above your ticker. Done.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+  // overlay base: relative file when local, /overlay route on the web
+  var OVR_PREVIEW = (location.protocol==='file:') ? 'overlay.html' : 'overlay.html';
+  var OVR_PUBLIC  = (location.protocol==='file:') ? (location.href.replace(/studio\.html.*$/,'overlay.html')) : (location.origin + '/overlay');
+
+  // perfect default = the recommended config (decide for them)
+  var S = { preset:'strip', bg:'dark', corners:'rounded', font:22, max:16,
+            plats:{twitch:1,kick:1,x:1,mb:1}, bots:0, badges:1, status:1, anim:1 };
+
+  function presetSize(){ return S.preset==='square' ? {w:560,h:560} : {w:480,h:960}; }
+
+  function params(){
+    var p=[];
+    p.push('preset='+S.preset);
+    p.push('bg='+S.bg);
+    if(S.corners==='square') p.push('radius=0');
+    p.push('font='+S.font);
+    p.push('max='+S.max);
+    var on=Object.keys(S.plats).filter(function(k){return S.plats[k];});
+    p.push('platforms='+(on.length===4?'all':on.join(',')));
+    if(S.bots) p.push('bots=1');
+    if(!S.badges) p.push('badges=0');
+    if(!S.status) p.push('status=0');
+    if(!S.anim) p.push('anim=0');
+    return p.join('&');
+  }
+
+  function render(){
+    // reflect state into the controls
+    document.querySelectorAll('.seg').forEach(function(seg){
+      var k=seg.getAttribute('data-k');
+      seg.querySelectorAll('button').forEach(function(btn){ btn.classList.toggle('on', btn.getAttribute('data-v')===S[k]); });
+    });
+    $('#font').value=S.font; $('#fontV').textContent=S.font+'px';
+    $('#max').value=S.max; $('#maxV').textContent=S.max;
+    document.querySelectorAll('#plats .chip').forEach(function(c){ c.classList.toggle('on', !!S.plats[c.getAttribute('data-p')]); });
+    document.querySelectorAll('.sw').forEach(function(sw){ sw.classList.toggle('on', !!S[sw.getAttribute('data-t')]); });
+    // preview iframe: aspect + src
+    var pv=$('#pv'); pv.className='pv '+(S.preset==='square'?'square':'strip');
+    var qs=params();
+    pv.src=OVR_PREVIEW+'?'+qs;
+    // public URL + size
+    $('#url').value=OVR_PUBLIC+'?'+qs;
+    var sz=presetSize(); $('#size').textContent=sz.w+' × '+sz.h+' px';
+  }
+
+  // wire segmented controls
+  document.querySelectorAll('.seg').forEach(function(seg){
+    seg.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return;
+      S[seg.getAttribute('data-k')]=b.getAttribute('data-v');
+      // sensible coupling: square wants a slightly smaller font, strip a bit denser
+      if(seg.getAttribute('data-k')==='preset'){ S.font=(S.preset==='square'?20:22); S.max=(S.preset==='square'?9:16); }
+      render(); });
+  });
+  $('#font').addEventListener('input',function(){ S.font=+this.value; render(); });
+  $('#max').addEventListener('input',function(){ S.max=+this.value; render(); });
+  document.querySelectorAll('#plats .chip').forEach(function(c){
+    c.addEventListener('click',function(){ var p=c.getAttribute('data-p'); var on=Object.keys(S.plats).filter(function(k){return S.plats[k];});
+      if(S.plats[p] && on.length===1) return; // keep at least one
+      S.plats[p]=S.plats[p]?0:1; render(); });
+  });
+  document.querySelectorAll('.sw').forEach(function(sw){
+    sw.addEventListener('click',function(){ var t=sw.getAttribute('data-t'); S[t]=S[t]?0:1; render(); });
+  });
+  $('#copy').addEventListener('click',function(){ var i=$('#url'); i.select();
+    var done=function(){ var b=$('#copy'); b.textContent='Copied ✓'; b.classList.add('done'); setTimeout(function(){ b.textContent='Copy'; b.classList.remove('done'); },1500); };
+    try{ navigator.clipboard.writeText(i.value).then(done,function(){ document.execCommand('copy'); done(); }); }
+    catch(_){ try{ document.execCommand('copy'); done(); }catch(e){} }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

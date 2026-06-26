@@ -3,7 +3,8 @@
   "rewrites": [
     { "source": "/", "destination": "/deck.html" },
     { "source": "/add", "destination": "/deck.html" },
-    { "source": "/overlay", "destination": "/overlay.html" }
+    { "source": "/overlay", "destination": "/overlay.html" },
+    { "source": "/studio", "destination": "/studio.html" }
   ],
   "headers": [
     {
