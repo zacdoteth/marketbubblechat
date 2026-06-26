@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  MARKET BUBBLE — COMBINED CHAT OVERLAY  ·  built for OBS Browser Source
+  ────────────────────────────────────────────────────────────────────
+  Headerless, square (1:1), TRANSPARENT-by-OBS chat window that drinks
+  from the SAME unified backend as the deck (Twitch + Kick + X + native
+  MB, merged into one feed). Color-as-data: every message wears its
+  platform's color so the producer's audience SEES the rivers converge.
+
+  Broadcast-correct by construction (researched, not guessed):
+   • body alpha = 0 (OBS composites real transparency; scrim lives ONLY
+     on the .panel child) — never an opaque-overlay trap.
+   • hard DOM cap + single rolling buffer → flat memory over a 24/7 show.
+   • GPU-only entrance (opacity/translateY) → no CEF CPU spike at rest.
+   • text stroke + paint-order + layered shadow → legible over ANY video.
+   • OBS lifecycle aware (pauses when the source is hidden). Silent.
+
+  Drop the URL into an OBS Browser Source, set Width = Height (square).
+  Tunables (all optional): ?bg=dark|transparent|<hex>  ?font=18  ?max=18
+   ?fade=0  ?platforms=all|twitch,kick,x,mb  ?compact=0  ?scrim=0
+   ?anim=1  ?bots=0  ?status=1  ?badges=1
+-->
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Market Bubble — Combined Chat Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://conflux-backend-production.up.railway.app" />
+<link rel="preconnect" href="https://files.kick.com" />
+<link rel="dns-prefetch" href="https://7tv.io" />
+<link rel="dns-prefetch" href="https://cdn.7tv.app" />
+<link rel="dns-prefetch" href="https://api.betterttv.net" />
+<link rel="dns-prefetch" href="https://cdn.betterttv.net" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" />
+<style>
+  /* ── OBS transparency: html/body MUST stay alpha-0; scrim is on .panel only ── */
+  html,body{margin:0;padding:0;height:100%;background:transparent!important;overflow:hidden}
+  *{box-sizing:border-box}
+  :root{
+    --font:18px;
+    --pad:22px;
+    --twitch:#B69BFF; --kick:#53FC18; --x:#FFFFFF; --mb:#83A6FF;
+    --body:#F4F5F8; --dim:#Aeb0ba;
+    --scrim:rgba(8,10,16,.72);
+    --gk:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  body{font-family:var(--gk);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* the square chat window — fills whatever size the producer sets the source to */
+  .panel{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
+    padding:var(--pad);overflow:hidden;border-radius:14px;
+    background:var(--scrim);border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);}
+  body.bg-transparent .panel{background:transparent;border-color:transparent;box-shadow:none;border-radius:0}
+
+  /* feed: column-reverse pins newest to the bottom, older rise & clip at the top — no JS scroll */
+  .feed{display:flex;flex-direction:column-reverse;gap:9px;min-height:0;overflow:hidden;
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 8%,#000 100%);
+            mask-image:linear-gradient(to bottom,transparent 0,#000 8%,#000 100%);}
+  body.compact .feed{gap:6px}
+
+  /* a chat row */
+  .msg{--c:var(--mb);will-change:auto;}
+  .msg .meta{display:flex;align-items:center;gap:7px;line-height:1.1;margin-bottom:2px}
+  .msg .src{display:inline-flex;flex:0 0 auto;color:var(--c)}
+  .msg .src svg{width:calc(var(--font) * .82);height:calc(var(--font) * .82);display:block;
+    filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.9))}
+  .msg .usr{font-weight:700;font-size:calc(var(--font) * 1.02);color:var(--c);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62%}
+  .msg .bdg{flex:0 0 auto;font-family:var(--mono);font-size:calc(var(--font) * .52);font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;padding:2px 5px;border-radius:5px;line-height:1;
+    color:#0A0A0C;text-shadow:none}
+  .msg .bdg.host{background:var(--mb)} .msg .bdg.mod{background:var(--kick)}
+  .msg .txt{font-size:var(--font);line-height:1.4;color:var(--body);overflow-wrap:anywhere;max-width:96%}
+  .msg .txt .mention{color:var(--mb);font-weight:600}
+  .msg .txt .em{font-weight:700}
+  .msg .txt img.emote{height:calc(var(--font) * 1.45);width:auto;vertical-align:-26%;margin:0 1px}
+
+  /* LEGIBILITY — survives white-on-white & black-on-black on ANY footage */
+  .msg .usr,.msg .txt{
+    paint-order:stroke fill;-webkit-text-stroke:.72px rgba(0,0,0,.92);
+    text-shadow:0 1px 2px rgba(0,0,0,.92), 0 0 4px rgba(0,0,0,.7);}
+  .msg.m-x .usr{ -webkit-text-stroke:.9px rgba(0,0,0,.96); }   /* white names need extra outline */
+
+  .msg.m-twitch{--c:var(--twitch)} .msg.m-kick{--c:var(--kick)}
+  .msg.m-x{--c:var(--x)} .msg.m-mb{--c:var(--mb)}
+
+  /* GPU-only entrance (transform+opacity only) — restrained, ~180ms */
+  @keyframes msgIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  body.anim .msg.enter{animation:msgIn .18s var(--ease) both}
+  .msg.leaving{opacity:0;transition:opacity .35s var(--ease)}
+  @media (prefers-reduced-motion: reduce){ body.anim .msg.enter{animation:none} }
+
+  /* connection pip — a whisper, not a header */
+  .status{position:fixed;top:10px;right:12px;width:8px;height:8px;border-radius:50%;
+    background:#FF5765;box-shadow:0 0 7px rgba(255,87,101,.7);opacity:.0;transition:opacity .3s,background .3s,box-shadow .3s;z-index:5}
+  body.show-status .status{opacity:.8}
+  .status.live{background:var(--kick);box-shadow:0 0 7px rgba(83,252,24,.7)}
+  .status.wait{background:#FFB020;box-shadow:0 0 7px rgba(255,176,32,.7)}
+
+  /* in OBS: no pointer, no scrollbars, no accidents */
+  body.in-obs{pointer-events:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+</style>
+</head>
+<body>
+  <div class="panel" id="panel">
+    <div class="feed" id="feed" aria-live="polite" aria-label="Combined live chat — Twitch, Kick, X and Market Bubble"></div>
+  </div>
+  <div class="status" id="status" title="Combined chat connection"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var feedEl=$('feed'), statusEl=$('status'), bodyEl=document.body;
+
+  /* ── URL params (the producer's knobs) ── */
+  var P=new URLSearchParams(location.search);
+  var pInt=function(k,d){ var v=parseInt(P.get(k),10); return isNaN(v)?d:v; };
+  var pBool=function(k,d){ var v=P.get(k); if(v==null)return d; return /^(1|true|on|yes)$/i.test(v); };
+  var CFG={
+    bg:       (P.get('bg')||'dark').toLowerCase(),
+    font:     Math.max(11,Math.min(48, pInt('font',18))),
+    max:      Math.max(3,Math.min(120, pInt('max',18))),
+    fade:     Math.max(0, pInt('fade',0)),                       // seconds; 0 = persist
+    platforms:(P.get('platforms')||'all').toLowerCase(),
+    compact:  pBool('compact',false),
+    scrim:    P.get('scrim'),                                    // null => follow bg
+    anim:     pBool('anim', pBool('motion',true)),
+    bots:     pBool('bots', pBool('commands',false)),            // default: HIDE bots/!commands
+    status:   pBool('status',true),
+    badges:   pBool('badges',true)
+  };
+
+  /* apply config to the DOM/CSS */
+  var root=document.documentElement.style;
+  root.setProperty('--font', CFG.font+'px');
+  if(CFG.compact){ bodyEl.classList.add('compact'); root.setProperty('--pad','14px'); }
+  if(CFG.anim) bodyEl.classList.add('anim');
+  if(CFG.status) bodyEl.classList.add('show-status');
+  // background mode
+  if(CFG.bg==='transparent'||CFG.bg==='clear'||CFG.bg==='none'){ bodyEl.classList.add('bg-transparent'); }
+  else if(CFG.bg!=='dark'){ // custom hex/rgb
+    var safe=/^#?[0-9a-f]{3,8}$|^rgba?\(/i.test(CFG.bg) ? (/^[0-9a-f]{3,8}$/i.test(CFG.bg)?('#'+CFG.bg):CFG.bg) : null;
+    if(safe) root.setProperty('--scrim', safe);
+  }
+  if(CFG.scrim==='0') bodyEl.classList.add('bg-transparent');
+  // platform filter
+  var ENABLED=(function(){ if(CFG.platforms==='all') return {twitch:1,kick:1,x:1,mb:1};
+    var o={}; CFG.platforms.split(',').forEach(function(p){ p=p.trim(); if(p)o[p]=1; }); return o; })();
+
+  /* ── OBS detection + lifecycle (idle when the source is hidden) ── */
+  var IN_OBS = (typeof window.obsstudio==='object' && window.obsstudio) || /\bOBS\//.test(navigator.userAgent);
+  if(IN_OBS) bodyEl.classList.add('in-obs');
+  var active=true;
+  window.addEventListener('obsSourceActiveChanged', function(e){ active=!!(e.detail&&e.detail.active); if(active) doFlush(); });
+  window.addEventListener('obsSourceVisibleChanged', function(e){ active=!!(e.detail&&e.detail.visible); if(active) doFlush(); });
+  window.addEventListener('obsExit', function(){ try{ if(ws)ws.close(); }catch(_){ } });
+
+  /* ── platform identity (ported from the deck) ── */
+  var PLABEL={twitch:'Twitch', x:'X', kick:'Kick', mb:'MB'};
+  var ICON={
+    twitch:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3 3 6v13h4v2l3-2h3l6-6V3H4Zm15 9-3 3h-4l-2 2v-2H6V5h13v7Z"/></svg>',
+    x:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.9l-5.4-7-6.2 7H1.4l8-9.2L1 2h7l4.9 6.4L18.9 2Zm-1.2 18h1.9L7.1 4H5.1l12.6 16Z"/></svg>',
+    kick:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h6v6l5-6h7l-8 9 8 9h-7l-5-6v6H3z"/></svg>',
+    mb:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>'
+  };
+
+  /* ── hostile-input-safe text + emote rendering (ported verbatim from the deck) ── */
+  var EMOTES={};
+  (function(){ if(typeof fetch!=='function')return;
+    fetch('https://7tv.io/v3/emote-sets/global').then(function(r){return r.json();}).then(function(d){
+      ((d&&d.emotes)||[]).forEach(function(e){ if(e&&e.name&&e.id) EMOTES[e.name]='https://cdn.7tv.app/emote/'+e.id+'/1x.webp'; });
+    }).catch(function(){});
+    fetch('https://api.betterttv.net/3/cached/emotes/global').then(function(r){return r.json();}).then(function(a){
+      (a||[]).forEach(function(e){ if(e&&e.code&&e.id&&!EMOTES[e.code]) EMOTES[e.code]='https://cdn.betterttv.net/emote/'+e.id+'/2x'; });
+    }).catch(function(){});
+  })();
+  function escHTML(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function highlightText(t){
+    t=escHTML(t);
+    t=t.replace(/\[emote:(\d+):([A-Za-z0-9_\-!]{1,40})\]/g,'<img class="emote" src="https://files.kick.com/emotes/$1/fullsize" alt="$2" title="$2" loading="lazy" decoding="async"/>');
+    t=t.replace(/\[emote:\d+:([^\]]*)\]/g,':$1:');
+    t=t.replace(/(^|\s)(:?)([A-Za-z0-9_]{2,30})(:?)(?=$|\s)/g,function(full,sp,c1,w,c2){
+      var u=EMOTES[w]; return u?(sp+'<img class="emote" src="'+u+'" alt="'+w+'" title="'+w+'" loading="lazy" decoding="async"/>'):full; });
+    return t.replace(/@(\w+)/g,'<span class="mention">@$1</span>')
+            .replace(/(🔥|📈|🚀)/g,'<span class="em">$1</span>')
+            .replace(/(OMEGALUL|PagMan|KEKW|FeelsBadMan|fbcrac\w*)/g,'<span class="em">$1</span>');
+  }
+  var BOT_RE=/(^|[^a-z])(streamelements|nightbot|streamlabs|moobot|bot)([^a-z]|$)/i;
+
+  /* ── streams map (streamId -> platform) from snapshot/streams ── */
+  var STREAMMAP={};
+  function rememberStreams(streams){ (streams||[]).forEach(function(s){ if(s&&s.id) STREAMMAP[s.id]={plat:s.platform}; }); }
+
+  /* ── render: one capped, batched, bottom-anchored feed ── */
+  var pending=[], raf=0, tmo=0;
+  // batch bursts into one frame; setTimeout is a fallback if rAF is throttled (backgrounded OBS source)
+  function scheduleFlush(){ if(!raf) raf=requestAnimationFrame(doFlush); if(!tmo) tmo=setTimeout(doFlush,250); }
+  function doFlush(){ if(raf){cancelAnimationFrame(raf);raf=0;} if(tmo){clearTimeout(tmo);tmo=0;} flush(); }
+  function flush(){
+    if(!active){ if(pending.length>CFG.max) pending=pending.slice(-CFG.max); return; }
+    if(!pending.length) return;
+    var batch=pending; pending=[];
+    for(var i=0;i<batch.length;i++) renderRow(batch[i]);
+    // cap the DOM (column-reverse: lastChild = oldest, visually topmost)
+    while(feedEl.children.length>CFG.max){ var old=feedEl.lastChild; if(old&&old._t)clearTimeout(old._t); feedEl.removeChild(old); }
+  }
+  function renderRow(v){
+    var plat=v.plat, name=v.name||'viewer';
+    var el=document.createElement('div');
+    el.className='msg m-'+(PLABEL[plat]?plat:'mb')+(CFG.anim?' enter':'');
+    var badges='';
+    if(CFG.badges){ if(v.host)badges+='<span class="bdg host">Host</span>'; if(v.mod)badges+='<span class="bdg mod">Mod</span>'; }
+    el.innerHTML='<div class="meta"><span class="src" aria-hidden="true">'+(ICON[plat]||ICON.mb)+'</span>'+
+      '<span class="usr">'+escHTML(name)+'</span>'+badges+'</div>'+
+      '<div class="txt">'+highlightText(v.text||'')+'</div>';
+    feedEl.insertBefore(el, feedEl.firstChild);   // newest -> first child -> bottom (column-reverse)
+    if(CFG.anim){ el.addEventListener('animationend',function(){ el.classList.remove('enter'); },{once:true}); }
+    if(CFG.fade>0){ el._t=setTimeout(function(){ el.classList.add('leaving');
+      setTimeout(function(){ if(el.parentNode)el.parentNode.removeChild(el); },400); }, CFG.fade*1000); }
+  }
+
+  /* ── ingest one backend message (mirrors the deck's adapter) ── */
+  function ingest(m){
+    if(!m||!m.platform)return;
+    var plat=m.platform; if(!ENABLED[plat]) return;
+    var name=(m.displayName||m.username||'viewer');
+    var text=String(m.text||'');
+    if(!CFG.bots){ if(BOT_RE.test(name)) return; if(/^\s*!/.test(text)) return; }
+    pending.push({ plat:plat, name:name, text:text, host:!!m.streamer,
+      mod:false, you:(plat==='mb') });
+    scheduleFlush();
+  }
+
+  /* ── the live wire — same backend the deck drinks from ── */
+  var BACKEND_URL=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+    ? 'ws://localhost:8787' : 'wss://conflux-backend-production.up.railway.app';
+  var ws=null, reconnectDelay=1000+Math.random()*1000, RECONNECT_MAX=30000;
+  function setStatus(cls){ statusEl.className='status'+(cls?(' '+cls):''); }
+  function scheduleReconnect(){ setStatus('wait'); setTimeout(connect, reconnectDelay); reconnectDelay=Math.min(reconnectDelay*1.5,RECONNECT_MAX); }
+  function connect(){
+    try{
+      ws=new WebSocket(BACKEND_URL);
+      ws.onopen=function(){ setStatus('live'); reconnectDelay=1000+Math.random()*1000; };
+      ws.onmessage=function(e){ var m; try{m=JSON.parse(e.data);}catch(_){return;}
+        if(m.type==='snapshot'){ rememberStreams(m.snapshot?m.snapshot.streams:m.streams);
+          // rebuild from a capped tail so reconnects never accumulate
+          feedEl.innerHTML=''; pending=[];
+          var msgs=(m.messages||(m.snapshot&&m.snapshot.messages)||[]); msgs.slice(-CFG.max).forEach(ingest); flush();
+        }
+        else if(m.type==='message'){ ingest(m.message); }
+        else if(m.type==='streams'){ rememberStreams(m.streams); }
+        else if(m.type==='clear'){ feedEl.innerHTML=''; pending=[]; }
+      };
+      ws.onclose=function(){ setStatus(''); scheduleReconnect(); };
+      ws.onerror=function(){ try{ws.close();}catch(_){ } };
+    }catch(_){ scheduleReconnect(); }
+  }
+  setStatus('');
+  connect();
+
+  /* expose a tiny hook for headless verification (no effect in production) */
+  window.__overlay={ ingest:ingest, flush:doFlush, cfg:CFG, feed:feedEl };
+})();
+</script>
+</body>
+</html>
