@@ -20,6 +20,7 @@
   Tunables (all optional): ?bg=dark|transparent|<hex>  ?font=18  ?max=18
    ?fade=0  ?platforms=all|twitch,kick,x,mb  ?compact=0  ?scrim=0
    ?anim=1  ?bots=0  ?status=1  ?badges=1
+  Presets (set source W=H to match): ?preset=square (≈560×560) · ?preset=strip (≈480×960, the recommended hero — chat flows vertically).
 -->
 <head>
 <meta charset="utf-8" />
@@ -41,11 +42,12 @@
   html,body{margin:0;padding:0;height:100%;background:transparent!important;overflow:hidden}
   *{box-sizing:border-box}
   :root{
-    --font:18px;
-    --pad:22px;
+    --font:22px;          /* broadcast default (proven 20-24 band); ?font=18 = compact/monitor */
+    --pad:16px;
+    --gap:6px;            /* tight inter-row leading like native Kick chat */
     --twitch:#B69BFF; --kick:#53FC18; --x:#FFFFFF; --mb:#83A6FF;
     --body:#F4F5F8; --dim:#Aeb0ba;
-    --scrim:rgba(8,10,16,.72);
+    --scrim:rgba(8,10,16,.66);
     --gk:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
     --mono:'JetBrains Mono',ui-monospace,monospace;
     --ease:cubic-bezier(.22,.61,.36,1);
@@ -60,14 +62,14 @@
   body.bg-transparent .panel{background:transparent;border-color:transparent;box-shadow:none;border-radius:0}
 
   /* feed: column-reverse pins newest to the bottom, older rise & clip at the top — no JS scroll */
-  .feed{display:flex;flex-direction:column-reverse;gap:9px;min-height:0;overflow:hidden;
+  .feed{display:flex;flex-direction:column-reverse;gap:var(--gap,6px);min-height:0;overflow:hidden;
     -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 8%,#000 100%);
             mask-image:linear-gradient(to bottom,transparent 0,#000 8%,#000 100%);}
-  body.compact .feed{gap:6px}
+  body.compact .feed{gap:5px}
 
   /* a chat row */
   .msg{--c:var(--mb);--cs:rgba(91,140,255,.18);--cb:rgba(91,140,255,.4);will-change:auto;}
-  .msg .meta{display:flex;align-items:center;gap:8px;line-height:1.1;margin-bottom:3px}
+  .msg .meta{display:flex;align-items:center;gap:8px;line-height:1.1;margin-bottom:3px;flex-wrap:nowrap;min-width:0}
   /* platform source CHIP — color-as-data, broadcast-safe (no color-mix dependency) */
   .msg .src{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
     width:calc(var(--font) * 1.34);height:calc(var(--font) * 1.34);border-radius:6px;color:var(--c);
@@ -75,21 +77,21 @@
   .msg .src svg{width:calc(var(--font) * .78);height:calc(var(--font) * .78);display:block;
     filter:drop-shadow(0 1px 1px rgba(0,0,0,.55))}
   .msg .usr{font-weight:700;font-size:calc(var(--font) * 1.02);color:var(--c);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62%}
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:62%}
   .msg .bdg{flex:0 0 auto;font-family:var(--mono);font-size:calc(var(--font) * .52);font-weight:700;
     letter-spacing:.04em;text-transform:uppercase;padding:2px 5px;border-radius:5px;line-height:1;
     color:#0A0A0C;text-shadow:none}
   .msg .bdg.host{background:var(--mb)} .msg .bdg.mod{background:var(--kick)}
-  .msg .txt{font-size:var(--font);line-height:1.4;color:var(--body);overflow-wrap:anywhere;max-width:96%}
+  .msg .txt{font-size:var(--font);line-height:1.32;color:var(--body);overflow-wrap:anywhere;max-width:96%}
   .msg .txt .mention{color:var(--mb);font-weight:600}
   .msg .txt .em{font-weight:700}
   .msg .txt img.emote{height:calc(var(--font) * 1.45);width:auto;vertical-align:-26%;margin:0 1px}
 
   /* LEGIBILITY — survives white-on-white & black-on-black on ANY footage */
   .msg .usr,.msg .txt{
-    paint-order:stroke fill;-webkit-text-stroke:.72px rgba(0,0,0,.92);
+    paint-order:stroke fill;-webkit-text-stroke:.8px rgba(0,0,0,.92);
     text-shadow:0 1px 2px rgba(0,0,0,.92), 0 0 4px rgba(0,0,0,.7);}
-  .msg.m-x .usr{ -webkit-text-stroke:.9px rgba(0,0,0,.96); }   /* white names need extra outline */
+  .msg.m-x .usr{ -webkit-text-stroke:.95px rgba(0,0,0,.96); }   /* white names need extra outline */
 
   .msg.m-twitch{--c:var(--twitch);--cs:rgba(145,70,255,.17);--cb:rgba(145,70,255,.4)}
   .msg.m-kick{--c:var(--kick);--cs:rgba(83,252,24,.14);--cb:rgba(83,252,24,.38)}
@@ -130,10 +132,14 @@
   var P=new URLSearchParams(location.search);
   var pInt=function(k,d){ var v=parseInt(P.get(k),10); return isNaN(v)?d:v; };
   var pBool=function(k,d){ var v=P.get(k); if(v==null)return d; return /^(1|true|on|yes)$/i.test(v); };
+  // presets seed the defaults; individual params still override
+  var PRESET=(P.get('preset')||'').toLowerCase();
+  var PD = PRESET==='square' ? {font:20,max:9,gap:8} : PRESET==='strip' ? {font:22,max:16,gap:6} : {font:22,max:14,gap:6};
   var CFG={
     bg:       (P.get('bg')||'dark').toLowerCase(),
-    font:     Math.max(11,Math.min(48, pInt('font',18))),
-    max:      Math.max(3,Math.min(120, pInt('max',18))),
+    font:     Math.max(11,Math.min(48, pInt('font',PD.font))),
+    max:      Math.max(3,Math.min(120, pInt('max',PD.max))),
+    gap:      Math.max(2,Math.min(24, pInt('gap',PD.gap))),
     fade:     Math.max(0, pInt('fade',0)),                       // seconds; 0 = persist
     platforms:(P.get('platforms')||'all').toLowerCase(),
     compact:  pBool('compact',false),
@@ -147,6 +153,7 @@
   /* apply config to the DOM/CSS */
   var root=document.documentElement.style;
   root.setProperty('--font', CFG.font+'px');
+  root.setProperty('--gap', CFG.gap+'px');
   if(CFG.compact){ bodyEl.classList.add('compact'); root.setProperty('--pad','14px'); }
   if(CFG.anim) bodyEl.classList.add('anim');
   if(CFG.status) bodyEl.classList.add('show-status');
