@@ -19,7 +19,7 @@
   Drop the URL into an OBS Browser Source, set Width = Height (square).
   Tunables (all optional): ?bg=dark|transparent|<hex>  ?font=18  ?max=18
    ?fade=0  ?platforms=all|twitch,kick,x,mb  ?compact=0  ?scrim=0
-   ?anim=1  ?bots=0  ?status=1  ?badges=1
+   ?anim=1  ?bots=0  ?status=1  ?badges=1  ?radius=12 (0 = hard square corners)
   Presets (set source W=H to match): ?preset=square (≈560×560) · ?preset=strip (≈480×960, the recommended hero — chat flows vertically).
 -->
 <head>
@@ -45,6 +45,7 @@
     --font:22px;          /* broadcast default (proven 20-24 band); ?font=18 = compact/monitor */
     --pad:16px;
     --gap:6px;            /* tight inter-row leading like native Kick chat */
+    --radius:12px;        /* corner softness of the dark 'chat window' card; ?radius=0 = hard square */
     --twitch:#B69BFF; --kick:#53FC18; --x:#FFFFFF; --mb:#83A6FF;
     --body:#F4F5F8; --dim:#Aeb0ba;
     --scrim:rgba(8,10,16,.66);
@@ -56,7 +57,7 @@
 
   /* the square chat window — fills whatever size the producer sets the source to */
   .panel{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
-    padding:var(--pad);overflow:hidden;border-radius:14px;
+    padding:var(--pad);overflow:hidden;border-radius:var(--radius,12px);
     background:var(--scrim);border:1px solid rgba(255,255,255,.08);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -70px 70px -50px rgba(0,0,0,.45);}
   body.bg-transparent .panel{background:transparent;border-color:transparent;box-shadow:none;border-radius:0}
@@ -140,6 +141,7 @@
     font:     Math.max(11,Math.min(48, pInt('font',PD.font))),
     max:      Math.max(3,Math.min(120, pInt('max',PD.max))),
     gap:      Math.max(2,Math.min(24, pInt('gap',PD.gap))),
+    radius:   Math.max(0,Math.min(40, pInt('radius',12))),
     fade:     Math.max(0, pInt('fade',0)),                       // seconds; 0 = persist
     platforms:(P.get('platforms')||'all').toLowerCase(),
     compact:  pBool('compact',false),
@@ -154,6 +156,7 @@
   var root=document.documentElement.style;
   root.setProperty('--font', CFG.font+'px');
   root.setProperty('--gap', CFG.gap+'px');
+  root.setProperty('--radius', CFG.radius+'px');
   if(CFG.compact){ bodyEl.classList.add('compact'); root.setProperty('--pad','14px'); }
   if(CFG.anim) bodyEl.classList.add('anim');
   if(CFG.status) bodyEl.classList.add('show-status');
