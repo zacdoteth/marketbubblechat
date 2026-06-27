@@ -154,7 +154,7 @@
             <h3>Background</h3>
             <div class="seg" data-k="bg"><button data-v="window">Window</button><button data-v="gradient">Gradient</button><button data-v="clear">Clear</button></div>
           </div>
-          <div class="sec">
+          <div class="sec" id="secCorners">
             <h3>Corners</h3>
             <div class="seg" data-k="corners"><button data-v="rounded">Rounded</button><button data-v="square">Square</button></div>
           </div>
@@ -178,7 +178,7 @@
             <div class="toggle"><span>Host / Mod badges</span><div class="sw" data-t="badges"></div></div>
             <div class="toggle"><span>Connection dot</span><div class="sw" data-t="status"></div></div>
             <div class="toggle"><span>Entrance animation</span><div class="sw" data-t="anim"></div></div>
-            <div class="toggle"><span>Bright-footage floor <span style="color:var(--dim-2);font-size:11px">(per-message)</span></span><div class="sw" data-t="pill"></div></div>
+            <div class="toggle"><span>Boost readability <span style="color:var(--dim-2);font-size:11px">(over bright/busy video)</span></span><div class="sw" data-t="pill"></div></div>
           </div>
         </div>
 
@@ -234,6 +234,7 @@
       var k=seg.getAttribute('data-k');
       seg.querySelectorAll('button').forEach(function(btn){ btn.classList.toggle('on', btn.getAttribute('data-v')===S[k]); });
     });
+    var sc=$('#secCorners'); if(sc) sc.style.display=(S.bg==='window')?'':'none';
     $('#font').value=S.font; $('#fontV').textContent=S.font+'px';
     $('#max').value=S.max; $('#maxV').textContent=S.max;
     document.querySelectorAll('#plats .chip').forEach(function(c){ c.classList.toggle('on', !!S.plats[c.getAttribute('data-p')]); });
