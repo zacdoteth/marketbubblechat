@@ -2882,7 +2882,7 @@
   onStats.push(applyStats);
 
   /* LIVE MARKETS — real CoinGecko prices into the deck's tape + markets (fail-safe; static stays on failure) */
-  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near',LINK:'chainlink',SUI:'sui',AVAX:'avalanche-2',TIA:'celestia',RENDER:'render-token',ONDO:'ondo-finance'};
+  var CG={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',DOGE:'dogecoin',WIF:'dogwifcoin',POPCAT:'popcat',BONK:'bonk',PEPE:'pepe',HYPE:'hyperliquid',JUP:'jupiter-exchange-solana',FARTCOIN:'fartcoin',ZEC:'zcash',NEAR:'near',LINK:'chainlink',SUI:'sui',AVAX:'avalanche-2',TIA:'celestia',RENDER:'render-token',ONDO:'ondo-finance',ANSEM:'the-black-bull'};   /* ANSEM = The Black Bull (SOL: 9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump) */
   function fmtPx(p){ p=Number(p)||0; if(p>=1000)return p.toLocaleString(undefined,{maximumFractionDigits:0}); if(p>=1)return p.toFixed(2); if(p>=0.01)return p.toFixed(4); if(p>=0.0001)return p.toFixed(6); if(p<=0)return '0'; var d=Math.max(0,-Math.floor(Math.log10(p))+1); return p.toFixed(Math.min(d,12)); }
   var LOGOS={};                                  // sym -> CoinGecko logo URL (the mission piece)
   try{ var _lc=JSON.parse(localStorage.getItem('mb_logos')||'{}'); if(_lc&&typeof _lc==='object') LOGOS=_lc; }catch(e){}   // persist across refreshes — logos never vanish on a rate-limit
@@ -3282,7 +3282,7 @@
   /* ===== TAPE ===== */
   var tape=[['BTC','61,274',-2.24],['ETH','1,625',-2.75],['SOL','63.46',-4.02],['DOGE','0.0836',-2.84],['WIF','0.1513',-3.12],['POPCAT','0.0404',-2.33],['BONK','0.0000043',-2.11],['PEPE','0.0000027',-2.15],['HYPE','55.91',-9.70],['JUP','1.14',-3.66]];
   /* show-exact ticker: coin-colored monogram circle · TICKER · price · −abs (−pct%) */
-  var COINC={BTC:'#F7931A',ETH:'#627EEA',SOL:'#9945FF',DOGE:'#C2A633',WIF:'#A9805B',POPCAT:'#B8A9F0',BONK:'#FF6B1A',PEPE:'#3D8130',HYPE:'#50D2C1',JUP:'#3FB6A8',TRUMP:'#E8B04B',MOODENG:'#C97A4A',FARTCOIN:'#8F9467'};
+  var COINC={BTC:'#F7931A',ETH:'#627EEA',SOL:'#9945FF',DOGE:'#C2A633',WIF:'#A9805B',POPCAT:'#B8A9F0',BONK:'#FF6B1A',PEPE:'#3D8130',HYPE:'#50D2C1',JUP:'#3FB6A8',TRUMP:'#E8B04B',MOODENG:'#C97A4A',FARTCOIN:'#8F9467',ANSEM:'#B5452B'};
   function tapeTick(t){var pc=Number(t[2])||0, d=pc>=0, px=parseFloat(String(t[1]).replace(/,/g,''))||0;
     var ab=px*Math.abs(pc)/100;
     var abs= ab>0?fmtPx(ab):'0.00';
@@ -3296,7 +3296,7 @@
     var pts=[],y=11; for(var i=0;i<22;i++){ y+=(Math.random()-(down?0.62:0.38))*3; y=Math.max(2,Math.min(20,y)); pts.push(i*3+','+y.toFixed(1)); }
     return '<svg class="spk" viewBox="0 0 66 22" preserveAspectRatio="none"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(down?'#FF5765':'#4ADE80')+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>';
   }
-  var mix=[['BTC','Bitcoin','61,330',-2.15],['ETH','Ethereum','1,626',-2.67],['SOL','Solana','63.52',-3.90],['HYPE','Hyperliquid','55.91',-9.70],['ZEC','Zcash','58.40',4.20],['NEAR','Near','2.85',2.10],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['WIF','Dogwifhat','0.1514',-3.13],['FARTCOIN','Fartcoin','0.1130',-3.87],['LINK','Chainlink','14.2',3.1],['SUI','Sui','1.85',5.4],['AVAX','Avalanche','22.1',1.8],['TIA','Celestia','3.40',6.2],['RENDER','Render','4.10',2.7],['ONDO','Ondo','0.88',4.0]];
+  var mix=[['BTC','Bitcoin','61,330',-2.15],['ETH','Ethereum','1,626',-2.67],['SOL','Solana','63.52',-3.90],['HYPE','Hyperliquid','55.91',-9.70],['ZEC','Zcash','58.40',4.20],['NEAR','Near','2.85',2.10],['PEPE','Pepe','0.0000027',-1.80],['DOGE','Dogecoin','0.0837',-2.90],['BONK','Bonk','0.0000043',-2.06],['WIF','Dogwifhat','0.1514',-3.13],['FARTCOIN','Fartcoin','0.1130',-3.87],['ANSEM','Ansem','0.2774',-25.82],['LINK','Chainlink','14.2',3.1],['SUI','Sui','1.85',5.4],['AVAX','Avalanche','22.1',1.8],['TIA','Celestia','3.40',6.2],['RENDER','Render','4.10',2.7],['ONDO','Ondo','0.88',4.0]];
   var preds=[
     ['BTC above $150K by Q3?',61,'yes','$2.4M','Crypto'],
     ['ETH staking ETF approved 2026?',56,'yes','$890K','Crypto'],
@@ -3447,14 +3447,15 @@
     try{ var bl=flexBlobSync(); if(bl&&navigator.clipboard&&window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':bl})]).catch(function(){}); } flexToastShow('image copied — opening X'); }catch(e){}
     try{ window.open(url,'_blank','noopener'); }catch(e){} }
   function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
+  var FEATCOIN='ANSEM';                                                    // the hero coin — holds the centre of the tank
   function tankData(){
     var out=[];
-    mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0}); });   // all good coins (no stablecoins in the set)
+    mix.forEach(function(m){ out.push({kind:'coin',sym:m[0],name:m[1],px:m[2],val:Number(m[3])||0,feat:m[0]===FEATCOIN}); });   // all good coins (no stablecoins in the set)
     preds.slice(0, TANK.full?preds.length:9).forEach(function(p){ out.push({kind:'pred',q:p[0],odds:p[1],side:p[2],vol:p[3],cat:p[4]}); });
     return out;
   }
   function tankRadius(d){
-    if(d.kind==='coin'){ var m=Math.min(8,Math.abs(d.val)); return 17+(m/8)*16; }   // movers grow
+    if(d.kind==='coin'){ var m=Math.min(8,Math.abs(d.val)); var r=17+(m/8)*16; return d.feat?Math.max(30,r):r; }   // movers grow; the hero never shrinks below centre-stage size
     var c=Math.min(45,Math.abs(d.odds-50)); return 15+(c/45)*14;                     // conviction grows
   }
   /* coinquarium fill: scale every bubble so the school occupies ~58% of the water */
@@ -3485,6 +3486,7 @@
     cv.width=Math.round(TANK.w*TANK.dpr); cv.height=Math.round(TANK.h*TANK.dpr);
     cv.style.width=TANK.w+'px'; cv.style.height=TANK.h+'px'; tankFit(); }
   function tankScatter(){ TANK.bubs.forEach(function(b){
+    if(b.d&&b.d.feat){ b.x=TANK.w*0.5; b.y=TANK.h*0.5; return; }           // hero spawns dead-centre
     b.x=b.r+Math.random()*Math.max(10,TANK.w-2*b.r); b.y=b.r+Math.random()*Math.max(10,TANK.h-2*b.r); }); }
   function tankSync(){ var fresh=tankData();
     TANK.bubs.forEach(function(b){ var f=null,i;
@@ -3510,7 +3512,8 @@
       if(a.state==='gone') continue;                                       // popped — sits out of physics
       a.r += (a.br-a.r)*0.06;                                              // ease to live size
       if(!reduce){ a.x+=a.vx; a.y+=a.vy; a.vx*=0.95; a.vy*=0.95;            // gentle brownian drift — fills the whole pane, no centre clump
-        a.vx+=(Math.random()-0.5)*0.03; a.vy+=(Math.random()-0.5)*0.03; }
+        a.vx+=(Math.random()-0.5)*0.03; a.vy+=(Math.random()-0.5)*0.03;
+        if(a.d.feat){ a.vx+=(w*0.5-a.x)*0.0005; a.vy+=(h*0.5-a.y)*0.0005; } }   // soft spring — the hero always drifts home to centre
       var rr=a.r*1.04;
       if(a.x<rr){a.x=rr;a.vx=Math.abs(a.vx)*0.7;} if(a.x>w-rr){a.x=w-rr;a.vx=-Math.abs(a.vx)*0.7;}
       if(a.y<rr){a.y=rr;a.vy=Math.abs(a.vy)*0.7;} if(a.y>h-rr){a.y=h-rr;a.vy=-Math.abs(a.vy)*0.7;}
