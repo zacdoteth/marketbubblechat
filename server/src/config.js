@@ -2,9 +2,9 @@
 // secrets come from process.env (loaded via --env-file=.env or the host).
 export const PORT = Number(process.env.PORT) || 8787;
 export const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || '';
-// Optional control-channel gate. If set, only clients that send this token may
-// connect/disconnect streams (the creator opens the dashboard with ?key=<token>).
-// If unset (default), the control channel is open — fine for a local/demo run.
+// Control-channel gate: the operator password. Clients unlock /admin by sending it
+// via checkAuth, then attach it as `token` on every control action.
+// If unset, NOBODY can control (read-only show).
 export const CONTROL_TOKEN = process.env.CONTROL_TOKEN || '';
 
 // Shared secret for the X-broadcast capture worker → POST /ingest/x. If unset, the

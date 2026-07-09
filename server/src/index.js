@@ -136,7 +136,7 @@ process.on('uncaughtException', (err) => { console.error('[fatal] uncaughtExcept
 if (!X_BEARER_TOKEN) console.warn('[startup] X ingestion disabled: X_BEARER_TOKEN not set');
 if (!KICK_CLIENT_ID || !KICK_CLIENT_SECRET) console.warn('[startup] Kick ingestion disabled: KICK_CLIENT_ID or KICK_CLIENT_SECRET not set');
 if (!X_INGEST_TOKEN) console.warn('[startup] X-broadcast ingest disabled: X_INGEST_TOKEN not set (POST /ingest/x → 503)');
-if (!CONTROL_TOKEN) console.warn('[startup] CONTROL_TOKEN not set — operator controls are LOCKED (read-only show). Set it to enable /add.');
+if (!CONTROL_TOKEN) console.warn('[startup] CONTROL_TOKEN not set — operator controls are LOCKED (read-only show). Set it (the operator password) to enable /admin.');
 
 server.listen(PORT, () => console.log('CONFLUX backend on :' + PORT));
 

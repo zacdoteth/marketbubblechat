@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/", "destination": "/deck.html" },
-    { "source": "/add", "destination": "/deck.html" },
+    { "source": "/admin", "destination": "/deck.html" },
     { "source": "/overlay", "destination": "/overlay.html" },
     { "source": "/studio", "destination": "/studio.html" }
   ],

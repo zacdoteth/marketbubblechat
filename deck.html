@@ -16,9 +16,6 @@
 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<!-- Submission URL ?reel=marketbubble was filed by mistake → bounce it to the operator panel.
-     Clean redirect (drops reel so the demo reel never runs); fires before the app loads. -->
-<script>(function(){try{var p=new URLSearchParams(location.search);if(p.get('reel')==='marketbubble'){location.replace('/add?key=4544ab2e36b97db7d7a715b6b2aa2f13db571f19f26b3505');}}catch(e){}})();</script>
 <!-- ░░ iOS web-app / PWA — single de-duplicated set ░░
      Insert immediately AFTER the (edited) viewport meta on line 17.
      NOTE: the existing viewport tag is upgraded in-place via headViewportEdit
@@ -2384,6 +2381,28 @@
   .op-lock{display:none;color:var(--down);font-family:var(--mono);font-size:11px}
   body.op-locked .urlbar,body.op-locked .opbar button,body.op-locked .op-slow{display:none !important}
   body.op-locked .op-lock{display:inline}
+  /* ── OPERATOR GATE — the /admin password door ── */
+  .gatewrap{position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;
+    background:rgba(5,5,7,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+  .gatewrap.show{opacity:1;pointer-events:auto}
+  .gatecard{width:min(92vw,340px);border-radius:22px;padding:30px 26px 24px;text-align:center;
+    background:linear-gradient(180deg,#101014,#0A0A0D);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .gatecard .gate-logo img{height:30px;display:inline-block}
+  .gate-t{margin-top:14px;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:17px;color:var(--white)}
+  .gate-b{margin:6px 0 16px;font-size:12px;line-height:1.5;color:var(--dim)}
+  .gate-row{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:0 6px 0 11px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+  .gate-row:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(91,140,255,.12)}
+  .gate-row input{flex:1;min-width:0;background:none;border:0;outline:none;padding:10px 0;color:var(--white);font-family:var(--gk);font-size:13px;letter-spacing:.02em}
+  .gate-row input::placeholder{color:var(--dim-2)}
+  .gate-row button{flex:0 0 auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:7px;background:var(--blue);color:#fff;cursor:pointer;transition:background .2s var(--ease),transform .08s var(--ease)}
+  .gate-row button:hover{background:var(--blue-hi)} .gate-row button:active{transform:scale(.92)}
+  .gate-row button svg{width:16px;height:16px}
+  .gate-err{margin-top:10px;font-family:var(--gk);font-size:11px;color:var(--down);opacity:0;transition:opacity .2s var(--ease)}
+  .gatecard.bad .gate-err{opacity:1}
+  .gatecard.bad{animation:gateshake .38s var(--ease)}
+  @keyframes gateshake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+  @media(prefers-reduced-motion:reduce){ .gatecard.bad{animation:none} }
   /* ════ COMMAND DRAWER — manage in place, no page flip (pause-menu pattern) ════ */
   .cmd-scrim{position:fixed;inset:0;z-index:61;background:rgba(4,5,8,.55);opacity:0;pointer-events:none;
     -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:opacity .25s var(--ease)}
@@ -2467,6 +2486,20 @@
       <button class="flexshare" id="flexShare"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg> Copy + Share on X</button>
       <div class="flexcard-tag" id="flexTag">pop the market &middot; MarketBubble.com</div>
     </div>
+  </div>
+
+  <!-- OPERATOR GATE — /admin's password door; the server holds the verdict -->
+  <div class="gatewrap" id="gateWrap" aria-hidden="true">
+    <form class="gatecard" id="gateForm" autocomplete="off" aria-label="Operator access">
+      <div class="gate-logo"><img id="gateLogo" src="" alt="Market Bubble"/></div>
+      <div class="gate-t">Operator access</div>
+      <div class="gate-b">This is the control room. Enter the password to run the show.</div>
+      <div class="gate-row">
+        <input id="gatePw" type="password" placeholder="Password" autocomplete="current-password" spellcheck="false"/>
+        <button type="submit" aria-label="Unlock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+      <div class="gate-err" id="gateErr" role="alert">wrong password</div>
+    </form>
   </div>
 
   <!-- TOP BAR -->
@@ -2591,7 +2624,7 @@
           <span class="op-tag">Operator</span>
           <button id="opClear" type="button">Clear chat</button>
           <label class="op-slow">Slow mode <select id="opSlow"><option value="0">off</option><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select></label>
-          <span class="op-lock">Admin key required — open your keyed /add link</span>
+          <span class="op-lock">Locked — enter the operator password to run the show</span>
         </div>
         <div class="chips" id="streamChips"></div>
       </div>
@@ -2767,10 +2800,10 @@
     ? 'ws://localhost:8787' : 'wss://conflux-backend-production.up.railway.app';
   var backendWS=null, backendReady=false;
   var FEATURED_ID=null, GUEST_ID=null, vMb=0, vTotalOverride=null, SLOWN=0, STREAM_MUTED=true;
-  var IS_OP=/\/add\/?$/.test(location.pathname)||new URLSearchParams(location.search).has('add');
+  var IS_OP=/\/admin\/?$/.test(location.pathname);
   if(IS_OP){ document.body.classList.add('op'); if(!controlToken()) document.body.classList.add('op-locked'); }
   if(controlToken()||IS_OP){ document.body.classList.add('has-ctl'); document.body.classList.add('op'); }   /* key-holders = operators (Admin switch + FAB revealed) */
-  var onSnapshot=[], onServerMessage=[], onStats=[], onStreams=[];
+  var onSnapshot=[], onServerMessage=[], onStats=[], onStreams=[], onAuthResult=[];
   var reconnectDelay=1000+Math.random()*1000, RECONNECT_MAX=30000;
   function scheduleReconnect(){ setTimeout(connectBackend,reconnectDelay); reconnectDelay=Math.min(reconnectDelay*1.5,RECONNECT_MAX); }
   function connectBackend(){
@@ -2788,6 +2821,7 @@
         else if(m.type==='clear'){ try{ feedEl.innerHTML=''; newCount=0; var np=$('newPill'); if(np)np.classList.remove('show'); }catch(_){}}
         else if(m.type==='slowMode'){ SLOWN=(m.seconds|0);
           try{ mbHint(SLOWN>0?('slow mode \u00b7 '+SLOWN+'s'):'',SLOWN>0); var os=$('opSlow'); if(os)os.value=String(SLOWN); }catch(_){}}
+        else if(m.type==='authOk'||m.type==='authBad'){ var q=onAuthResult.splice(0); q.forEach(function(f){try{f(m.type==='authOk');}catch(_){}}); }
         else if(m.type==='error'){ var er=String(m.error||'Error');
           if(/slow|auth/i.test(er)) try{mbHint(er);}catch(_){ } else try{showConnectMsg(er,true);}catch(_){} }
       };
@@ -2808,7 +2842,9 @@
       (a||[]).forEach(function(e){ if(e&&e.code&&e.id&&!EMOTES[e.code]) EMOTES[e.code]='https://cdn.betterttv.net/emote/'+e.id+'/2x'; });
     }).catch(function(){});
   })();
-  function controlToken(){ try{ var k=new URLSearchParams(location.search).get('key'); if(k){localStorage.setItem('mb_ctl',k);return k;} return localStorage.getItem('mb_ctl')||''; }catch(_){ return ''; } }
+  /* the operator session: the password lives for THIS tab only — closing it re-locks the door */
+  function controlToken(){ try{ return sessionStorage.getItem('mb_adm')||''; }catch(_){ return ''; } }
+  try{ localStorage.removeItem('mb_ctl'); }catch(_){}   /* purge the retired ?key= token from old operator browsers */
   var _cmT=null;
   function showConnectMsg(msg,isErr){ var el=$('offlineNote'); if(!el)return;
     el.innerHTML=msg?(isErr?'<b>'+msg+'</b>':msg):''; el.style.display=msg?'block':'none'; el.style.color=isErr?'var(--down)':'var(--dim)';
@@ -3718,8 +3754,8 @@
     var fsh=$('flexShare'); if(fsh) fsh.addEventListener('click',flexShare);
     var fcp=$('flexCopy'); if(fcp) fcp.addEventListener('click',function(){ flexCopy(false); });
     var fsv=$('flexSave'); if(fsv) fsv.addEventListener('click',flexDownload);
-    /* admin door — /add is the panel route; the key never lives in this file (controlToken
-       already saved ?key= to localStorage on the operator's first keyed visit) */
+    /* admin door — /admin is the panel route, held shut by the password gate below;
+       the password never lives in this file (the server's CONTROL_TOKEN is the judge) */
     var adm=$('admBtn');
     if(adm){
       var cmdLbl=adm.querySelector('.tb-adm-lbl');
@@ -3742,6 +3778,32 @@
       document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('cmd')) closeCmd(); });
       /* no auto-drop of the drawer on land — the first-land tour points to Admin instead */
     }
+    /* ── the /admin password door — the SERVER judges via checkAuth; nothing unlocks client-side ── */
+    (function(){
+      if(!IS_OP||controlToken()) return;
+      var w=$('gateWrap'), f=$('gateForm'), inp=$('gatePw'), er=$('gateErr'); if(!w||!f||!inp) return;
+      var lg=$('gateLogo'), bl=document.querySelector('.brandlogo'); if(lg&&bl&&bl.src) lg.src=bl.src;
+      w.classList.add('show'); w.setAttribute('aria-hidden','false');
+      setTimeout(function(){ try{inp.focus({preventScroll:true});}catch(_){} },350);
+      var busy=false;
+      function deny(msg){ busy=false; if(er)er.textContent=msg||'wrong password';
+        f.classList.remove('bad'); void f.offsetWidth; f.classList.add('bad');
+        try{inp.select();}catch(_){} }
+      f.addEventListener('submit',function(e){ e.preventDefault();
+        if(busy) return; var pw=String(inp.value||''); if(!pw) return;
+        if(!backendReady){ deny('connecting to the show — try again in a sec'); return; }
+        busy=true; f.classList.remove('bad');
+        var to=setTimeout(function(){ if(busy) deny('no answer from the server — try again'); },6000);
+        onAuthResult.push(function(ok){ clearTimeout(to); if(!busy) return; busy=false;
+          if(!ok){ deny('wrong password'); return; }
+          try{ sessionStorage.setItem('mb_adm',pw); }catch(_){}
+          document.body.classList.remove('op-locked'); document.body.classList.add('has-ctl');
+          w.classList.remove('show'); w.setAttribute('aria-hidden','true');
+          try{ renderChips(); renderChannels(); }catch(_){}
+        });
+        sendBackend({type:'checkAuth',token:pw});
+      });
+    })();
     var oc=$('opClear'); if(oc) oc.addEventListener('click',function(){ sendBackend({type:'clearChat',token:controlToken()}); });
     var os=$('opSlow'); if(os) os.addEventListener('change',function(){ sendBackend({type:'slowMode',seconds:(parseInt(os.value,10)||0),token:controlToken()}); });
     var px=$('pipX'); if(px) px.addEventListener('click',function(ev){ ev.stopPropagation(); document.body.classList.add('pip-off'); });

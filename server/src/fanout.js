@@ -31,6 +31,8 @@ export function startFanout(httpServer, hubOptions = {}) {
             send(ws, { type: 'error', error: 'not authorized' }); return;
           }
           switch (msg.type) {
+            // The admin door: verifies a password attempt WITHOUT performing any action.
+            case 'checkAuth': send(ws, { type: mayControl(msg) ? 'authOk' : 'authBad' }); break;
             case 'nativeChat': { const r = showRoom.nativeChat(client, msg.text); if (r && r.error) send(ws, { type: 'error', error: r.error }); break; }
             case 'connectStream': { const r = await showRoom.connect(msg.url); if (r && r.error) send(ws, { type: 'error', error: r.error }); break; }
             case 'disconnectStream': showRoom.disconnect(msg.id); break;
